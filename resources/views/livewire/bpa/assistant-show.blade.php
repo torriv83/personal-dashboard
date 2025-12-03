@@ -1,0 +1,339 @@
+<div class="w-full h-full flex flex-col">
+    {{-- Header med tilbake-knapp og rediger --}}
+    <div class="flex items-center justify-between mb-6">
+        <a href="{{ route('bpa.assistants') }}" class="inline-flex items-center gap-2 text-muted hover:text-foreground transition-colors cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Tilbake til assistenter</span>
+        </a>
+        <button
+            x-on:click="$dispatch('open-modal', 'edit-assistant')"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-black rounded-md hover:bg-accent-hover transition-colors cursor-pointer"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            <span class="hidden sm:inline">Rediger</span>
+        </button>
+    </div>
+
+    {{-- Assistent-info header --}}
+    <div class="bg-card border border-border rounded-lg p-4 sm:p-6 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+            {{-- Avatar --}}
+            <div
+                class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 flex items-center justify-center text-xl sm:text-2xl font-bold shrink-0"
+                style="background-color: {{ $assistant->color }}20; border-color: {{ $assistant->color }}50; color: {{ $assistant->color }}"
+            >
+                {{ $assistant->initials }}
+            </div>
+
+            {{-- Info --}}
+            <div class="flex-1 min-w-0">
+                <div class="flex flex-wrap items-center gap-2 mb-1">
+                    <h1 class="text-xl sm:text-2xl font-bold text-foreground">{{ $assistant->name }}</h1>
+                    <span class="text-muted-foreground">{{ $assistant->formatted_number }}</span>
+                </div>
+
+                @php
+                    $typeClasses = match($assistant->type) {
+                        'primary' => 'bg-accent/10 text-accent border-accent/30',
+                        'substitute' => 'bg-card-hover text-muted border-border',
+                        'oncall' => 'bg-card-hover text-muted-foreground border-border',
+                        default => 'bg-card-hover text-muted border-border',
+                    };
+                @endphp
+
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                    <span class="px-2.5 py-1 text-xs rounded-md border {{ $typeClasses }}">
+                        {{ $assistant->type_label }}
+                    </span>
+                    <span class="text-sm text-muted">
+                        Ansatt i {{ $this->employmentDuration }}
+                    </span>
+                </div>
+
+                {{-- Kontaktinfo og hurtighandlinger --}}
+                <div class="flex flex-wrap items-center gap-3">
+                    @if($assistant->phone)
+                        <a href="tel:{{ $assistant->phone }}" class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            {{ $assistant->phone }}
+                        </a>
+                    @endif
+                    @if($assistant->email)
+                        <a href="mailto:{{ $assistant->email }}" class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            {{ $assistant->email }}
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Statistikk-kort --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-card border border-border rounded-lg p-4">
+            <div class="text-sm text-muted mb-1">Timer i år</div>
+            <div class="text-2xl font-bold text-foreground">{{ $this->stats['hours_this_year'] }}</div>
+        </div>
+        <div class="bg-card border border-border rounded-lg p-4">
+            <div class="text-sm text-muted mb-1">Timer denne mnd</div>
+            <div class="text-2xl font-bold text-foreground">{{ $this->stats['hours_this_month'] }}</div>
+        </div>
+        <div class="bg-card border border-border rounded-lg p-4">
+            <div class="text-sm text-muted mb-1">Antall vakter</div>
+            <div class="text-2xl font-bold text-foreground">{{ $this->stats['total_shifts'] }}</div>
+        </div>
+        <div class="bg-card border border-border rounded-lg p-4">
+            <div class="text-sm text-muted mb-1">Snitt per vakt</div>
+            <div class="text-2xl font-bold text-foreground">{{ $this->stats['average_per_shift'] }}</div>
+        </div>
+    </div>
+
+    {{-- Arbeidshistorikk --}}
+    <div class="bg-card border border-border rounded-lg overflow-hidden mb-6">
+        {{-- Header med filtre --}}
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-4 border-b border-border">
+            <h2 class="text-lg font-semibold text-foreground">Arbeidshistorikk</h2>
+            <div class="flex flex-wrap items-center gap-3">
+                {{-- År-filter --}}
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-muted">År:</label>
+                    <select
+                        wire:model.live="year"
+                        class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                    >
+                        @foreach($this->availableYears as $y)
+                            <option value="{{ $y }}">{{ $y }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Måned-filter --}}
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-muted">Måned:</label>
+                    <select
+                        wire:model.live="month"
+                        class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                    >
+                        <option value="">Alle</option>
+                        <option value="1">Januar</option>
+                        <option value="2">Februar</option>
+                        <option value="3">Mars</option>
+                        <option value="4">April</option>
+                        <option value="5">Mai</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                </div>
+
+                {{-- Per side --}}
+                <div class="flex items-center gap-2">
+                    <label class="text-sm text-muted">Per side:</label>
+                    <select
+                        wire:model.live="perPage"
+                        class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                    >
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        {{-- Tabell --}}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="hidden sm:table-header-group">
+                    <tr class="bg-card-hover/50 text-left text-sm font-medium text-muted">
+                        <th class="px-4 sm:px-6 py-3">Dato</th>
+                        <th class="px-4 sm:px-6 py-3">Tid</th>
+                        <th class="px-4 sm:px-6 py-3">Varighet</th>
+                        <th class="px-4 sm:px-6 py-3">Notat</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    @forelse($this->shifts as $shift)
+                        <tr class="hover:bg-card-hover transition-colors {{ $shift->is_unavailable ? 'bg-warning/5' : '' }}">
+                            {{-- Mobil: Kompakt layout --}}
+                            <td class="sm:hidden px-4 py-3" colspan="4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="font-medium text-foreground">
+                                            {{ $shift->starts_at->translatedFormat('j. M Y') }}
+                                        </div>
+                                        <div class="text-sm text-muted">
+                                            {{ $shift->time_range }}
+                                            @if($shift->is_unavailable)
+                                                <span class="ml-2 text-warning">(Borte)</span>
+                                            @endif
+                                        </div>
+                                        @if($shift->note)
+                                            <div class="text-sm text-muted-foreground mt-1">{{ $shift->note }}</div>
+                                        @endif
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-foreground font-medium">{{ $shift->formatted_duration }}</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            {{-- Desktop: Full layout --}}
+                            <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-foreground whitespace-nowrap">
+                                {{ $shift->starts_at->translatedFormat('j. M Y') }}
+                                @if($shift->is_unavailable)
+                                    <span class="ml-2 px-1.5 py-0.5 text-xs rounded bg-warning/10 text-warning border border-warning/30">Borte</span>
+                                @endif
+                            </td>
+                            <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-muted whitespace-nowrap">
+                                {{ $shift->time_range }}
+                            </td>
+                            <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-foreground font-medium whitespace-nowrap">
+                                {{ $shift->formatted_duration }}
+                            </td>
+                            <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-muted-foreground">
+                                {{ $shift->note ?? '-' }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-4 sm:px-6 py-8 text-center text-muted">
+                                Ingen vakter registrert for {{ $year }}.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Pagination --}}
+        @if($this->shifts->hasPages())
+            <div class="px-4 sm:px-6 py-4 border-t border-border">
+                {{ $this->shifts->links() }}
+            </div>
+        @endif
+    </div>
+
+    {{-- Kommende utilgjengelighet --}}
+    @if($this->upcomingUnavailability->isNotEmpty())
+        <div class="bg-card border border-border rounded-lg p-4 sm:p-6">
+            <h2 class="text-lg font-semibold text-foreground mb-4">Kommende utilgjengelighet</h2>
+            <div class="space-y-3">
+                @foreach($this->upcomingUnavailability as $unavailable)
+                    <div class="flex items-start gap-3 p-3 bg-warning/5 border border-warning/20 rounded-lg">
+                        <svg class="w-5 h-5 text-warning shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-foreground">
+                                @if($unavailable->is_all_day)
+                                    {{ $unavailable->starts_at->translatedFormat('j. M Y') }}
+                                    @if($unavailable->starts_at->toDateString() !== $unavailable->ends_at->toDateString())
+                                        - {{ $unavailable->ends_at->translatedFormat('j. M Y') }}
+                                    @endif
+                                @else
+                                    {{ $unavailable->starts_at->translatedFormat('j. M Y') }}
+                                    <span class="text-muted font-normal">({{ $unavailable->time_range }})</span>
+                                @endif
+                            </div>
+                            @if($unavailable->note)
+                                <div class="text-sm text-muted mt-0.5">{{ $unavailable->note }}</div>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- Rediger assistent modal --}}
+    <x-modal name="edit-assistant" title="Rediger assistent" maxWidth="xl">
+        <div class="space-y-4">
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">Navn <span class="text-destructive">*</span></label>
+                    <input type="text" wire:model="editName" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">Assistent nummer <span class="text-destructive">*</span></label>
+                    <input type="number" wire:model="editEmployeeNumber" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
+                </div>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">E-post <span class="text-destructive">*</span></label>
+                    <input type="email" wire:model="editEmail" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">Telefon</label>
+                    <input type="tel" wire:model="editPhone" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent">
+                </div>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">Type <span class="text-destructive">*</span></label>
+                    <select wire:model="editType" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent cursor-pointer" required>
+                        <option value="primary">Fast ansatt</option>
+                        <option value="substitute">Vikar</option>
+                        <option value="oncall">Tilkalling</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-muted mb-1">Ansatt dato <span class="text-destructive">*</span></label>
+                    <div
+                        x-data="{
+                            value: $wire.entangle('editHiredAt'),
+                            get formatted() {
+                                if (!this.value) return 'Velg dato...';
+                                const d = new Date(this.value + 'T00:00:00');
+                                return d.toLocaleDateString('nb-NO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            }
+                        }"
+                        class="relative"
+                    >
+                        <div class="flex items-center justify-between w-full bg-input border border-border rounded-md px-3 py-2 text-foreground cursor-pointer">
+                            <span x-text="formatted" :class="value ? 'text-foreground' : 'text-muted'"></span>
+                            <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <input
+                            type="date"
+                            x-model="value"
+                            class="datepicker-overlay"
+                            required
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4">
+                <button
+                    x-on:click="$dispatch('close-modal', 'edit-assistant')"
+                    class="px-4 py-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
+                >
+                    Avbryt
+                </button>
+                <button wire:click="updateAssistant" class="px-4 py-2 bg-accent text-black text-sm rounded-md hover:opacity-90 transition-opacity cursor-pointer">
+                    Lagre endringer
+                </button>
+            </div>
+        </div>
+    </x-modal>
+</div>

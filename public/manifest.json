@@ -1,0 +1,50 @@
+{
+    "name": "Personlig Dashboard",
+    "short_name": "Dashboard",
+    "description": "Ditt personlige verktøy for hverdagen",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#1a1a1a",
+    "theme_color": "#1a1a1a",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "BPA Kalender",
+            "short_name": "Kalender",
+            "url": "/bpa/kalender",
+            "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Økonomi",
+            "short_name": "Økonomi",
+            "url": "/okonomi",
+            "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Medisinsk",
+            "short_name": "Medisinsk",
+            "url": "/medisinsk",
+            "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Ønskeliste",
+            "short_name": "Ønsker",
+            "url": "/onskeliste",
+            "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+        }
+    ]
+}

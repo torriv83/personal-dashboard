@@ -1,0 +1,13 @@
+# phpstan.neon
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+    level: 5 # Juster etter behov (0-8)
+    excludePaths:
+        - vendor/
+        - storage/
+        - node_modules/
+        - bootstrap/cache/
