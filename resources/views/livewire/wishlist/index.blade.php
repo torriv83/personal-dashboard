@@ -221,7 +221,19 @@
         </div>
 
         {{-- Desktop Table Layout --}}
-        <div class="hidden md:block overflow-x-auto">
+        <div class="hidden md:block overflow-x-auto"
+            x-data="{
+                colWidths: { totalt: 0, handlinger: 0 },
+                measureColumns() {
+                    const totaltTh = this.$refs.thTotalt;
+                    const handlingerTh = this.$refs.thHandlinger;
+                    if (totaltTh) this.colWidths.totalt = totaltTh.offsetWidth;
+                    if (handlingerTh) this.colWidths.handlinger = handlingerTh.offsetWidth;
+                }
+            }"
+            x-init="$nextTick(() => measureColumns())"
+            @resize.window.debounce.100ms="measureColumns()"
+        >
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-border bg-card-hover/50">
@@ -231,8 +243,8 @@
                         <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Pris</th>
                         <th class="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Antall</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Totalt</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Handlinger</th>
+                        <th x-ref="thTotalt" class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Totalt</th>
+                        <th x-ref="thHandlinger" class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Handlinger</th>
                     </tr>
                 </thead>
                 {{-- Sortable tbody - ONLY contains sortable items (groups and standalone items) --}}
@@ -281,14 +293,14 @@
                                                 <span class="text-xs text-muted-foreground">({{ count($wishlist['items']) }} elementer)</span>
                                             </div>
                                         </div>
-                                        {{-- Group Total --}}
-                                        <div class="px-4 py-4 text-right shrink-0">
+                                        {{-- Group Total - dynamically sized to match Totalt column --}}
+                                        <div class="px-4 py-4 text-right shrink-0 box-content" :style="'width: ' + (colWidths.totalt - 32) + 'px'">
                                             <span class="text-sm font-medium text-foreground">
                                                 kr {{ number_format($this->getGroupTotal($wishlist['items']), 0, ',', ' ') }}
                                             </span>
                                         </div>
-                                        {{-- Actions --}}
-                                        <div class="px-4 py-4 text-right shrink-0" @click.stop>
+                                        {{-- Actions - dynamically sized to match Handlinger column --}}
+                                        <div class="px-4 py-4 text-right shrink-0 box-content" :style="'width: ' + (colWidths.handlinger - 32) + 'px'" @click.stop>
                                             <div class="flex items-center justify-end gap-1">
                                                 <button
                                                     wire:click="openItemModal(null, {{ $wishlist['id'] }})"
