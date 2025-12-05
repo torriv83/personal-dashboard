@@ -24,6 +24,8 @@ class Index extends Component
 {
     public IncomeSetting $incomeSetting;
 
+    public bool $isLoadingYnab = true;
+
     #[Validate('required|numeric|min:0')]
     public string $monthly_gross = '';
 
@@ -40,6 +42,17 @@ class Index extends Component
     {
         $this->incomeSetting = IncomeSetting::instance();
         $this->fillForm();
+    }
+
+    public function loadYnabData(): void
+    {
+        // Trigger computed properties to load data
+        $this->accounts;
+        $this->ageOfMoney;
+        $this->monthlyData;
+        $this->lastModifiedAt;
+
+        $this->isLoadingYnab = false;
     }
 
     public function fillForm(): void
@@ -67,14 +80,16 @@ class Index extends Component
 
     public function syncYnab(): void
     {
+        $this->isLoadingYnab = true;
+
         $ynab = app(YnabService::class);
         $ynab->clearCache();
 
-        // Store sync timestamp (forever, until next sync)
-        Cache::forever('ynab.last_synced', now());
-
-        // Re-fetch data by clearing computed cache
+        // Re-fetch data by clearing computed cache (timestamp is set in YnabService when data is fetched)
         unset($this->accounts, $this->ageOfMoney, $this->monthlyData, $this->lastModifiedAt, $this->lastSyncedAt);
+
+        // Reload data
+        $this->loadYnabData();
 
         $this->dispatch('toast', type: 'success', message: 'YNAB-data oppdatert');
         $this->dispatch('syncCompleted');

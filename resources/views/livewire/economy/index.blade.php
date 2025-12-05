@@ -1,4 +1,4 @@
-<div class="p-4 sm:p-6 space-y-6">
+<div class="p-4 sm:p-6 space-y-6" wire:init="loadYnabData">
     {{-- Flash Message --}}
     @if (session('success'))
         <div
@@ -69,7 +69,13 @@
         </div>
         <div class="bg-card border border-border rounded-lg p-4 sm:p-5">
             <p class="text-sm text-muted-foreground">Age of Money</p>
-            <p class="text-2xl sm:text-3xl font-bold text-foreground mt-1">{{ $this->ageOfMoney ?? '-' }} dager</p>
+            @if($isLoadingYnab)
+                <div class="h-9 sm:h-10 mt-1 flex items-center">
+                    <div class="h-6 w-20 bg-muted animate-pulse rounded"></div>
+                </div>
+            @else
+                <p class="text-2xl sm:text-3xl font-bold text-foreground mt-1">{{ $this->ageOfMoney ?? '-' }} dager</p>
+            @endif
             <p class="text-xs text-muted-foreground mt-2">Fra YNAB</p>
         </div>
     </div>
@@ -78,17 +84,27 @@
     <div class="bg-card border border-border rounded-lg p-4 sm:p-5">
         <div class="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-1 xs:gap-0 mb-4">
             <h3 class="text-sm font-medium text-foreground">Kontoer</h3>
-            <div class="text-xs text-muted-foreground text-right">
-                @if($this->lastSyncedAt)
-                    <span>Sist synkronisert: {{ $this->lastSyncedAt }}</span>
-                @endif
-                @if($this->lastModifiedAt)
-                    <span class="block xs:inline xs:ml-3">Endret i YNAB: {{ \Carbon\Carbon::parse($this->lastModifiedAt)->format('d.m.Y \\k\\l. H:i') }}</span>
-                @endif
-            </div>
+            @if(!$isLoadingYnab)
+                <div class="text-xs text-muted-foreground text-right">
+                    @if($this->lastSyncedAt)
+                        <span>Sist synkronisert: {{ $this->lastSyncedAt }}</span>
+                    @endif
+                    @if($this->lastModifiedAt)
+                        <span class="block xs:inline xs:ml-3">Endret i YNAB: {{ \Carbon\Carbon::parse($this->lastModifiedAt)->format('d.m.Y \\k\\l. H:i') }}</span>
+                    @endif
+                </div>
+            @endif
         </div>
 
-        @if(count($this->accounts) > 0)
+        @if($isLoadingYnab)
+            <div class="flex flex-col items-center justify-center py-12">
+                <svg class="w-8 h-8 text-accent animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-3 text-sm text-muted-foreground">Henter data fra YNAB...</p>
+            </div>
+        @elseif(count($this->accounts) > 0)
             @php
                 $debtTypes = ['creditCard', 'lineOfCredit', 'mortgage', 'autoLoan', 'studentLoan', 'personalLoan', 'medicalDebt', 'otherDebt', 'otherLiability'];
                 $regularAccounts = collect($this->accounts)->filter(fn($a) => !in_array($a['type'], $debtTypes));
@@ -177,24 +193,38 @@
         @endif
 
         {{-- Total --}}
-        <div class="mt-4 pt-4 border-t border-border flex items-center justify-between">
-            <span class="text-sm text-muted-foreground">Total saldo</span>
-            <span class="text-xl font-bold {{ $this->totalBalance < 0 ? 'text-red-400' : 'text-accent' }}">
-                kr {{ number_format($this->totalBalance, 0, ',', ' ') }}
-            </span>
-        </div>
+        @if(!$isLoadingYnab)
+            <div class="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                <span class="text-sm text-muted-foreground">Total saldo</span>
+                <span class="text-xl font-bold {{ $this->totalBalance < 0 ? 'text-red-400' : 'text-accent' }}">
+                    kr {{ number_format($this->totalBalance, 0, ',', ' ') }}
+                </span>
+            </div>
+        @endif
     </div>
 
     {{-- Chart Section --}}
-    @php
-        $chartData = collect($this->monthlyData)->reverse()->values();
-        $months = $chartData->pluck('month')->map(fn($m) => \Carbon\Carbon::parse($m)->translatedFormat('M'))->toArray();
-        $expenses = $chartData->pluck('activity')->map(fn($v) => abs($v))->toArray();
-        $income = $chartData->pluck('income')->toArray();
-        $budgeted = $chartData->pluck('budgeted')->toArray();
-        $net = $chartData->map(fn($m) => $m['income'] + $m['activity'])->toArray();
-    @endphp
-    <div
+    @if($isLoadingYnab)
+        <div class="bg-card border border-border rounded-lg p-4 sm:p-5">
+            <h3 class="text-sm font-medium text-foreground mb-4">Månedlig oversikt</h3>
+            <div class="flex flex-col items-center justify-center py-16">
+                <svg class="w-8 h-8 text-accent animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-3 text-sm text-muted-foreground">Laster graf...</p>
+            </div>
+        </div>
+    @else
+        @php
+            $chartData = collect($this->monthlyData)->reverse()->values();
+            $months = $chartData->pluck('month')->map(fn($m) => \Carbon\Carbon::parse($m)->translatedFormat('M'))->toArray();
+            $expenses = $chartData->pluck('activity')->map(fn($v) => abs($v))->toArray();
+            $income = $chartData->pluck('income')->toArray();
+            $budgeted = $chartData->pluck('budgeted')->toArray();
+            $net = $chartData->map(fn($m) => $m['income'] + $m['activity'])->toArray();
+        @endphp
+        <div
         x-data="{
             expanded: false,
             chart: null,
@@ -327,63 +357,74 @@
             </div>
         </template>
     </div>
+    @endif
 
     {{-- YNAB Data Table --}}
     <div class="bg-card border border-border rounded-lg overflow-hidden">
         <div class="px-4 sm:px-5 py-4 border-b border-border">
             <h3 class="text-sm font-medium text-foreground">Tall fra YNAB</h3>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="border-b border-border">
-                        <th class="px-4 sm:px-5 py-3 text-left text-xs font-medium text-muted-foreground whitespace-nowrap">Måned</th>
-                        <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Inntekter</th>
-                        <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Utgifter</th>
-                        <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Budsjettert</th>
-                        <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Netto</th>
-                        <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Age of Money</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-border">
-                    @forelse($this->monthlyData as $month)
-                        @php
-                            $net = $month['income'] + $month['activity'];
-                        @endphp
-                        <tr class="hover:bg-card-hover transition-colors">
-                            <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap">
-                                {{ \Carbon\Carbon::parse($month['month'])->translatedFormat('F, Y') }}
-                            </td>
-                            <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap text-right">
-                                kr {{ number_format($month['income'], 2, ',', ' ') }}
-                            </td>
-                            <td class="px-4 sm:px-5 py-3 text-sm text-red-400 whitespace-nowrap text-right">
-                                kr {{ number_format($month['activity'], 2, ',', ' ') }}
-                            </td>
-                            <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap text-right">
-                                kr {{ number_format($month['budgeted'], 2, ',', ' ') }}
-                            </td>
-                            <td class="px-4 sm:px-5 py-3 text-sm whitespace-nowrap text-right {{ $net >= 0 ? 'text-accent' : 'text-red-400' }}">
-                                kr {{ number_format($net, 2, ',', ' ') }}
-                            </td>
-                            <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap text-right">
-                                {{ $month['age_of_money'] ?? '-' }} dager
-                            </td>
+        @if($isLoadingYnab)
+            <div class="flex flex-col items-center justify-center py-12">
+                <svg class="w-8 h-8 text-accent animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="mt-3 text-sm text-muted-foreground">Laster tabelldata...</p>
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-border">
+                            <th class="px-4 sm:px-5 py-3 text-left text-xs font-medium text-muted-foreground whitespace-nowrap">Måned</th>
+                            <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Inntekter</th>
+                            <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Utgifter</th>
+                            <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Budsjettert</th>
+                            <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Netto</th>
+                            <th class="px-4 sm:px-5 py-3 text-right text-xs font-medium text-muted-foreground whitespace-nowrap">Age of Money</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-4 sm:px-5 py-8 text-sm text-muted-foreground text-center">
-                                @if(!$this->isYnabConfigured)
-                                    YNAB er ikke konfigurert
-                                @else
-                                    Ingen data tilgjengelig
-                                @endif
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        @forelse($this->monthlyData as $month)
+                            @php
+                                $net = $month['income'] + $month['activity'];
+                            @endphp
+                            <tr class="hover:bg-card-hover transition-colors">
+                                <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap">
+                                    {{ \Carbon\Carbon::parse($month['month'])->translatedFormat('F, Y') }}
+                                </td>
+                                <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap text-right">
+                                    kr {{ number_format($month['income'], 2, ',', ' ') }}
+                                </td>
+                                <td class="px-4 sm:px-5 py-3 text-sm text-red-400 whitespace-nowrap text-right">
+                                    kr {{ number_format($month['activity'], 2, ',', ' ') }}
+                                </td>
+                                <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap text-right">
+                                    kr {{ number_format($month['budgeted'], 2, ',', ' ') }}
+                                </td>
+                                <td class="px-4 sm:px-5 py-3 text-sm whitespace-nowrap text-right {{ $net >= 0 ? 'text-accent' : 'text-red-400' }}">
+                                    kr {{ number_format($net, 2, ',', ' ') }}
+                                </td>
+                                <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap text-right">
+                                    {{ $month['age_of_money'] ?? '-' }} dager
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-4 sm:px-5 py-8 text-sm text-muted-foreground text-center">
+                                    @if(!$this->isYnabConfigured)
+                                        YNAB er ikke konfigurert
+                                    @else
+                                        Ingen data tilgjengelig
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
 
     {{-- Income Settings Card --}}

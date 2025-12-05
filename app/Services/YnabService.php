@@ -44,6 +44,8 @@ class YnabService
                 return [];
             }
 
+            $this->updateSyncTimestamp();
+
             return collect($response['data']['accounts'] ?? [])
                 ->filter(fn ($account) => ! $account['deleted'] && ! $account['closed'])
                 ->map(fn ($account) => [
@@ -75,6 +77,8 @@ class YnabService
                 return null;
             }
 
+            $this->updateSyncTimestamp();
+
             $budget = $response['data']['budget'] ?? null;
 
             return $budget ? [
@@ -101,6 +105,8 @@ class YnabService
                 return null;
             }
 
+            $this->updateSyncTimestamp();
+
             return $response['data']['month']['age_of_money'] ?? null;
         });
     }
@@ -120,6 +126,8 @@ class YnabService
             if (! $response) {
                 return [];
             }
+
+            $this->updateSyncTimestamp();
 
             $currentMonth = now()->format('Y-m-01');
 
@@ -153,6 +161,14 @@ class YnabService
         foreach ([6, 12, 24] as $months) {
             Cache::forget("ynab.months.{$months}");
         }
+    }
+
+    /**
+     * Update the last synced timestamp.
+     */
+    private function updateSyncTimestamp(): void
+    {
+        Cache::forever('ynab.last_synced', now());
     }
 
     /**
