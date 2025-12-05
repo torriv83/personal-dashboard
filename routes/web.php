@@ -13,6 +13,7 @@ use App\Livewire\Economy\Index as EconomyIndex;
 use App\Livewire\Medical\Dashboard as MedicalDashboard;
 use App\Livewire\Medical\Equipment;
 use App\Livewire\Medical\Prescriptions;
+use App\Livewire\Tools\PortGenerator;
 use App\Livewire\User\Profile;
 use App\Livewire\User\Settings;
 use App\Livewire\Wishlist\Index as WishlistIndex;
@@ -55,4 +56,9 @@ Route::middleware('auth')->group(function () {
 
     // Ønskeliste
     Route::get('/onskeliste', WishlistIndex::class)->name('wishlist');
+
+    // Verktøy
+    Route::prefix('verktoy')->name('tools.')->group(function () {
+        Route::get('/port-generator', PortGenerator::class)->name('port-generator');
+    });
 });

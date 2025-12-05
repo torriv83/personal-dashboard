@@ -111,8 +111,8 @@
             <x-sidebar-sublink :disabled="true">
                 Pdf til Markdown (kommer snart)
             </x-sidebar-sublink>
-            <x-sidebar-sublink :disabled="true">
-                Portvelger (kommer snart)
+            <x-sidebar-sublink href="{{ route('tools.port-generator') }}" :active="request()->routeIs('tools.port-generator')">
+                Portvelger
             </x-sidebar-sublink>
         </x-sidebar-group>
     </nav>
