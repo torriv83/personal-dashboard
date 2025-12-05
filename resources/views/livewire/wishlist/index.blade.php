@@ -223,12 +223,16 @@
         {{-- Desktop Table Layout --}}
         <div class="hidden md:block overflow-x-auto"
             x-data="{
-                colWidths: { totalt: 0, handlinger: 0 },
+                colWidths: { drag: 0, navn: 0, lenke: 0, pris: 0, antall: 0, status: 0, totalt: 0, handlinger: 0 },
                 measureColumns() {
-                    const totaltTh = this.$refs.thTotalt;
-                    const handlingerTh = this.$refs.thHandlinger;
-                    if (totaltTh) this.colWidths.totalt = totaltTh.offsetWidth;
-                    if (handlingerTh) this.colWidths.handlinger = handlingerTh.offsetWidth;
+                    this.colWidths.drag = this.$refs.thDrag?.offsetWidth || 0;
+                    this.colWidths.navn = this.$refs.thNavn?.offsetWidth || 0;
+                    this.colWidths.lenke = this.$refs.thLenke?.offsetWidth || 0;
+                    this.colWidths.pris = this.$refs.thPris?.offsetWidth || 0;
+                    this.colWidths.antall = this.$refs.thAntall?.offsetWidth || 0;
+                    this.colWidths.status = this.$refs.thStatus?.offsetWidth || 0;
+                    this.colWidths.totalt = this.$refs.thTotalt?.offsetWidth || 0;
+                    this.colWidths.handlinger = this.$refs.thHandlinger?.offsetWidth || 0;
                 }
             }"
             x-init="$nextTick(() => measureColumns())"
@@ -237,12 +241,12 @@
             <table class="w-full">
                 <thead>
                     <tr class="border-b border-border bg-card-hover/50">
-                        <th class="w-10 px-3 py-3"></th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Navn</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Lenke</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Pris</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Antall</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                        <th x-ref="thDrag" class="w-10 px-3 py-3"></th>
+                        <th x-ref="thNavn" class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Navn</th>
+                        <th x-ref="thLenke" class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Lenke</th>
+                        <th x-ref="thPris" class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Pris</th>
+                        <th x-ref="thAntall" class="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">Antall</th>
+                        <th x-ref="thStatus" class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                         <th x-ref="thTotalt" class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Totalt</th>
                         <th x-ref="thHandlinger" class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Handlinger</th>
                     </tr>
@@ -337,6 +341,16 @@
                                     {{-- Expanded Child Items (inside the same TD, not a separate TR) --}}
                                     <div x-show="expanded.includes({{ $wishlist['id'] }})" x-collapse class="border-t border-border bg-card-hover/20">
                                         <table class="w-full">
+                                            <colgroup>
+                                                <col :style="'width: ' + colWidths.drag + 'px'">
+                                                <col :style="'width: ' + colWidths.navn + 'px'">
+                                                <col :style="'width: ' + colWidths.lenke + 'px'">
+                                                <col :style="'width: ' + colWidths.pris + 'px'">
+                                                <col :style="'width: ' + colWidths.antall + 'px'">
+                                                <col :style="'width: ' + colWidths.status + 'px'">
+                                                <col :style="'width: ' + colWidths.totalt + 'px'">
+                                                <col :style="'width: ' + colWidths.handlinger + 'px'">
+                                            </colgroup>
                                             <tbody class="divide-y divide-border/50">
                                                 @foreach($wishlist['items'] as $item)
                                                     @php $isCompleted = in_array($item['status'], ['Spart', 'Kjøpt']); @endphp
