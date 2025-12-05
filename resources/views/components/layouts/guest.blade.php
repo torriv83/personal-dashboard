@@ -7,6 +7,10 @@
 
     <title>{{ $title ?? 'Logg inn' }} - Personlig Dashboard</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png">
+
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#1a1a1a">
@@ -24,9 +28,7 @@
         <!-- Logo/Title -->
         <div class="mb-8 text-center">
             <div class="flex items-center justify-center gap-3 mb-2">
-                <svg class="w-10 h-10 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
+                <img src="/icons/icon-192x192.png" alt="Dashboard" class="w-10 h-10 rounded-lg">
                 <h1 class="text-2xl font-bold text-foreground">Personlig Dashboard</h1>
             </div>
             <p class="text-muted text-sm">Ditt personlige verktøy for hverdagen</p>

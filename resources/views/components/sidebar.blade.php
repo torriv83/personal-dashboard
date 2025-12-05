@@ -1,11 +1,7 @@
 <div class="flex flex-col h-full">
     <!-- Logo/Header -->
     <div class="flex items-center gap-3 px-6 py-6 border-b border-border">
-        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-accent">
-            <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-        </div>
+        <img src="/icons/icon-192x192.png" alt="Dashboard" class="w-10 h-10 rounded-lg">
         <div>
             <h2 class="text-lg font-semibold text-foreground">Personlig</h2>
             <p class="text-xs text-muted">Dashboard</p>
