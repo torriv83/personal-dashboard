@@ -247,80 +247,86 @@
                                 class="align-top"
                             >
                                 <td colspan="8" class="p-0">
-                                    {{-- Group Header Row --}}
-                                    <div class="flex items-center hover:bg-card-hover transition-colors cursor-pointer" @click="{{ $toggleClick }}">
-                                        {{-- Drag Handle --}}
-                                        <div class="w-10 px-3 py-4 text-muted-foreground shrink-0" @click.stop>
-                                            <div class="flex items-center gap-2" x-sort:handle>
-                                                <svg class="w-4 h-4 cursor-grab" fill="currentColor" viewBox="0 0 24 24">
-                                                    <circle cx="9" cy="6" r="1.5" />
-                                                    <circle cx="15" cy="6" r="1.5" />
-                                                    <circle cx="9" cy="12" r="1.5" />
-                                                    <circle cx="15" cy="12" r="1.5" />
-                                                    <circle cx="9" cy="18" r="1.5" />
-                                                    <circle cx="15" cy="18" r="1.5" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                        {{-- Name with expand icon --}}
-                                        <div class="flex-1 px-4 py-4">
-                                            <div class="flex items-center gap-2">
-                                                <svg
-                                                    class="w-4 h-4 text-muted-foreground transition-transform"
-                                                    :class="expanded.includes({{ $wishlist['id'] }}) && 'rotate-90'"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                                </svg>
-                                                <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                                </svg>
-                                                <span class="text-sm font-medium text-foreground">{{ $wishlist['navn'] }}</span>
-                                                <span class="text-xs text-muted-foreground">({{ count($wishlist['items']) }} elementer)</span>
-                                            </div>
-                                        </div>
-                                        {{-- Group Total --}}
-                                        <div class="px-4 py-4 text-right shrink-0">
-                                            <span class="text-sm font-medium text-foreground">
-                                                kr {{ number_format($this->getGroupTotal($wishlist['items']), 0, ',', ' ') }}
-                                            </span>
-                                        </div>
-                                        {{-- Actions --}}
-                                        <div class="px-4 py-4 text-right shrink-0" @click.stop>
-                                            <div class="flex items-center justify-end gap-1">
-                                                <button
-                                                    wire:click="openItemModal(null, {{ $wishlist['id'] }})"
-                                                    class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer"
-                                                    title="Legg til i gruppe"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    {{-- Group Header Row - uses table layout to align with parent table columns --}}
+                                    <table class="w-full">
+                                        <tr class="hover:bg-card-hover transition-colors cursor-pointer" @click="{{ $toggleClick }}">
+                                            {{-- Drag Handle --}}
+                                            <td class="w-10 px-3 py-4 text-muted-foreground" @click.stop>
+                                                <div class="flex items-center gap-2" x-sort:handle>
+                                                    <svg class="w-4 h-4 cursor-grab" fill="currentColor" viewBox="0 0 24 24">
+                                                        <circle cx="9" cy="6" r="1.5" />
+                                                        <circle cx="15" cy="6" r="1.5" />
+                                                        <circle cx="9" cy="12" r="1.5" />
+                                                        <circle cx="15" cy="12" r="1.5" />
+                                                        <circle cx="9" cy="18" r="1.5" />
+                                                        <circle cx="15" cy="18" r="1.5" />
                                                     </svg>
-                                                </button>
-                                                <button
-                                                    wire:click="openGroupModal({{ $wishlist['id'] }})"
-                                                    class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
-                                                    title="Rediger gruppe"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </div>
+                                            </td>
+                                            {{-- Name with expand icon (spans Navn + Lenke columns) --}}
+                                            <td class="px-4 py-4" colspan="2">
+                                                <div class="flex items-center gap-2">
+                                                    <svg
+                                                        class="w-4 h-4 text-muted-foreground transition-transform"
+                                                        :class="expanded.includes({{ $wishlist['id'] }}) && 'rotate-90'"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                                     </svg>
-                                                </button>
-                                                <button
-                                                    wire:click="deleteGroup({{ $wishlist['id'] }})"
-                                                    wire:confirm="Er du sikker på at du vil slette denne gruppen og alle elementer i den?"
-                                                    class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
-                                                    title="Slett gruppe"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                                     </svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                                    <span class="text-sm font-medium text-foreground">{{ $wishlist['navn'] }}</span>
+                                                    <span class="text-xs text-muted-foreground">({{ count($wishlist['items']) }} elementer)</span>
+                                                </div>
+                                            </td>
+                                            {{-- Empty cells for Pris, Antall, Status --}}
+                                            <td class="px-4 py-4"></td>
+                                            <td class="px-4 py-4"></td>
+                                            <td class="px-4 py-4"></td>
+                                            {{-- Group Total --}}
+                                            <td class="px-4 py-4 text-right">
+                                                <span class="text-sm font-medium text-foreground">
+                                                    kr {{ number_format($this->getGroupTotal($wishlist['items']), 0, ',', ' ') }}
+                                                </span>
+                                            </td>
+                                            {{-- Actions --}}
+                                            <td class="px-4 py-4 text-right" @click.stop>
+                                                <div class="flex items-center justify-end gap-1">
+                                                    <button
+                                                        wire:click="openItemModal(null, {{ $wishlist['id'] }})"
+                                                        class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer"
+                                                        title="Legg til i gruppe"
+                                                    >
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        wire:click="openGroupModal({{ $wishlist['id'] }})"
+                                                        class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
+                                                        title="Rediger gruppe"
+                                                    >
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        wire:click="deleteGroup({{ $wishlist['id'] }})"
+                                                        wire:confirm="Er du sikker på at du vil slette denne gruppen og alle elementer i den?"
+                                                        class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                                                        title="Slett gruppe"
+                                                    >
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
 
                                     {{-- Expanded Child Items (inside the same TD, not a separate TR) --}}
                                     <div x-show="expanded.includes({{ $wishlist['id'] }})" x-collapse class="border-t border-border bg-card-hover/20">
