@@ -47,7 +47,7 @@
             <x-sidebar-sublink href="{{ route('bpa.timesheets') }}" :active="request()->routeIs('bpa.timesheets')">
                 Timelister
             </x-sidebar-sublink>
-            <x-sidebar-sublink href="{{ route('bpa.assistants') }}" :active="request()->routeIs('bpa.assistants')">
+            <x-sidebar-sublink href="{{ route('bpa.assistants') }}" :active="request()->routeIs('bpa.assistants*')">
                 Assistenter
             </x-sidebar-sublink>
         </x-sidebar-group>
