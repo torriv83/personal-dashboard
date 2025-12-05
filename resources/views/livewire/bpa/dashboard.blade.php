@@ -7,18 +7,33 @@
     {{-- Stat Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         @foreach($this->stats as $stat)
-            <div class="bg-card border border-border rounded-lg p-5">
-                <p class="text-sm text-muted-foreground">{{ $stat['label'] }}</p>
-                <p class="text-3xl font-bold text-foreground mt-1">
-                    {{ $stat['value'] }}
-                    @if(!empty($stat['valueSuffix']))
-                        <span class="text-xs font-normal text-muted-foreground">{{ $stat['valueSuffix'] }}</span>
+            @if(!empty($stat['link']))
+                <a href="{{ $stat['link'] }}" class="bg-card border border-border rounded-lg p-5 hover:bg-card-hover hover:border-accent/50 transition-colors cursor-pointer block">
+                    <p class="text-sm text-muted-foreground">{{ $stat['label'] }}</p>
+                    <p class="text-3xl font-bold text-foreground mt-1">
+                        {{ $stat['value'] }}
+                        @if(!empty($stat['valueSuffix']))
+                            <span class="text-xs font-normal text-muted-foreground">{{ $stat['valueSuffix'] }}</span>
+                        @endif
+                    </p>
+                    @if($stat['description'])
+                        <p class="text-xs text-accent mt-2">{{ $stat['description'] }}</p>
                     @endif
-                </p>
-                @if($stat['description'])
-                    <p class="text-xs text-accent mt-2">{{ $stat['description'] }}</p>
-                @endif
-            </div>
+                </a>
+            @else
+                <div class="bg-card border border-border rounded-lg p-5">
+                    <p class="text-sm text-muted-foreground">{{ $stat['label'] }}</p>
+                    <p class="text-3xl font-bold text-foreground mt-1">
+                        {{ $stat['value'] }}
+                        @if(!empty($stat['valueSuffix']))
+                            <span class="text-xs font-normal text-muted-foreground">{{ $stat['valueSuffix'] }}</span>
+                        @endif
+                    </p>
+                    @if($stat['description'])
+                        <p class="text-xs text-accent mt-2">{{ $stat['description'] }}</p>
+                    @endif
+                </div>
+            @endif
         @endforeach
     </div>
 

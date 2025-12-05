@@ -176,6 +176,7 @@ class Dashboard extends Component
                 'label' => 'Antall Assistenter',
                 'value' => (string) Assistant::count(),
                 'description' => null,
+                'link' => route('bpa.assistants'),
             ],
             [
                 'label' => 'Timer brukt i år',
