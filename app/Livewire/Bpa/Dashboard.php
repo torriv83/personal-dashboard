@@ -6,8 +6,10 @@ use App\Models\Assistant;
 use App\Models\Setting;
 use App\Models\Shift;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 /**
@@ -22,6 +24,7 @@ use Livewire\Component;
  * @property-read array $employees
  * @property-read array $monthlyChartData
  * @property-read array $percentageChartData
+ * @property-read EloquentCollection<int, Assistant> $allAssistants
  */
 class Dashboard extends Component
 {
@@ -39,6 +42,18 @@ class Dashboard extends Component
     public int $employeesPage = 1;
 
     public string $employeesSortDirection = 'desc';
+
+    // Quick add unavailable form state
+    public bool $showQuickAddForm = false;
+
+    #[Validate('required|exists:assistants,id')]
+    public ?int $quickAddAssistantId = null;
+
+    #[Validate('required|date')]
+    public string $quickAddFromDate = '';
+
+    #[Validate('required|date|after_or_equal:quickAddFromDate')]
+    public string $quickAddToDate = '';
 
     // Reset page when per-page changes
     public function updatedWeeklyPerPage(): void
@@ -107,6 +122,56 @@ class Dashboard extends Component
         $this->employeesSortDirection = $this->employeesSortDirection === 'desc' ? 'asc' : 'desc';
         $this->employeesPage = 1;
         unset($this->employees);
+    }
+
+    // Quick add unavailable methods
+    public function openQuickAddForm(): void
+    {
+        $this->showQuickAddForm = true;
+        $this->quickAddFromDate = now()->format('Y-m-d');
+        $this->quickAddToDate = now()->format('Y-m-d');
+    }
+
+    public function closeQuickAddForm(): void
+    {
+        $this->showQuickAddForm = false;
+        $this->resetQuickAddForm();
+    }
+
+    public function saveQuickAdd(): void
+    {
+        $this->validate([
+            'quickAddAssistantId' => 'required|exists:assistants,id',
+            'quickAddFromDate' => 'required|date',
+            'quickAddToDate' => 'required|date|after_or_equal:quickAddFromDate',
+        ]);
+
+        Shift::create([
+            'assistant_id' => $this->quickAddAssistantId,
+            'starts_at' => $this->quickAddFromDate.' 00:00:00',
+            'ends_at' => $this->quickAddToDate.' 23:59:59',
+            'is_unavailable' => true,
+            'is_all_day' => true,
+            'is_archived' => false,
+        ]);
+
+        $this->dispatch('toast', type: 'success', message: 'Fravær lagt til');
+        $this->closeQuickAddForm();
+        unset($this->unavailableEmployees);
+    }
+
+    private function resetQuickAddForm(): void
+    {
+        $this->quickAddAssistantId = null;
+        $this->quickAddFromDate = '';
+        $this->quickAddToDate = '';
+        $this->resetValidation();
+    }
+
+    #[Computed]
+    public function allAssistants(): EloquentCollection
+    {
+        return Assistant::orderBy('name')->get();
     }
 
     #[Computed]
@@ -300,11 +365,19 @@ class Dashboard extends Component
             ->orderBy('starts_at')
             ->get()
             ->map(fn (Shift $shift) => [
+                'id' => $shift->id,
                 'name' => $shift->assistant->name ?? 'Ukjent',
                 'from' => $shift->starts_at->format('d.m.Y'),
                 'to' => $shift->ends_at->format('d.m.Y'),
             ])
             ->toArray();
+    }
+
+    public function deleteUnavailable(int $shiftId): void
+    {
+        Shift::find($shiftId)?->delete();
+        $this->dispatch('toast', type: 'success', message: 'Fravær slettet');
+        unset($this->unavailableEmployees);
     }
 
     #[Computed]
