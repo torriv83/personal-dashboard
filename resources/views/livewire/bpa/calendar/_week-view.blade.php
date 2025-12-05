@@ -102,7 +102,7 @@
                             </div>
                             {{-- Desktop: Full info --}}
                             <div class="hidden md:block bg-destructive/20 border border-destructive/50 rounded px-1.5 py-0.5 cursor-pointer hover:bg-destructive/30 transition-colors">
-                                <div class="text-[10px] font-medium text-destructive truncate">{{ $shift->assistant->initials }} - Borte</div>
+                                <div class="text-[10px] font-medium text-destructive truncate">{{ $shift->assistant->name }} - Borte</div>
                             </div>
                         @else
                             {{-- Mobil: Farget prikk --}}
@@ -111,7 +111,7 @@
                             </div>
                             {{-- Desktop: Full info --}}
                             <div class="hidden md:block rounded px-1.5 py-0.5 cursor-pointer hover:opacity-80 transition-opacity" style="background-color: {{ $shift->assistant->color ?? '#3b82f6' }}20; border: 1px solid {{ $shift->assistant->color ?? '#3b82f6' }}50">
-                                <div class="text-[10px] font-medium truncate" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">{{ $shift->assistant->initials }}</div>
+                                <div class="text-[10px] font-medium truncate" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">{{ $shift->assistant->name }}</div>
                             </div>
                         @endif
                     @endforeach
@@ -217,7 +217,7 @@
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%;"
                                     >
-                                        <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant->initials }}</div>
+                                        <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant->name }}</div>
                                         <div class="text-[10px] truncate" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
                                             <span x-show="resizingShift !== {{ $shift->id }}">Borte {{ $shift->time_range }}</span>
                                             <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>
@@ -248,7 +248,7 @@
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $shift->assistant->color ?? '#3b82f6' }}20; border-color: {{ $shift->assistant->color ?? '#3b82f6' }}"
                                     >
-                                        <div class="text-xs font-medium truncate" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">{{ $shift->assistant->initials }}</div>
+                                        <div class="text-xs font-medium truncate" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">{{ $shift->assistant->name }}</div>
                                         <div class="text-[10px] truncate" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
                                             <span x-show="resizingShift !== {{ $shift->id }}">{{ $shift->time_range }}</span>
                                             <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>

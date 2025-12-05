@@ -87,7 +87,7 @@
                                                 class="px-1.5 py-0.5 rounded bg-destructive/20 border-l-2 border-destructive cursor-pointer hover:bg-destructive/30 transition-colors"
                                                 :class="draggedShift === {{ $shift->id }} && 'opacity-50'"
                                             >
-                                                <div class="text-[10px] font-medium text-destructive truncate">{{ $shift->assistant->initials }} - Borte</div>
+                                                <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant->name }} - Borte</div>
                                                 @unless($shift->is_all_day)
                                                     <div class="text-[9px] text-muted truncate">{{ $shift->time_range }}</div>
                                                 @endunless
@@ -102,7 +102,7 @@
                                                 :class="draggedShift === {{ $shift->id }} && 'opacity-50'"
                                                 style="background-color: {{ $shift->assistant->color ?? '#3b82f6' }}20; border-color: {{ $shift->assistant->color ?? '#3b82f6' }}"
                                             >
-                                                <div class="text-[10px] font-medium truncate" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">{{ $shift->assistant->initials }}</div>
+                                                <div class="text-xs font-medium truncate" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">{{ $shift->assistant->name }}</div>
                                                 <div class="text-[9px] text-muted truncate">{{ $shift->time_range }}</div>
                                             </div>
                                         @endif
