@@ -118,6 +118,109 @@
                             <span class="text-sm text-foreground select-none">Hele dagen</span>
                         </label>
                     </div>
+
+                    {{-- Gjentakende (kun for "Ikke tilgjengelig" og kun ved opprettelse) --}}
+                    @unless($editingShiftId)
+                        <div
+                            x-show="$wire.isUnavailable"
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 -translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 -translate-y-2"
+                            class="mt-4 p-4 bg-card-hover rounded-lg border border-border space-y-4"
+                        >
+                            <label class="inline-flex items-center gap-2.5 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    wire:model.live="isRecurring"
+                                    class="w-5 h-5 rounded border-border text-accent focus:ring-accent/50 cursor-pointer"
+                                >
+                                <span class="text-sm font-medium text-foreground select-none">Gjentakende</span>
+                            </label>
+
+                            @if($isRecurring)
+                                <div class="space-y-4 pt-2">
+                                    {{-- Intervall --}}
+                                    <div>
+                                        <label class="block text-sm font-medium text-foreground mb-1.5">Gjenta</label>
+                                        <select
+                                            wire:model.live="recurringInterval"
+                                            class="w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors appearance-none cursor-pointer"
+                                        >
+                                            <option value="weekly">Ukentlig</option>
+                                            <option value="biweekly">Hver 2. uke</option>
+                                            <option value="monthly">Månedlig</option>
+                                        </select>
+                                    </div>
+
+                                    {{-- Avslutt --}}
+                                    <div class="space-y-3">
+                                        <label class="block text-sm font-medium text-foreground">Avslutt</label>
+
+                                        <label class="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                wire:model.live="recurringEndType"
+                                                value="count"
+                                                class="w-4 h-4 text-accent focus:ring-accent/50 cursor-pointer"
+                                            >
+                                            <span class="text-sm text-foreground">Etter</span>
+                                            <input
+                                                type="number"
+                                                wire:model.live="recurringCount"
+                                                min="1"
+                                                max="52"
+                                                class="w-16 bg-input border border-border rounded-lg px-2 py-1 text-foreground text-center focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+                                                @if($recurringEndType !== 'count') disabled @endif
+                                            >
+                                            <span class="text-sm text-foreground">ganger</span>
+                                        </label>
+
+                                        <label class="flex items-center gap-3 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                wire:model.live="recurringEndType"
+                                                value="date"
+                                                class="w-4 h-4 text-accent focus:ring-accent/50 cursor-pointer"
+                                            >
+                                            <span class="text-sm text-foreground">På dato</span>
+                                            <input
+                                                type="date"
+                                                wire:model.live="recurringEndDate"
+                                                class="bg-input border border-border rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent cursor-pointer"
+                                                @if($recurringEndType !== 'date') disabled @endif
+                                            >
+                                        </label>
+                                    </div>
+
+                                    {{-- Forhåndsvisning --}}
+                                    @php $previewDates = $this->getRecurringPreviewDates(); @endphp
+                                    @if(count($previewDates) > 0)
+                                        <div class="pt-2 border-t border-border">
+                                            <p class="text-xs text-muted mb-2">
+                                                Forhåndsvisning: {{ count($previewDates) }} oppføringer
+                                            </p>
+                                            <div class="flex flex-wrap gap-1.5">
+                                                @foreach(array_slice($previewDates, 0, 8) as $date)
+                                                    <span class="text-xs px-2 py-1 bg-destructive/20 text-destructive rounded">
+                                                        {{ \Carbon\Carbon::parse($date)->format('d.m') }}
+                                                    </span>
+                                                @endforeach
+                                                @if(count($previewDates) > 8)
+                                                    <span class="text-xs px-2 py-1 bg-muted/20 text-muted rounded">
+                                                        +{{ count($previewDates) - 8 }} til
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @endunless
                 </div>
 
                 {{-- Separator --}}
@@ -293,9 +396,15 @@
                 {{-- Slett-knapp (kun for eksisterende vakter) --}}
                 <div>
                     @if($editingShiftId)
+                        @php
+                            $editingShift = \App\Models\Shift::find($editingShiftId);
+                            $isRecurringShift = $editingShift && $editingShift->isRecurring();
+                        @endphp
                         <button
                             wire:click="deleteShift"
-                            wire:confirm="Er du sikker på at du vil slette denne vakten?"
+                            @unless($isRecurringShift)
+                                wire:confirm="Er du sikker på at du vil slette denne oppføringen?"
+                            @endunless
                             class="px-4 py-2 text-sm font-medium text-destructive hover:text-white hover:bg-destructive rounded-lg transition-colors cursor-pointer"
                         >
                             Slett
@@ -318,13 +427,110 @@
                             Opprett & ny
                         </button>
                     @endunless
-                    <button
-                        wire:click="saveShift"
-                        class="px-5 py-2 text-sm font-semibold text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
-                    >
-                        {{ $editingShiftId ? 'Lagre' : 'Opprett' }}
-                    </button>
+                    @if($editingShiftId && isset($isRecurringShift) && $isRecurringShift)
+                        <button
+                            wire:click="initiateEditRecurring"
+                            class="px-5 py-2 text-sm font-semibold text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
+                        >
+                            Lagre
+                        </button>
+                    @else
+                        <button
+                            wire:click="saveShift"
+                            class="px-5 py-2 text-sm font-semibold text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
+                        >
+                            {{ $editingShiftId ? 'Lagre' : 'Opprett' }}
+                        </button>
+                    @endif
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Recurring Action Dialog --}}
+@if($showRecurringDialog)
+<div
+    x-data="{ show: true }"
+    x-show="show"
+    x-transition:enter="transition ease-out duration-150"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-100"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    @keydown.escape.window="$wire.closeRecurringDialog()"
+    class="fixed inset-0 z-[60] overflow-y-auto"
+>
+    {{-- Backdrop --}}
+    <div
+        wire:click="closeRecurringDialog"
+        class="fixed inset-0 bg-background/95 backdrop-blur-sm cursor-pointer"
+    ></div>
+
+    {{-- Dialog --}}
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div
+            x-show="show"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-100"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            @click.stop
+            class="relative w-full max-w-sm bg-card border border-border rounded-xl shadow-2xl"
+        >
+            {{-- Header --}}
+            <div class="px-5 py-4 border-b border-border">
+                <h3 class="text-lg font-semibold text-foreground">
+                    @if($recurringAction === 'delete')
+                        Slett gjentakende oppføring
+                    @else
+                        Rediger gjentakende oppføring
+                    @endif
+                </h3>
+                <p class="text-sm text-muted mt-1">
+                    Denne oppføringen er del av en gjentakende serie.
+                </p>
+            </div>
+
+            {{-- Options --}}
+            <div class="p-5 space-y-3">
+                <button
+                    wire:click="{{ $recurringAction === 'delete' ? 'confirmDeleteShift' : 'confirmEditRecurring' }}('single')"
+                    class="w-full text-left px-4 py-3 rounded-lg border border-border hover:bg-card-hover transition-colors cursor-pointer"
+                >
+                    <span class="block text-sm font-medium text-foreground">Kun denne</span>
+                    <span class="block text-xs text-muted mt-0.5">{{ $recurringAction === 'delete' ? 'Slett' : 'Endre' }} bare denne ene oppføringen</span>
+                </button>
+
+                <button
+                    wire:click="{{ $recurringAction === 'delete' ? 'confirmDeleteShift' : 'confirmEditRecurring' }}('future')"
+                    class="w-full text-left px-4 py-3 rounded-lg border border-border hover:bg-card-hover transition-colors cursor-pointer"
+                >
+                    <span class="block text-sm font-medium text-foreground">Denne og fremtidige</span>
+                    <span class="block text-xs text-muted mt-0.5">{{ $recurringAction === 'delete' ? 'Slett' : 'Endre' }} denne og alle fremtidige i serien</span>
+                </button>
+
+                <button
+                    wire:click="{{ $recurringAction === 'delete' ? 'confirmDeleteShift' : 'confirmEditRecurring' }}('all')"
+                    class="w-full text-left px-4 py-3 rounded-lg border border-border hover:bg-card-hover transition-colors cursor-pointer"
+                >
+                    <span class="block text-sm font-medium text-foreground">Alle i serien</span>
+                    <span class="block text-xs text-muted mt-0.5">{{ $recurringAction === 'delete' ? 'Slett' : 'Endre' }} alle oppføringer i denne serien</span>
+                </button>
+            </div>
+
+            {{-- Footer --}}
+            <div class="px-5 py-4 border-t border-border">
+                <button
+                    wire:click="closeRecurringDialog"
+                    class="w-full px-4 py-2 text-sm font-medium text-muted hover:text-foreground transition-colors cursor-pointer"
+                >
+                    Avbryt
+                </button>
             </div>
         </div>
     </div>

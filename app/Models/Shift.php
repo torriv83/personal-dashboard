@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $is_unavailable
  * @property bool $is_all_day
  * @property bool $is_archived
+ * @property string|null $recurring_group_id
  * @property string|null $note
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -35,6 +36,7 @@ class Shift extends Model
         'is_unavailable',
         'is_all_day',
         'is_archived',
+        'recurring_group_id',
         'note',
     ];
 
@@ -157,6 +159,57 @@ class Shift extends Model
         $endOfMonth = date('Y-m-t 23:59:59', strtotime($startOfMonth));
 
         return $query->whereBetween('starts_at', [$startOfMonth, $endOfMonth]);
+    }
+
+    /**
+     * Scope: Shifts in the same recurring group.
+     */
+    public function scopeInRecurringGroup($query, string $groupId)
+    {
+        return $query->where('recurring_group_id', $groupId);
+    }
+
+    /**
+     * Check if this shift is part of a recurring series.
+     */
+    public function isRecurring(): bool
+    {
+        return $this->recurring_group_id !== null;
+    }
+
+    /**
+     * Get all shifts in the same recurring group.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Shift>
+     */
+    public function getRecurringGroupShifts(): \Illuminate\Database\Eloquent\Collection
+    {
+        if (! $this->isRecurring()) {
+            return collect([$this]);
+        }
+
+        return static::query()
+            ->inRecurringGroup($this->recurring_group_id)
+            ->orderBy('starts_at')
+            ->get();
+    }
+
+    /**
+     * Get future shifts in the same recurring group (including this one if it's in the future).
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Shift>
+     */
+    public function getFutureRecurringShifts(): \Illuminate\Database\Eloquent\Collection
+    {
+        if (! $this->isRecurring()) {
+            return collect([$this]);
+        }
+
+        return static::query()
+            ->inRecurringGroup($this->recurring_group_id)
+            ->where('starts_at', '>=', $this->starts_at)
+            ->orderBy('starts_at')
+            ->get();
     }
 
     /**
