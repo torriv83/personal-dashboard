@@ -190,7 +190,11 @@ function mockYnabService(array $overrides = []): void
 
     $mock = Mockery::mock(YnabService::class);
     $mock->shouldReceive('isConfigured')->andReturn($data['isConfigured']);
-    $mock->shouldReceive('getAccounts')->andReturn($data['accounts']);
+    $mock->shouldReceive('getAccounts')->andReturnUsing(function () use ($data) {
+        Cache::forever('ynab.last_synced', now());
+
+        return $data['accounts'];
+    });
     $mock->shouldReceive('getAgeOfMoney')->andReturn($data['ageOfMoney']);
     $mock->shouldReceive('getMonthlyData')->andReturn($data['monthlyData']);
     $mock->shouldReceive('getBudgetDetails')->andReturn($data['budgetDetails']);
