@@ -101,6 +101,7 @@ class Index extends Component
                 'pris' => null,
                 'antall' => null,
                 'status' => null,
+                'status_value' => null,
                 'prioritet' => $group->sort_order,
                 'is_group' => true,
                 'items' => $group->items->map(fn (WishlistItem $item): array => [
@@ -110,6 +111,7 @@ class Index extends Component
                     'pris' => $item->price,
                     'antall' => $item->quantity,
                     'status' => $item->status->label(),
+                    'status_value' => $item->status->value,
                 ])->toArray(),
             ]);
         }
@@ -123,6 +125,7 @@ class Index extends Component
                 'pris' => $item->price,
                 'antall' => $item->quantity,
                 'status' => $item->status->label(),
+                'status_value' => $item->status->value,
                 'prioritet' => $item->sort_order,
                 'is_group' => false,
                 'items' => [],
@@ -443,6 +446,19 @@ class Index extends Component
             'Spart', 'Kjøpt' => 'bg-accent/10',
             default => 'bg-muted-foreground/10',
         };
+    }
+
+    public function updateItemStatus(int $itemId, string $status): void
+    {
+        $item = WishlistItem::find($itemId);
+        if (! $item) {
+            return;
+        }
+
+        $item->update(['status' => $status]);
+
+        unset($this->wishlists, $this->totalAll, $this->totalRemaining);
+        $this->dispatch('toast', type: 'success', message: 'Status oppdatert');
     }
 
     public function render()

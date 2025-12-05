@@ -47,10 +47,8 @@ class Index extends Component
     public function loadYnabData(): void
     {
         // Trigger computed properties to load data
-        $this->accounts;
-        $this->ageOfMoney;
-        $this->monthlyData;
-        $this->lastModifiedAt;
+        /** @phpstan-ignore expr.resultUnused */
+        [$this->accounts, $this->ageOfMoney, $this->monthlyData, $this->lastModifiedAt];
 
         $this->isLoadingYnab = false;
     }

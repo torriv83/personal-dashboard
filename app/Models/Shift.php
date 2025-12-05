@@ -185,9 +185,11 @@ class Shift extends Model
     public function getRecurringGroupShifts(): \Illuminate\Database\Eloquent\Collection
     {
         if (! $this->isRecurring()) {
-            return collect([$this]);
+            /** @var \Illuminate\Database\Eloquent\Collection<int, Shift> */
+            return new \Illuminate\Database\Eloquent\Collection([$this]);
         }
 
+        /** @var \Illuminate\Database\Eloquent\Collection<int, Shift> */
         return static::query()
             ->inRecurringGroup($this->recurring_group_id)
             ->orderBy('starts_at')
@@ -202,9 +204,11 @@ class Shift extends Model
     public function getFutureRecurringShifts(): \Illuminate\Database\Eloquent\Collection
     {
         if (! $this->isRecurring()) {
-            return collect([$this]);
+            /** @var \Illuminate\Database\Eloquent\Collection<int, Shift> */
+            return new \Illuminate\Database\Eloquent\Collection([$this]);
         }
 
+        /** @var \Illuminate\Database\Eloquent\Collection<int, Shift> */
         return static::query()
             ->inRecurringGroup($this->recurring_group_id)
             ->where('starts_at', '>=', $this->starts_at)

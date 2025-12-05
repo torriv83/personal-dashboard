@@ -103,9 +103,15 @@
                                     </div>
                                     {{-- Line 2: Status + Actions --}}
                                     <div class="flex items-center justify-between mt-2">
-                                        <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded {{ $this->getStatusBgColor($item['status']) }} {{ $this->getStatusColor($item['status']) }}">
-                                            {{ $item['status'] }}
-                                        </span>
+                                        <select
+                                            wire:change="updateItemStatus({{ $item['id'] }}, $event.target.value)"
+                                            @click.stop
+                                            class="px-2 py-0.5 text-xs font-medium rounded border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent {{ $this->getStatusBgColor($item['status']) }} {{ $this->getStatusColor($item['status']) }}"
+                                        >
+                                            @foreach($this->statusOptions as $value => $label)
+                                                <option value="{{ $value }}" {{ $item['status_value'] === $value ? 'selected' : '' }} class="bg-card text-foreground">{{ $label }}</option>
+                                            @endforeach
+                                        </select>
                                         <div class="flex items-center gap-1">
                                             <button wire:click.stop="moveItemToGroup({{ $item['id'] }}, null)" class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer" title="Flytt ut av gruppe">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
@@ -153,12 +159,14 @@
                         </div>
                         {{-- Actions row with status --}}
                         <div class="flex items-center justify-between mt-2 pl-7">
-                            <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded {{ $this->getStatusBgColor($wishlist['status']) }} {{ $this->getStatusColor($wishlist['status']) }}">
-                                @if($wishlist['status'] === 'Kjøpt')
-                                    <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                                @endif
-                                {{ $wishlist['status'] }}
-                            </span>
+                            <select
+                                wire:change="updateItemStatus({{ $wishlist['id'] }}, $event.target.value)"
+                                class="px-2 py-0.5 text-xs font-medium rounded border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent {{ $this->getStatusBgColor($wishlist['status']) }} {{ $this->getStatusColor($wishlist['status']) }}"
+                            >
+                                @foreach($this->statusOptions as $value => $label)
+                                    <option value="{{ $value }}" {{ $wishlist['status_value'] === $value ? 'selected' : '' }} class="bg-card text-foreground">{{ $label }}</option>
+                                @endforeach
+                            </select>
                             <div class="flex items-center gap-1">
                                 {{-- Move to group dropdown --}}
                                 @if(count($this->groups) > 0)
@@ -354,14 +362,14 @@
                                                         </td>
                                                         {{-- Status --}}
                                                         <td class="px-4 py-3">
-                                                            <span class="inline-flex px-2 py-1 text-xs font-medium rounded {{ $this->getStatusBgColor($item['status']) }} {{ $this->getStatusColor($item['status']) }}">
-                                                                @if($item['status'] === 'Kjøpt')
-                                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                                    </svg>
-                                                                @endif
-                                                                {{ $item['status'] }}
-                                                            </span>
+                                                            <select
+                                                                wire:change="updateItemStatus({{ $item['id'] }}, $event.target.value)"
+                                                                class="px-2 py-1 text-xs font-medium rounded border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent {{ $this->getStatusBgColor($item['status']) }} {{ $this->getStatusColor($item['status']) }}"
+                                                            >
+                                                                @foreach($this->statusOptions as $value => $label)
+                                                                    <option value="{{ $value }}" {{ $item['status_value'] === $value ? 'selected' : '' }} class="bg-card text-foreground">{{ $label }}</option>
+                                                                @endforeach
+                                                            </select>
                                                         </td>
                                                         {{-- Total --}}
                                                         <td class="px-4 py-3 text-right">
@@ -459,14 +467,14 @@
                                 </td>
                                 {{-- Status --}}
                                 <td class="px-4 py-4">
-                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded {{ $this->getStatusBgColor($wishlist['status']) }} {{ $this->getStatusColor($wishlist['status']) }}">
-                                        @if($wishlist['status'] === 'Kjøpt')
-                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        @endif
-                                        {{ $wishlist['status'] }}
-                                    </span>
+                                    <select
+                                        wire:change="updateItemStatus({{ $wishlist['id'] }}, $event.target.value)"
+                                        class="px-2 py-1 text-xs font-medium rounded border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent {{ $this->getStatusBgColor($wishlist['status']) }} {{ $this->getStatusColor($wishlist['status']) }}"
+                                    >
+                                        @foreach($this->statusOptions as $value => $label)
+                                            <option value="{{ $value }}" {{ $wishlist['status_value'] === $value ? 'selected' : '' }} class="bg-card text-foreground">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
                                 </td>
                                 {{-- Total --}}
                                 <td class="px-4 py-4 text-right">
