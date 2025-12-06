@@ -124,7 +124,7 @@
 
         {{-- Chart --}}
         @if(count($this->chartData) > 1)
-            <div class="bg-card border border-border rounded-xl p-5">
+            <div class="bg-card border border-border rounded-xl p-5" wire:key="chart-{{ count($this->chartData) }}-{{ $this->entries->first()?->id }}">
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h2 class="text-lg font-semibold text-foreground">Vektutvikling</h2>
