@@ -28,6 +28,16 @@ use Livewire\Component;
  */
 class Dashboard extends Component
 {
+    /**
+     * Pagination section configuration.
+     * Maps section name to [pageProperty, computedProperty].
+     */
+    private const PAGINATION_SECTIONS = [
+        'weekly' => ['weeklyPage', 'weeklyHours'],
+        'shifts' => ['shiftsPage', 'upcomingShifts'],
+        'employees' => ['employeesPage', 'employees'],
+    ];
+
     // Pagination state
     public int $weeklyPerPage = 3;
 
@@ -55,73 +65,50 @@ class Dashboard extends Component
     #[Validate('required|date|after_or_equal:quickAddFromDate')]
     public string $quickAddToDate = '';
 
-    // Reset page when per-page changes
+    // Generic pagination methods
+    public function nextPage(string $section): void
+    {
+        [$pageProperty, $computedProperty] = self::PAGINATION_SECTIONS[$section];
+        $this->{$pageProperty}++;
+        unset($this->{$computedProperty});
+    }
+
+    public function prevPage(string $section): void
+    {
+        [$pageProperty, $computedProperty] = self::PAGINATION_SECTIONS[$section];
+        if ($this->{$pageProperty} > 1) {
+            $this->{$pageProperty}--;
+            unset($this->{$computedProperty});
+        }
+    }
+
+    private function resetPagination(string $section): void
+    {
+        [$pageProperty, $computedProperty] = self::PAGINATION_SECTIONS[$section];
+        $this->{$pageProperty} = 1;
+        unset($this->{$computedProperty});
+    }
+
+    // Lifecycle hooks for per-page changes
     public function updatedWeeklyPerPage(): void
     {
-        $this->weeklyPage = 1;
-        unset($this->weeklyHours);
+        $this->resetPagination('weekly');
     }
 
     public function updatedShiftsPerPage(): void
     {
-        $this->shiftsPage = 1;
-        unset($this->upcomingShifts);
+        $this->resetPagination('shifts');
     }
 
     public function updatedEmployeesPerPage(): void
     {
-        $this->employeesPage = 1;
-        unset($this->employees);
-    }
-
-    // Navigation methods
-    public function nextWeeklyPage(): void
-    {
-        $this->weeklyPage++;
-        unset($this->weeklyHours);
-    }
-
-    public function prevWeeklyPage(): void
-    {
-        if ($this->weeklyPage > 1) {
-            $this->weeklyPage--;
-            unset($this->weeklyHours);
-        }
-    }
-
-    public function nextShiftsPage(): void
-    {
-        $this->shiftsPage++;
-        unset($this->upcomingShifts);
-    }
-
-    public function prevShiftsPage(): void
-    {
-        if ($this->shiftsPage > 1) {
-            $this->shiftsPage--;
-            unset($this->upcomingShifts);
-        }
-    }
-
-    public function nextEmployeesPage(): void
-    {
-        $this->employeesPage++;
-        unset($this->employees);
-    }
-
-    public function prevEmployeesPage(): void
-    {
-        if ($this->employeesPage > 1) {
-            $this->employeesPage--;
-            unset($this->employees);
-        }
+        $this->resetPagination('employees');
     }
 
     public function sortEmployeesByHours(): void
     {
         $this->employeesSortDirection = $this->employeesSortDirection === 'desc' ? 'asc' : 'desc';
-        $this->employeesPage = 1;
-        unset($this->employees);
+        $this->resetPagination('employees');
     }
 
     // Quick add unavailable methods

@@ -357,13 +357,13 @@
                 </div>
                 <div class="flex items-center gap-2">
                     @if($weeklyPage > 1)
-                        <button wire:click="prevWeeklyPage" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
+                        <button wire:click="prevPage('weekly')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
                             Forrige
                         </button>
                     @endif
                     <span class="text-xs text-muted-foreground">{{ $weeklyPage }} / {{ $this->weeklyTotalPages }}</span>
                     @if($weeklyPage < $this->weeklyTotalPages)
-                        <button wire:click="nextWeeklyPage" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
+                        <button wire:click="nextPage('weekly')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
                             Neste
                         </button>
                     @endif
@@ -415,13 +415,13 @@
                 </div>
                 <div class="flex items-center gap-2">
                     @if($shiftsPage > 1)
-                        <button wire:click="prevShiftsPage" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
+                        <button wire:click="prevPage('shifts')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
                             Forrige
                         </button>
                     @endif
                     <span class="text-xs text-muted-foreground">{{ $shiftsPage }} / {{ $this->shiftsTotalPages }}</span>
                     @if($shiftsPage < $this->shiftsTotalPages)
-                        <button wire:click="nextShiftsPage" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
+                        <button wire:click="nextPage('shifts')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
                             Neste
                         </button>
                     @endif
@@ -619,13 +619,13 @@
                 </div>
                 <div class="flex items-center gap-2">
                     @if($employeesPage > 1)
-                        <button wire:click="prevEmployeesPage" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
+                        <button wire:click="prevPage('employees')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
                             Forrige
                         </button>
                     @endif
                     <span class="text-xs text-muted-foreground">{{ $employeesPage }} / {{ $this->employeesTotalPages }}</span>
                     @if($employeesPage < $this->employeesTotalPages)
-                        <button wire:click="nextEmployeesPage" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
+                        <button wire:click="nextPage('employees')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
                             Neste
                         </button>
                     @endif
