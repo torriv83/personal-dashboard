@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -78,40 +79,44 @@ class Shift extends Model
     /**
      * Get formatted duration (e.g., "4:30").
      */
-    public function getFormattedDurationAttribute(): string
+    protected function formattedDuration(): Attribute
     {
-        if ($this->is_all_day) {
-            return 'Hele dagen';
-        }
+        return Attribute::make(
+            get: function (): string {
+                if ($this->is_all_day) {
+                    return 'Hele dagen';
+                }
 
-        $hours = intdiv($this->duration_minutes, 60);
-        $minutes = $this->duration_minutes % 60;
+                $hours = intdiv($this->duration_minutes, 60);
+                $minutes = $this->duration_minutes % 60;
 
-        return sprintf('%d:%02d', $hours, $minutes);
+                return sprintf('%d:%02d', $hours, $minutes);
+            }
+        );
     }
 
     /**
      * Get formatted time range (e.g., "08:00 - 12:30").
      */
-    public function getTimeRangeAttribute(): string
+    protected function timeRange(): Attribute
     {
-        if ($this->is_all_day) {
-            return 'Hele dagen';
-        }
-
-        return $this->starts_at->format('H:i').' - '.$this->ends_at->format('H:i');
+        return Attribute::make(
+            get: fn (): string => $this->is_all_day
+                ? 'Hele dagen'
+                : $this->starts_at->format('H:i').' - '.$this->ends_at->format('H:i')
+        );
     }
 
     /**
      * Get compact time range for copying (e.g., "0800-1230").
      */
-    public function getCompactTimeRangeAttribute(): string
+    protected function compactTimeRange(): Attribute
     {
-        if ($this->is_all_day) {
-            return 'Hele dagen';
-        }
-
-        return $this->starts_at->format('Hi').'-'.$this->ends_at->format('Hi');
+        return Attribute::make(
+            get: fn (): string => $this->is_all_day
+                ? 'Hele dagen'
+                : $this->starts_at->format('Hi').'-'.$this->ends_at->format('Hi')
+        );
     }
 
     /**

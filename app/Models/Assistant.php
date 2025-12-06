@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -58,34 +59,42 @@ class Assistant extends Model
     /**
      * Get the Norwegian label for the type.
      */
-    public function getTypeLabelAttribute(): string
+    protected function typeLabel(): Attribute
     {
-        return self::$typeLabels[$this->type] ?? $this->type;
+        return Attribute::make(
+            get: fn (): string => self::$typeLabels[$this->type] ?? $this->type
+        );
     }
 
     /**
      * Get initials from name.
      */
-    public function getInitialsAttribute(): string
+    protected function initials(): Attribute
     {
-        $words = explode(' ', $this->name);
-        $initials = '';
+        return Attribute::make(
+            get: function (): string {
+                $words = explode(' ', $this->name);
+                $initials = '';
 
-        foreach ($words as $word) {
-            if (! empty($word)) {
-                $initials .= mb_strtoupper(mb_substr($word, 0, 1));
+                foreach ($words as $word) {
+                    if (! empty($word)) {
+                        $initials .= mb_strtoupper(mb_substr($word, 0, 1));
+                    }
+                }
+
+                return $initials;
             }
-        }
-
-        return $initials;
+        );
     }
 
     /**
      * Get formatted employee number (e.g., #001).
      */
-    public function getFormattedNumberAttribute(): string
+    protected function formattedNumber(): Attribute
     {
-        return '#'.str_pad((string) $this->employee_number, 3, '0', STR_PAD_LEFT);
+        return Attribute::make(
+            get: fn (): string => '#'.str_pad((string) $this->employee_number, 3, '0', STR_PAD_LEFT)
+        );
     }
 
     /**
