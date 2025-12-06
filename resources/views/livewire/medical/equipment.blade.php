@@ -1,4 +1,50 @@
-<div class="p-4 md:p-6 space-y-6">
+<div
+    class="p-4 md:p-6 space-y-6"
+    x-data="{
+        orderList: [],
+        showOrderPanel: false,
+
+        addToOrder(id, name, articleNumber) {
+            const existing = this.orderList.find(item => item.id === id);
+            if (existing) {
+                existing.quantity++;
+            } else {
+                this.orderList.push({ id, name, articleNumber, quantity: 1 });
+            }
+        },
+
+        removeFromOrder(id) {
+            this.orderList = this.orderList.filter(item => item.id !== id);
+        },
+
+        updateQuantity(id, delta) {
+            const item = this.orderList.find(i => i.id === id);
+            if (item) {
+                item.quantity = Math.max(1, item.quantity + delta);
+            }
+        },
+
+        formatOrder() {
+            return this.orderList.map(item => {
+                const artNr = item.articleNumber ? `Art. nr: ${item.articleNumber}, ` : '';
+                return `- ${item.name}, ${artNr}${item.quantity} stk.`;
+            }).join('\n');
+        },
+
+        async copyOrder() {
+            await navigator.clipboard.writeText(this.formatOrder());
+        },
+
+        clearOrder() {
+            this.orderList = [];
+            this.showOrderPanel = false;
+        },
+
+        get orderCount() {
+            return this.orderList.reduce((sum, item) => sum + item.quantity, 0);
+        }
+    }"
+>
     {{-- Header --}}
     <div class="flex items-center justify-between gap-3">
         <div>
@@ -15,6 +61,22 @@
             <span class="hidden sm:inline">Opprett utstyr</span>
         </button>
     </div>
+
+    {{-- Floating Order Cart Button --}}
+    <button
+        x-show="orderList.length > 0"
+        x-on:click="showOrderPanel = true"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        class="fixed bottom-6 right-6 z-40 flex items-center gap-2 px-4 py-3 bg-accent text-black font-medium rounded-full shadow-lg hover:bg-accent-hover transition-colors cursor-pointer"
+    >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        <span>Bestillingsliste</span>
+        <span class="flex items-center justify-center w-6 h-6 bg-black/20 rounded-full text-sm" x-text="orderCount"></span>
+    </button>
 
     {{-- Category Filter with Search --}}
     <div class="bg-card border border-border rounded-lg p-4">
@@ -89,6 +151,15 @@
                         </button>
                     </div>
                     <div class="flex items-center gap-1 shrink-0">
+                        <button
+                            x-on:click="addToOrder({{ $item->id }}, '{{ addslashes($item->name) }}', '{{ $item->article_number }}')"
+                            class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer"
+                            title="Legg til i bestilling"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
                         <button
                             wire:click="openEquipmentModal({{ $item->id }})"
                             class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
@@ -244,6 +315,15 @@
                             </td>
                             <td class="px-5 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
+                                    <button
+                                        x-on:click="addToOrder({{ $item->id }}, '{{ addslashes($item->name) }}', '{{ $item->article_number }}')"
+                                        class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer"
+                                        title="Legg til i bestilling"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                    </button>
                                     <button
                                         wire:click="openEquipmentModal({{ $item->id }})"
                                         class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
@@ -515,4 +595,133 @@
             </div>
         </div>
     @endif
+
+    {{-- Order Panel Modal --}}
+    <div
+        x-show="showOrderPanel"
+        x-on:keydown.escape.window="showOrderPanel = false"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 z-50 flex items-center justify-center"
+        x-cloak
+    >
+        {{-- Backdrop --}}
+        <div
+            class="absolute inset-0 bg-black/50"
+            x-on:click="showOrderPanel = false"
+        ></div>
+
+        {{-- Modal --}}
+        <div
+            x-show="showOrderPanel"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            class="relative bg-card border border-border rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
+        >
+            {{-- Header --}}
+            <div class="px-6 py-4 border-b border-border flex items-center justify-between shrink-0">
+                <h2 class="text-lg font-semibold text-foreground">Bestillingsliste</h2>
+                <button
+                    x-on:click="showOrderPanel = false"
+                    class="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            {{-- Body --}}
+            <div class="px-6 py-4 space-y-3 overflow-y-auto flex-1">
+                <template x-for="item in orderList" :key="item.id">
+                    <div class="flex items-center gap-3 p-3 bg-card-hover rounded-lg">
+                        {{-- Item info --}}
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-foreground truncate" x-text="item.name"></p>
+                            <p class="text-xs text-muted-foreground" x-show="item.articleNumber">
+                                Art. nr: <span x-text="item.articleNumber" class="font-mono text-accent"></span>
+                            </p>
+                        </div>
+
+                        {{-- Quantity controls --}}
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button
+                                x-on:click="updateQuantity(item.id, -1)"
+                                class="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                                </svg>
+                            </button>
+                            <span class="w-8 text-center text-sm font-medium text-foreground" x-text="item.quantity"></span>
+                            <button
+                                x-on:click="updateQuantity(item.id, 1)"
+                                class="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {{-- Remove button --}}
+                        <button
+                            x-on:click="removeFromOrder(item.id)"
+                            class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer shrink-0"
+                            title="Fjern"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </template>
+
+                {{-- Empty state --}}
+                <div x-show="orderList.length === 0" class="text-center py-8 text-muted-foreground">
+                    <svg class="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <p class="text-sm">Ingen elementer i bestillingslisten</p>
+                </div>
+            </div>
+
+            {{-- Preview --}}
+            <div x-show="orderList.length > 0" class="px-6 py-3 border-t border-border bg-card-hover/50 shrink-0">
+                <p class="text-xs text-muted-foreground mb-2">Forhåndsvisning:</p>
+                <pre class="text-xs text-foreground font-mono whitespace-pre-wrap bg-input rounded p-2 max-h-24 overflow-y-auto" x-text="formatOrder()"></pre>
+            </div>
+
+            {{-- Footer --}}
+            <div x-show="orderList.length > 0" class="px-6 py-4 border-t border-border flex items-center justify-end gap-3 shrink-0">
+                <button
+                    x-data="{ copied: false }"
+                    x-on:click="copyOrder(); copied = true; setTimeout(() => copied = false, 2000)"
+                    class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer flex items-center gap-2"
+                >
+                    <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <svg x-show="copied" x-cloak class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span x-text="copied ? 'Kopiert!' : 'Kopier'"></span>
+                </button>
+                <button
+                    x-on:click="clearOrder()"
+                    class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                >
+                    Ferdig
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
