@@ -176,10 +176,29 @@
                                         <div class="font-medium text-foreground">
                                             {{ $shift->starts_at->translatedFormat('j. M Y') }}
                                         </div>
-                                        <div class="text-sm text-muted">
-                                            {{ $shift->time_range }}
+                                        <div class="text-sm text-muted flex items-center gap-1">
+                                            <span>{{ $shift->time_range }}</span>
+                                            @unless($shift->is_all_day)
+                                                <button
+                                                    x-data="{ copied: false }"
+                                                    x-on:click.stop="
+                                                        navigator.clipboard.writeText('{{ $shift->compact_time_range }}');
+                                                        copied = true;
+                                                        setTimeout(() => copied = false, 1500);
+                                                    "
+                                                    class="p-0.5 text-muted hover:text-accent transition-colors cursor-pointer"
+                                                    title="Kopier tid"
+                                                >
+                                                    <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </button>
+                                            @endunless
                                             @if($shift->is_unavailable)
-                                                <span class="ml-2 text-warning">(Borte)</span>
+                                                <span class="ml-1 text-warning">(Borte)</span>
                                             @endif
                                         </div>
                                         @if($shift->note)
@@ -200,7 +219,28 @@
                                 @endif
                             </td>
                             <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-muted whitespace-nowrap">
-                                {{ $shift->time_range }}
+                                <div class="flex items-center gap-2">
+                                    <span>{{ $shift->time_range }}</span>
+                                    @unless($shift->is_all_day)
+                                        <button
+                                            x-data="{ copied: false }"
+                                            x-on:click.stop="
+                                                navigator.clipboard.writeText('{{ $shift->compact_time_range }}');
+                                                copied = true;
+                                                setTimeout(() => copied = false, 1500);
+                                            "
+                                            class="p-1 text-muted hover:text-accent transition-colors cursor-pointer"
+                                            title="Kopier tid"
+                                        >
+                                            <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                            </svg>
+                                            <svg x-show="copied" x-cloak class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </button>
+                                    @endunless
+                                </div>
                             </td>
                             <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-foreground font-medium whitespace-nowrap">
                                 {{ $shift->formatted_duration }}

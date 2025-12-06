@@ -103,6 +103,18 @@ class Shift extends Model
     }
 
     /**
+     * Get compact time range for copying (e.g., "0800-1230").
+     */
+    public function getCompactTimeRangeAttribute(): string
+    {
+        if ($this->is_all_day) {
+            return 'Hele dagen';
+        }
+
+        return $this->starts_at->format('Hi').'-'.$this->ends_at->format('Hi');
+    }
+
+    /**
      * Scope: Only active (non-archived) shifts.
      */
     public function scopeActive($query)
