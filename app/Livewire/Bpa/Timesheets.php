@@ -92,6 +92,16 @@ class Timesheets extends Component
         if ($dbField) {
             $shift->{$dbField} = ! $shift->{$dbField};
             $shift->save();
+
+            $fieldName = match ($field) {
+                'away' => 'Borte',
+                'fullDay' => 'Hel dag',
+                'archived' => 'Arkivert',
+                default => 'Status',
+            };
+
+            $status = $shift->{$dbField} ? 'aktivert' : 'deaktivert';
+            $this->dispatch('toast', type: 'success', message: "{$fieldName} {$status}");
         }
     }
 
