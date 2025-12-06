@@ -18,7 +18,11 @@ use App\Livewire\Tools\PortGenerator;
 use App\Livewire\User\Profile;
 use App\Livewire\User\Settings;
 use App\Livewire\Wishlist\Index as WishlistIndex;
+use App\Livewire\Wishlist\SharedView as WishlistSharedView;
 use Illuminate\Support\Facades\Route;
+
+// Offentlig delt ønskeliste (ingen innlogging krevd)
+Route::get('/delt/{token}', WishlistSharedView::class)->name('wishlist.shared');
 
 // Auth (gjester - redirect til dashboard hvis allerede innlogget)
 Route::middleware('guest')->group(function () {

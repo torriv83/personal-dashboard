@@ -53,6 +53,11 @@
                                 <svg class="w-4 h-4 text-yellow-500 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                 </svg>
+                                @if($wishlist['is_shared'])
+                                    <svg class="w-3.5 h-3.5 text-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Delt">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                    </svg>
+                                @endif
                                 <span class="text-sm font-medium text-foreground truncate">{{ $wishlist['navn'] }}</span>
                             </div>
                             <svg
@@ -69,6 +74,9 @@
                                 {{ count($wishlist['items']) }} elementer · kr {{ number_format($this->getGroupTotal($wishlist['items']), 0, ',', ' ') }}
                             </span>
                             <div class="flex items-center gap-1">
+                                <button wire:click="openShareModal({{ $wishlist['id'] }})" class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer" title="Del">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                                </button>
                                 <button wire:click="openItemModal(null, {{ $wishlist['id'] }})" class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer" title="Legg til">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                                 </button>
@@ -293,6 +301,11 @@
                                                 <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
                                                     <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                                                 </svg>
+                                                @if($wishlist['is_shared'])
+                                                    <svg class="w-3.5 h-3.5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Delt">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                                    </svg>
+                                                @endif
                                                 <span class="text-sm font-medium text-foreground">{{ $wishlist['navn'] }}</span>
                                                 <span class="text-xs text-muted-foreground">({{ count($wishlist['items']) }} elementer)</span>
                                             </div>
@@ -306,6 +319,15 @@
                                         {{-- Actions - dynamically sized to match Handlinger column --}}
                                         <div class="px-4 py-4 text-right shrink-0 box-content" :style="'width: ' + (colWidths.handlinger - 32) + 'px'" @click.stop>
                                             <div class="flex items-center justify-end gap-1">
+                                                <button
+                                                    wire:click="openShareModal({{ $wishlist['id'] }})"
+                                                    class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer"
+                                                    title="Del gruppe"
+                                                >
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                                                    </svg>
+                                                </button>
                                                 <button
                                                     wire:click="openItemModal(null, {{ $wishlist['id'] }})"
                                                     class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer"
@@ -778,6 +800,115 @@
                         class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
                     >
                         {{ $editingGroupId ? 'Lagre' : 'Opprett' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Share Modal --}}
+    @if($showShareModal)
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-data="{ copied: false }"
+            x-on:keydown.escape.window="$wire.closeShareModal()"
+        >
+            {{-- Backdrop --}}
+            <div
+                class="absolute inset-0 bg-black/50"
+                wire:click="closeShareModal"
+            ></div>
+
+            {{-- Modal --}}
+            <div class="relative bg-card border border-border rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+                {{-- Header --}}
+                <div class="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-foreground">Del gruppe</h2>
+                    <button
+                        wire:click="closeShareModal"
+                        class="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Body --}}
+                <div class="px-4 sm:px-6 py-4 space-y-4">
+                    {{-- Toggle --}}
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-foreground">Aktiver deling</p>
+                            <p class="text-xs text-muted-foreground">Gjør gruppen tilgjengelig via lenke</p>
+                        </div>
+                        <button
+                            wire:click="toggleSharing"
+                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-card {{ $sharingEnabled ? 'bg-accent' : 'bg-muted-foreground/30' }}"
+                            role="switch"
+                            aria-checked="{{ $sharingEnabled ? 'true' : 'false' }}"
+                        >
+                            <span
+                                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out {{ $sharingEnabled ? 'translate-x-5' : 'translate-x-0' }}"
+                            ></span>
+                        </button>
+                    </div>
+
+                    {{-- Share URL section --}}
+                    @if($sharingEnabled && $shareUrl)
+                        <div class="space-y-3 pt-2 border-t border-border">
+                            <div>
+                                <label class="block text-sm font-medium text-foreground mb-1">Delingslenke</label>
+                                <div class="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        value="{{ $shareUrl }}"
+                                        readonly
+                                        class="flex-1 bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none"
+                                    >
+                                    <button
+                                        @click="navigator.clipboard.writeText('{{ $shareUrl }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                                        class="px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                                        :class="copied ? 'bg-accent text-black' : 'bg-card-hover text-foreground border border-border hover:bg-input'"
+                                    >
+                                        <span x-show="!copied">Kopier</span>
+                                        <span x-show="copied" x-cloak>Kopiert!</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <a
+                                    href="{{ $shareUrl }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="flex-1 px-3 py-2 text-sm font-medium text-center text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                                >
+                                    Forhåndsvis
+                                </a>
+                                <button
+                                    wire:click="regenerateShareToken"
+                                    wire:confirm="Er du sikker på at du vil generere en ny lenke? Den gamle lenken vil slutte å virke."
+                                    class="flex-1 px-3 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                                >
+                                    Ny lenke
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+
+                    <p class="text-xs text-muted-foreground pt-2">
+                        Delte lister viser kun navn, pris, lenke og antall. Status-kolonnen er skjult for besøkende.
+                    </p>
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end">
+                    <button
+                        wire:click="closeShareModal"
+                        class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                    >
+                        Lukk
                     </button>
                 </div>
             </div>
