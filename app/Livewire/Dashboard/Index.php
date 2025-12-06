@@ -6,6 +6,7 @@ use App\Models\Prescription;
 use App\Models\Setting;
 use App\Models\Shift;
 use App\Models\WishlistItem;
+use App\Services\WeatherService;
 use App\Services\YnabService;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -17,6 +18,8 @@ class Index extends Component
     public array $widgets = [];
 
     public bool $showSettings = false;
+
+    public bool $showForecastModal = false;
 
     /**
      * Default widget configuration.
@@ -227,6 +230,56 @@ class Index extends Component
         return WishlistItem::query()
             ->whereNotIn('status', ['saved', 'purchased'])
             ->count();
+    }
+
+    /**
+     * Get current weather data.
+     *
+     * @return array{
+     *     temperature: float,
+     *     symbol: string,
+     *     description: string,
+     *     wind_speed: float,
+     *     precipitation: float,
+     *     location: string,
+     *     updated_at: string
+     * }|null
+     */
+    #[Computed]
+    public function weather(): ?array
+    {
+        return app(WeatherService::class)->getCurrentWeather();
+    }
+
+    /**
+     * Get weekly forecast data.
+     *
+     * @return array<int, array{
+     *     date: string,
+     *     day_name: string,
+     *     day_short: string,
+     *     symbol: string,
+     *     description: string,
+     *     temp_high: float,
+     *     temp_low: float,
+     *     precipitation: float,
+     *     wind_speed: float
+     * }>
+     */
+    #[Computed]
+    public function forecast(): array
+    {
+        return app(WeatherService::class)->getWeeklyForecast();
+    }
+
+    /**
+     * Refresh weather data.
+     */
+    public function refreshWeather(): void
+    {
+        app(WeatherService::class)->clearCache();
+        unset($this->weather);
+        unset($this->forecast);
     }
 
     public function render()

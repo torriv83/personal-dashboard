@@ -82,7 +82,87 @@
             </x-card>
         </div>
 
-        <!-- Row 2: Lock Screen (full width) -->
+        <!-- Row 2: Weather Settings (full width) -->
+        <x-card>
+            <x-slot name="header">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                    <h2 class="text-lg font-medium text-foreground">Vær</h2>
+                </div>
+                <p class="mt-1 text-sm text-muted">Konfigurer værvisning på kontrollpanelet</p>
+            </x-slot>
+
+            <div class="space-y-4">
+                {{-- Enable/Disable toggle --}}
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-foreground">Vis vær på kontrollpanel</p>
+                        <p class="text-xs text-muted">Viser værinformasjon fra Met.no (Yr)</p>
+                    </div>
+                    <button
+                        wire:click="toggleWeather"
+                        class="relative w-12 h-7 rounded-full transition-colors cursor-pointer {{ $weatherEnabled ? 'bg-accent' : 'bg-border' }}"
+                    >
+                        <span
+                            class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $weatherEnabled ? 'translate-x-5' : '' }}"
+                        ></span>
+                    </button>
+                </div>
+
+                @if($weatherEnabled)
+                    <div x-data="{ saved: false }"
+                        x-on:weather-saved.window="saved = true; setTimeout(() => saved = false, 2000)"
+                        class="pt-4 border-t border-border"
+                    >
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label for="weather_search" class="block text-sm font-medium text-foreground">Sted</label>
+                            <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 translate-x-2"
+                                x-transition:enter-end="opacity-100 translate-x-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                class="flex items-center gap-1 text-xs text-accent">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                Lagret
+                            </span>
+                        </div>
+                        <form wire:submit="searchWeatherLocation" class="flex gap-2">
+                            <div class="flex-1">
+                                <input
+                                    type="text"
+                                    id="weather_search"
+                                    wire:model="weatherLocationSearch"
+                                    class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                    placeholder="Søk etter sted..."
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
+                                wire:loading.attr="disabled"
+                                wire:loading.class="opacity-50"
+                            >
+                                <span wire:loading.remove wire:target="searchWeatherLocation">Søk</span>
+                                <span wire:loading wire:target="searchWeatherLocation">...</span>
+                            </button>
+                        </form>
+                        @error('weatherLocationSearch')
+                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                        @enderror
+                        <p class="mt-2 text-xs text-muted">
+                            Nåværende sted: <span class="text-foreground">{{ $weatherLocationName }}</span>
+                        </p>
+                    </div>
+                @endif
+            </div>
+        </x-card>
+
+        <!-- Row 3: Lock Screen (full width) -->
         <x-card>
             <x-slot name="header">
                 <div class="flex items-center gap-2">
