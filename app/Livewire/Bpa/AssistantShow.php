@@ -30,6 +30,8 @@ class AssistantShow extends Component
     #[Url]
     public ?int $month = null;
 
+    public ?string $typeFilter = null;
+
     public int $perPage = 25;
 
     // Edit form properties
@@ -104,6 +106,15 @@ class AssistantShow extends Component
             $query->whereMonth('starts_at', $this->month);
         }
 
+        // Apply type filter
+        match ($this->typeFilter) {
+            'worked' => $query->where('is_unavailable', false)->where('is_archived', false),
+            'away' => $query->where('is_unavailable', true),
+            'fullday' => $query->where('is_all_day', true),
+            'archived' => $query->where('is_archived', true),
+            default => null,
+        };
+
         return $query->orderBy('starts_at', 'desc')
             ->paginate($this->perPage);
     }
@@ -168,6 +179,12 @@ class AssistantShow extends Component
 
     public function updatedMonth(): void
     {
+        $this->resetPage();
+    }
+
+    public function setTypeFilter(?string $type): void
+    {
+        $this->typeFilter = $type;
         $this->resetPage();
     }
 

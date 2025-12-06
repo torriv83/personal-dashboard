@@ -219,7 +219,7 @@
         @endif
     </div>
 
-    {{-- År-filter og per-side velger --}}
+    {{-- År-filter, type-filter og per-side velger --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         {{-- År-filter --}}
         <div class="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
@@ -241,20 +241,57 @@
             </div>
         </div>
 
-        {{-- Per-side velger --}}
-        <div class="flex items-center gap-2 shrink-0">
-            <span class="text-sm text-muted">Vis</span>
-            <select
-                wire:model.live="perPage"
-                class="bg-card border border-border rounded-md px-2 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-            >
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="250">250</option>
-            </select>
-            <span class="text-sm text-muted">per side</span>
+        {{-- Type-filter og per-side velger --}}
+        <div class="flex items-center gap-3 shrink-0">
+            {{-- Type-filter --}}
+            <div class="flex items-center bg-card border border-border rounded-md overflow-hidden shrink-0">
+                <button
+                    wire:click="setTypeFilter(null)"
+                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === null ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                >
+                    Alle typer
+                </button>
+                <button
+                    wire:click="setTypeFilter('worked')"
+                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'worked' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                >
+                    Jobbet
+                </button>
+                <button
+                    wire:click="setTypeFilter('away')"
+                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'away' ? 'bg-warning text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                >
+                    Borte
+                </button>
+                <button
+                    wire:click="setTypeFilter('fullday')"
+                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'fullday' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                >
+                    Hel dag
+                </button>
+                <button
+                    wire:click="setTypeFilter('archived')"
+                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'archived' ? 'bg-muted-foreground text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                >
+                    Arkivert
+                </button>
+            </div>
+
+            {{-- Per-side velger --}}
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-muted">Vis</span>
+                <select
+                    wire:model.live="perPage"
+                    class="bg-card border border-border rounded-md px-2 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                >
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="250">250</option>
+                </select>
+                <span class="text-sm text-muted">per side</span>
+            </div>
         </div>
     </div>
 

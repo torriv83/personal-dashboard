@@ -30,6 +30,8 @@ class Timesheets extends Component
 
     public ?int $selectedYear = null;
 
+    public ?string $typeFilter = null;
+
     public int $perPage = 10;
 
     // Modal state
@@ -68,6 +70,12 @@ class Timesheets extends Component
 
         // Clear computed property caches
         unset($this->allShiftsForYear, $this->monthSummaries);
+    }
+
+    public function setTypeFilter(?string $type): void
+    {
+        $this->typeFilter = $type;
+        $this->resetPage();
     }
 
     public function updatedPerPage(): void
@@ -194,6 +202,15 @@ class Timesheets extends Component
         if ($this->selectedYear !== null) {
             $query->forYear($this->selectedYear);
         }
+
+        // Apply type filter
+        match ($this->typeFilter) {
+            'worked' => $query->where('is_unavailable', false)->where('is_archived', false),
+            'away' => $query->where('is_unavailable', true),
+            'fullday' => $query->where('is_all_day', true),
+            'archived' => $query->where('is_archived', true),
+            default => null,
+        };
 
         return $query->paginate($this->perPage);
     }
