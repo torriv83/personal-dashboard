@@ -111,6 +111,12 @@ class Calendar extends Component
         $this->year = $now->year;
         $this->month = $now->month;
         $this->day = $now->day;
+
+        // Open create modal if ?create=1 is in URL
+        if (request()->query('create')) {
+            $this->openModal($now->format('Y-m-d'));
+            $this->dispatch('clear-url-params');
+        }
     }
 
     public function previousMonth(): void

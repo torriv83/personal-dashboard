@@ -70,6 +70,15 @@ class Assistants extends Component
         return Assistant::withTrashed()->count();
     }
 
+    public function mount(): void
+    {
+        // Open create modal if ?create=1 is in URL
+        if (request()->query('create')) {
+            $this->dispatch('open-modal', name: 'add-assistant');
+            $this->dispatch('clear-url-params');
+        }
+    }
+
     public function editAssistant(int $id): void
     {
         $assistant = Assistant::withTrashed()->findOrFail($id);

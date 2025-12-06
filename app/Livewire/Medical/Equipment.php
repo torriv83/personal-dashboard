@@ -66,6 +66,15 @@ class Equipment extends Component
         return $query->orderBy('type')->orderBy('name')->get();
     }
 
+    public function mount(): void
+    {
+        // Open create modal if ?create=1 is in URL
+        if (request()->query('create')) {
+            $this->openEquipmentModal();
+            $this->dispatch('clear-url-params');
+        }
+    }
+
     public function selectCategory(?string $categoryId): void
     {
         $this->selectedCategory = $categoryId;

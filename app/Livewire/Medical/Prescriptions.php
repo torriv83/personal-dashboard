@@ -49,6 +49,15 @@ class Prescriptions extends Component
             });
     }
 
+    public function mount(): void
+    {
+        // Open create modal if ?create=1 is in URL
+        if (request()->query('create')) {
+            $this->openModal();
+            $this->dispatch('clear-url-params');
+        }
+    }
+
     public function openModal(?int $id = null): void
     {
         $this->editingId = $id;

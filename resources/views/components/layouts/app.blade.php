@@ -83,9 +83,22 @@
     {{-- Lock Screen (only for authenticated users) --}}
     @auth
         <livewire:lock-screen />
+        <livewire:command-palette />
     @endauth
 
     @livewireScriptConfig
+
+    {{-- Global Livewire event listeners --}}
+    <script>
+        document.addEventListener('livewire:init', () => {
+            // Clear URL params when modals open via ?create=1
+            Livewire.on('clear-url-params', () => {
+                const url = new URL(window.location);
+                url.searchParams.delete('create');
+                window.history.replaceState({}, '', url);
+            });
+        });
+    </script>
 
     <!-- Service Worker Registration -->
     <script>

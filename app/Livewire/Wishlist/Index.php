@@ -184,6 +184,15 @@ class Index extends Component
         return collect($items)->sum(fn ($item) => $item['pris'] * $item['antall']);
     }
 
+    public function mount(): void
+    {
+        // Open create modal if ?create=1 is in URL
+        if (request()->query('create')) {
+            $this->openItemModal();
+            $this->dispatch('clear-url-params');
+        }
+    }
+
     public function openItemModal(?int $id = null, ?int $groupId = null): void
     {
         $this->resetItemForm();
