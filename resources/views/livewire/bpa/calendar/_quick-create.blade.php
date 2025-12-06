@@ -16,7 +16,7 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         class="fixed z-50 bg-card border border-border rounded-xl shadow-2xl p-3 min-w-56"
-        :style="`left: ${quickCreateX}px; top: ${quickCreateY}px;`"
+        style="left: {{ $quickCreateX }}px; top: {{ $quickCreateY }}px;"
     >
         {{-- Header --}}
         <div class="flex items-center justify-between mb-2 pb-2 border-b border-border">

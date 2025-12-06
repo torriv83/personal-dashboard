@@ -81,18 +81,19 @@
             </div>
             <div class="p-1 md:p-2 flex flex-wrap gap-1 md:gap-2">
                 @foreach($allDayShifts as $shift)
+                    @php $assistantColor = $shift->assistant?->color ?? '#6b7280'; @endphp
                     @if($shift->is_unavailable)
                         <div class="bg-destructive/20 border border-destructive/50 rounded px-1.5 md:px-2 py-0.5 md:py-1 cursor-pointer hover:bg-destructive/30 transition-colors">
                             <div class="text-[10px] md:text-xs font-medium text-destructive">
-                                <span class="md:hidden">{{ $shift->assistant->initials }} - Borte</span>
-                                <span class="hidden md:inline">{{ $shift->assistant->name }} - Borte hele dagen</span>
+                                <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }} - Borte</span>
+                                <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte hele dagen</span>
                             </div>
                         </div>
                     @else
-                        <div class="rounded px-1.5 md:px-2 py-0.5 md:py-1 cursor-pointer hover:opacity-80 transition-opacity" style="background-color: {{ $shift->assistant->color ?? '#3b82f6' }}20; border: 1px solid {{ $shift->assistant->color ?? '#3b82f6' }}50">
-                            <div class="text-[10px] md:text-xs font-medium" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">
-                                <span class="md:hidden">{{ $shift->assistant->initials }}</span>
-                                <span class="hidden md:inline">{{ $shift->assistant->name }}</span>
+                        <div class="rounded px-1.5 md:px-2 py-0.5 md:py-1 cursor-pointer hover:opacity-80 transition-opacity" style="background-color: {{ $assistantColor }}20; border: 1px solid {{ $assistantColor }}50">
+                            <div class="text-[10px] md:text-xs font-medium" style="color: {{ $assistantColor }}">
+                                <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
+                                <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
                             </div>
                         </div>
                     @endif
@@ -169,20 +170,20 @@
                             @endfor
 
                             {{-- Drag-to-create preview overlay --}}
-                            <template x-if="getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})">
-                                <div
-                                    class="absolute left-0.5 right-0.5 md:left-1 md:right-1 bg-accent/30 pointer-events-none z-20 border-x-2 border-accent border-dashed"
-                                    :class="{
-                                        'border-t-2 rounded-t': getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }}).isFirst,
-                                        'border-b-2 rounded-b': getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }}).isLast
-                                    }"
-                                    :style="`top: ${getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }}).top}%; height: ${getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }}).height}%;`"
-                                >
-                                    <div class="px-1 md:px-2 py-0.5 text-xs font-medium text-accent" x-show="getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }}).isFirst">
-                                        <span x-text="createStartTime + ' - ' + createEndTime"></span>
-                                    </div>
+                            <div
+                                x-show="isCreatingShift && createDate === '{{ $this->currentDate->format('Y-m-d') }}' && getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})"
+                                x-cloak
+                                class="absolute left-0.5 right-0.5 md:left-1 md:right-1 bg-accent/30 pointer-events-none z-20 border-x-2 border-accent border-dashed"
+                                :class="{
+                                    'border-t-2 rounded-t': getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.isFirst,
+                                    'border-b-2 rounded-b': getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.isLast
+                                }"
+                                :style="`top: ${getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.top ?? 0}%; height: ${getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.height ?? 0}%;`"
+                            >
+                                <div class="px-1 md:px-2 py-0.5 text-xs font-medium text-accent" x-show="getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.isFirst">
+                                    <span x-text="createStartTime + ' - ' + createEndTime"></span>
                                 </div>
-                            </template>
+                            </div>
                         </div>
 
                         {{-- Vakter i dette time-slottet --}}
@@ -198,6 +199,7 @@
                                 $topPercent = ($startMinute / 60) * 100;
                                 $durationHours = $shift->duration_minutes / 60;
                                 $heightPercent = $durationHours * 100;
+                                $assistantColor = $shift->assistant?->color ?? '#6b7280';
                             @endphp
                             @if($shift->is_unavailable)
                                 <div
@@ -211,8 +213,8 @@
                                     style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%;"
                                 >
                                     <div class="text-xs md:text-sm font-medium text-destructive">
-                                        <span class="md:hidden">{{ $shift->assistant->initials }}</span>
-                                        <span class="hidden md:inline">{{ $shift->assistant->name }}</span>
+                                        <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
+                                        <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
                                     </div>
                                     <div class="text-[10px] md:text-xs" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
                                         <span x-show="resizingShift !== {{ $shift->id }}">Borte {{ $shift->time_range }}</span>
@@ -234,11 +236,11 @@
                                     @dragend="endDrag($event)"
                                     class="absolute left-0.5 md:left-1 right-0.5 md:right-1 rounded px-1 md:px-2 py-0.5 md:py-1 pointer-events-auto cursor-pointer hover:opacity-80 transition-opacity z-10 border-l-2 group/shift"
                                     :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
-                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $shift->assistant->color ?? '#3b82f6' }}20; border-color: {{ $shift->assistant->color ?? '#3b82f6' }}"
+                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }}"
                                 >
-                                    <div class="text-xs md:text-sm font-medium" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">
-                                        <span class="md:hidden">{{ $shift->assistant->initials }}</span>
-                                        <span class="hidden md:inline">{{ $shift->assistant->name }}</span>
+                                    <div class="text-xs md:text-sm font-medium" style="color: {{ $assistantColor }}">
+                                        <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
+                                        <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
                                     </div>
                                     <div class="text-[10px] md:text-xs" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
                                         <span x-show="resizingShift !== {{ $shift->id }}">{{ $shift->time_range }}</span>
@@ -248,7 +250,7 @@
                                     <div
                                         @mousedown="startResize($event, {{ $shift->id }}, {{ $shift->duration_minutes }}, '{{ $shift->starts_at->format('H:i') }}')"
                                         class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover/shift:opacity-100 rounded-b transition-opacity"
-                                        style="background-color: {{ $shift->assistant->color ?? '#3b82f6' }}50"
+                                        style="background-color: {{ $assistantColor }}50"
                                         @click.stop
                                     ></div>
                                 </div>

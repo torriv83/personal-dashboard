@@ -28,20 +28,19 @@ export default (initialView) => ({
     justDragged: false,
     justResized: false,
 
-    // Quick create popover position
-    quickCreateX: 0,
-    quickCreateY: 0,
-
     // Drag-to-create state
     isCreatingShift: false,
     createPending: false,
     createTimeout: null,
+    createSessionId: 0, // Incremented each drag to invalidate stale timeouts
     createDate: null,
     createStartTime: null,
     createEndTime: null,
     createStartY: 0,
     createStartSlotTop: 0,
     createSlotHeight: 0,
+    _createMoveHandler: null,
+    _createUpHandler: null,
 
     /**
      * Initialize component - set day view as default on mobile
@@ -119,10 +118,10 @@ export default (initialView) => ({
             this.createTimeout = null;
             this.createPending = false;
         }
-        // Capture position and call Livewire
-        this.quickCreateX = Math.min(e.clientX, window.innerWidth - 280);
-        this.quickCreateY = Math.min(e.clientY, window.innerHeight - 300);
-        this.$wire.openQuickCreate(date, time, endTime);
+        // Calculate position and pass to Livewire (stored server-side to survive re-renders)
+        const x = Math.min(e.clientX, window.innerWidth - 280);
+        const y = Math.min(e.clientY, window.innerHeight - 300);
+        this.$wire.openQuickCreate(date, time, endTime, x, y);
     },
 
     // =========================================================================
@@ -135,8 +134,22 @@ export default (initialView) => ({
         // Only left mouse button
         if (e.button !== 0) return;
 
-        // Store initial data
+        // Clean up any existing drag state (may be stale after Livewire re-render)
+        if (this.createTimeout) {
+            clearTimeout(this.createTimeout);
+        }
+        if (this._createMoveHandler) {
+            document.removeEventListener('mousemove', this._createMoveHandler);
+        }
+        if (this._createUpHandler) {
+            document.removeEventListener('mouseup', this._createUpHandler);
+        }
+
+        // Reset all drag-to-create state and increment session ID
+        this.isCreatingShift = false;
         this.createPending = true;
+        this.createTimeout = null;
+        this.createSessionId++;
         this.createDate = date;
         this.createStartTime = time;
         this.createEndTime = time;
@@ -150,23 +163,31 @@ export default (initialView) => ({
             this.createSlotHeight = rect.height;
         }
 
-        // Add document-level listeners
-        const moveHandler = (moveE) => this.updateCreate(moveE);
-        const upHandler = (upE) => {
+        // Store handlers on component so we can clean them up later
+        this._createMoveHandler = (moveE) => this.updateCreate(moveE);
+        this._createUpHandler = (upE) => {
             this.endCreate(upE);
-            document.removeEventListener('mousemove', moveHandler);
-            document.removeEventListener('mouseup', upHandler);
+            document.removeEventListener('mousemove', this._createMoveHandler);
+            document.removeEventListener('mouseup', this._createUpHandler);
+            this._createMoveHandler = null;
+            this._createUpHandler = null;
         };
 
-        document.addEventListener('mousemove', moveHandler);
-        document.addEventListener('mouseup', upHandler);
+        document.addEventListener('mousemove', this._createMoveHandler);
+        document.addEventListener('mouseup', this._createUpHandler);
 
         // Delay before showing visual feedback (allows double-click to cancel)
+        // Capture session ID to verify timeout is still valid when it fires
+        const sessionId = this.createSessionId;
+        const component = this;
         this.createTimeout = setTimeout(() => {
-            if (this.createPending) {
-                this.isCreatingShift = true;
+            // Only proceed if this is still the current drag session
+            if (component.createSessionId === sessionId && component.createPending) {
+                component.isCreatingShift = true;
+                // Force Alpine to recognize the state change
+                component.$nextTick(() => {});
             }
-            this.createTimeout = null;
+            component.createTimeout = null;
         }, 150);
     },
 
@@ -264,7 +285,18 @@ export default (initialView) => ({
 
     handleDrop(e, date, time = null) {
         e.preventDefault();
-        const data = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+
+        // Safely parse transfer data
+        let data = {};
+        try {
+            const raw = e.dataTransfer.getData('text/plain');
+            if (raw) {
+                data = JSON.parse(raw);
+            }
+        } catch (err) {
+            // Not valid JSON (might be from drag-to-create or other source)
+            return;
+        }
 
         // Guard: ensure $wire has the expected methods
         if (typeof this.$wire.createShiftFromDrag !== 'function') {

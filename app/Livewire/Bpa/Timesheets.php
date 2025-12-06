@@ -93,7 +93,6 @@ class Timesheets extends Component
         $dbField = match ($field) {
             'away' => 'is_unavailable',
             'fullDay' => 'is_all_day',
-            'archived' => 'is_archived',
             default => null,
         };
 
@@ -104,7 +103,6 @@ class Timesheets extends Component
             $fieldName = match ($field) {
                 'away' => 'Borte',
                 'fullDay' => 'Hel dag',
-                'archived' => 'Arkivert',
                 default => 'Status',
             };
 
@@ -159,7 +157,6 @@ class Timesheets extends Component
             'note' => $this->note ?: null,
             'is_unavailable' => $this->is_unavailable,
             'is_all_day' => $this->is_all_day,
-            'is_archived' => false,
         ];
 
         if ($this->editingShiftId) {
@@ -178,6 +175,29 @@ class Timesheets extends Component
     {
         Shift::find($shiftId)?->delete();
         $this->dispatch('toast', type: 'success', message: 'Oppføringen ble slettet');
+    }
+
+    public function forceDelete(int $shiftId): void
+    {
+        $shift = Shift::withTrashed()->find($shiftId);
+        $shift?->forceDelete();
+        $this->dispatch('toast', type: 'success', message: 'Oppføringen ble permanent slettet');
+    }
+
+    public function toggleArchived(int $shiftId): void
+    {
+        $shift = Shift::withTrashed()->find($shiftId);
+        if (! $shift) {
+            return;
+        }
+
+        if ($shift->trashed()) {
+            $shift->restore();
+            $this->dispatch('toast', type: 'success', message: 'Arkivering fjernet');
+        } else {
+            $shift->delete();
+            $this->dispatch('toast', type: 'success', message: 'Oppføring arkivert');
+        }
     }
 
     private function resetForm(): void
@@ -204,12 +224,13 @@ class Timesheets extends Component
         }
 
         // Apply type filter
+        // Note: 'archived' uses onlyTrashed(), 'all' uses withTrashed(), others exclude trashed by default
         match ($this->typeFilter) {
-            'worked' => $query->where('is_unavailable', false)->where('is_archived', false),
+            'worked' => $query->where('is_unavailable', false),
             'away' => $query->where('is_unavailable', true),
             'fullday' => $query->where('is_all_day', true),
-            'archived' => $query->where('is_archived', true),
-            default => null,
+            'archived' => $query->onlyTrashed(),
+            default => $query->withTrashed(), // Show all including archived
         };
 
         return $query->paginate($this->perPage);

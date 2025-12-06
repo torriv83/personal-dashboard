@@ -73,4 +73,14 @@ trait HandlesCalendarNavigation
     {
         $this->view = $view;
     }
+
+    public function goToMonth(int $month): void
+    {
+        $this->month = $month;
+    }
+
+    public function goToYear(int $year): void
+    {
+        $this->year = $year;
+    }
 }

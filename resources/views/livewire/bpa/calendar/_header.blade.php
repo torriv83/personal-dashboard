@@ -6,7 +6,39 @@
         @if($view === 'day')
             <span class="text-muted text-sm md:text-base">({{ $this->currentDate->locale('nb')->dayName }})</span>
         @elseif($view === 'month')
-            <span class="text-muted text-sm md:text-base">{{ $year }}</span>
+            {{-- Årvelger ved siden av tittel --}}
+            <div x-data="{ open: false }" class="relative">
+                <button
+                    @click="open = !open"
+                    @click.away="open = false"
+                    class="text-muted text-sm md:text-base hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
+                >
+                    {{ $year }}
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    x-show="open"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    class="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-20"
+                >
+                    @foreach($this->availableYears as $y)
+                        <button
+                            wire:click="goToYear({{ $y }})"
+                            @click="open = false"
+                            class="w-full px-3 py-1.5 text-left text-sm cursor-pointer transition-colors {{ $year === $y ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                        >
+                            {{ $y }}
+                        </button>
+                    @endforeach
+                </div>
+            </div>
         @endif
     </div>
 
@@ -22,7 +54,39 @@
             @elseif($view === 'week')
                 <span class="text-base md:text-xl text-muted truncate">{{ $this->weekRange }}</span>
             @else
-                <span class="text-base md:text-xl text-muted">{{ $this->currentMonthName }}</span>
+                {{-- Månedvelger --}}
+                <div x-data="{ open: false }" class="relative">
+                    <button
+                        @click="open = !open"
+                        @click.away="open = false"
+                        class="text-base md:text-xl text-muted hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                        {{ $this->currentMonthName }}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div
+                        x-show="open"
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 scale-100"
+                        x-transition:leave-end="opacity-0 scale-95"
+                        class="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-32"
+                    >
+                        @foreach($norwegianMonths as $num => $name)
+                            <button
+                                wire:click="goToMonth({{ $num }})"
+                                @click="open = false"
+                                class="w-full px-3 py-1.5 text-left text-sm cursor-pointer transition-colors {{ $month === $num ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                            >
+                                {{ $name }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
             @endif
         </div>
 

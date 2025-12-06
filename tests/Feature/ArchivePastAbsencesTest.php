@@ -2,8 +2,8 @@
 
 use App\Models\Shift;
 
-it('archives past absence entries', function () {
-    // Past absence - should be archived
+it('archives past absence entries by soft deleting them', function () {
+    // Past absence - should be archived (soft deleted)
     $pastAbsence = Shift::factory()->past()->unavailable()->create();
 
     // Future absence - should NOT be archived
@@ -12,13 +12,18 @@ it('archives past absence entries', function () {
     // Past regular shift - should NOT be archived
     $pastShift = Shift::factory()->past()->create();
 
-    // Already archived absence - should remain archived (not double-counted)
+    // Already archived absence - should remain archived
     $alreadyArchived = Shift::factory()->past()->unavailable()->archived()->create();
 
     $this->artisan('shifts:archive-past-absences')->assertSuccessful();
 
-    expect($pastAbsence->fresh()->is_archived)->toBeTrue()
-        ->and($futureAbsence->fresh()->is_archived)->toBeFalse()
-        ->and($pastShift->fresh()->is_archived)->toBeFalse()
-        ->and($alreadyArchived->fresh()->is_archived)->toBeTrue();
+    // Past absence should now be soft deleted (archived)
+    // Note: fresh() uses newQueryWithoutScopes() so it returns the model even if soft-deleted
+    expect($pastAbsence->fresh()->trashed())->toBeTrue()
+        // Future absence should NOT be soft deleted
+        ->and($futureAbsence->fresh()->trashed())->toBeFalse()
+        // Past regular shift should NOT be soft deleted
+        ->and($pastShift->fresh()->trashed())->toBeFalse()
+        // Already archived should still be soft deleted
+        ->and($alreadyArchived->fresh()->trashed())->toBeTrue();
 });

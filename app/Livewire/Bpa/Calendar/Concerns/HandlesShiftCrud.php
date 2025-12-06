@@ -11,7 +11,7 @@ trait HandlesShiftCrud
     /**
      * Open the modal for creating a new shift.
      */
-    public function openModal(?string $date = null, ?string $time = null): void
+    public function openModal(?string $date = null, ?string $time = null, ?int $assistantId = null, ?string $endTime = null): void
     {
         $this->resetForm();
         $this->showModal = true;
@@ -27,10 +27,19 @@ trait HandlesShiftCrud
 
         if ($time) {
             $this->fromTime = $time;
-            // Set end time 1 hour after start
-            $parts = explode(':', $time);
-            $endHour = min((int) $parts[0] + 1, 23);
-            $this->toTime = sprintf('%02d:%s', $endHour, $parts[1] ?? '00');
+
+            if ($endTime) {
+                $this->toTime = $endTime;
+            } else {
+                // Set end time 1 hour after start
+                $parts = explode(':', $time);
+                $endHour = min((int) $parts[0] + 1, 23);
+                $this->toTime = sprintf('%02d:%s', $endHour, $parts[1] ?? '00');
+            }
+        }
+
+        if ($assistantId) {
+            $this->assistantId = $assistantId;
         }
     }
 
@@ -223,7 +232,7 @@ trait HandlesShiftCrud
 
     private function deleteSingleShift(Shift $shift): int
     {
-        $shift->delete();
+        $shift->forceDelete();
 
         return 1;
     }
@@ -238,7 +247,7 @@ trait HandlesShiftCrud
         $count = $futureShifts->count();
 
         foreach ($futureShifts as $futureShift) {
-            $futureShift->delete();
+            $futureShift->forceDelete();
         }
 
         return $count;
@@ -254,7 +263,96 @@ trait HandlesShiftCrud
         $count = $allShifts->count();
 
         foreach ($allShifts as $groupShift) {
-            $groupShift->delete();
+            $groupShift->forceDelete();
+        }
+
+        return $count;
+    }
+
+    /**
+     * Initiate archive - check if recurring and show dialog if needed.
+     */
+    public function archiveShift(): void
+    {
+        if (! $this->editingShiftId) {
+            return;
+        }
+
+        $shift = Shift::findOrFail($this->editingShiftId);
+
+        if ($shift->isRecurring()) {
+            $this->recurringAction = 'archive';
+            $this->showRecurringDialog = true;
+        } else {
+            $this->confirmArchiveShift('single');
+        }
+    }
+
+    /**
+     * Actually archive the shift(s) based on scope (soft delete).
+     */
+    public function confirmArchiveShift(string $scope): void
+    {
+        if (! $this->editingShiftId) {
+            return;
+        }
+
+        $shift = Shift::findOrFail($this->editingShiftId);
+
+        $archivedCount = match ($scope) {
+            'single' => $this->archiveSingleShift($shift),
+            'future' => $this->archiveFutureShifts($shift),
+            'all' => $this->archiveAllRecurringShifts($shift),
+            default => $this->archiveSingleShift($shift),
+        };
+
+        // Clear computed property cache
+        unset($this->shifts, $this->shiftsByDate);
+
+        $this->showRecurringDialog = false;
+        $this->closeModal();
+
+        $message = $archivedCount > 1
+            ? "{$archivedCount} oppføringer ble arkivert"
+            : 'Oppføringen ble arkivert';
+
+        $this->dispatch('toast', type: 'success', message: $message);
+    }
+
+    private function archiveSingleShift(Shift $shift): int
+    {
+        $shift->delete(); // Soft delete
+
+        return 1;
+    }
+
+    private function archiveFutureShifts(Shift $shift): int
+    {
+        if (! $shift->isRecurring()) {
+            return $this->archiveSingleShift($shift);
+        }
+
+        $futureShifts = $shift->getFutureRecurringShifts();
+        $count = $futureShifts->count();
+
+        foreach ($futureShifts as $futureShift) {
+            $futureShift->delete(); // Soft delete
+        }
+
+        return $count;
+    }
+
+    private function archiveAllRecurringShifts(Shift $shift): int
+    {
+        if (! $shift->isRecurring()) {
+            return $this->archiveSingleShift($shift);
+        }
+
+        $allShifts = $shift->getRecurringGroupShifts();
+        $count = $allShifts->count();
+
+        foreach ($allShifts as $groupShift) {
+            $groupShift->delete(); // Soft delete
         }
 
         return $count;
@@ -321,7 +419,7 @@ trait HandlesShiftCrud
     }
 
     /**
-     * Create a shift from sidebar drag & drop.
+     * Create a shift from sidebar drag & drop - opens modal for recurring options.
      */
     public function createShiftFromDrag(int $assistantId, string $date, ?string $time = null): void
     {
@@ -345,17 +443,13 @@ trait HandlesShiftCrud
             return;
         }
 
-        Shift::create([
-            'assistant_id' => $assistantId,
-            'starts_at' => $startsAt,
-            'ends_at' => $endsAt,
-            'is_unavailable' => false,
-            'is_all_day' => false,
-        ]);
-
-        // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate);
-        $this->dispatch('toast', type: 'success', message: 'Vakten ble opprettet');
+        // Open modal with pre-filled data instead of creating directly
+        $this->openModal(
+            $date,
+            $startsAt->format('H:i'),
+            $assistantId,
+            $endsAt->format('H:i')
+        );
     }
 
     /**
@@ -405,11 +499,13 @@ trait HandlesShiftCrud
     /**
      * Open quick create popup.
      */
-    public function openQuickCreate(string $date, string $time, ?string $endTime = null): void
+    public function openQuickCreate(string $date, string $time, ?string $endTime = null, int $x = 0, int $y = 0): void
     {
         $this->quickCreateDate = $date;
         $this->quickCreateTime = $time;
         $this->quickCreateEndTime = $endTime;
+        $this->quickCreateX = $x;
+        $this->quickCreateY = $y;
         $this->showQuickCreate = true;
     }
 

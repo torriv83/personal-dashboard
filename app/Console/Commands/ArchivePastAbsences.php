@@ -26,11 +26,18 @@ class ArchivePastAbsences extends Command
      */
     public function handle(): int
     {
+        // Count first, then bulk soft-delete
         $count = Shift::query()
             ->where('is_unavailable', true)
-            ->where('is_archived', false)
             ->where('starts_at', '<', now()->startOfDay())
-            ->update(['is_archived' => true]);
+            ->count();
+
+        if ($count > 0) {
+            Shift::query()
+                ->where('is_unavailable', true)
+                ->where('starts_at', '<', now()->startOfDay())
+                ->delete(); // Bulk soft delete
+        }
 
         $this->info("Archived {$count} past absence entries.");
 

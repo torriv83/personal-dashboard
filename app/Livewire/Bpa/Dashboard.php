@@ -140,7 +140,6 @@ class Dashboard extends Component
             'ends_at' => $this->quickAddToDate.' 23:59:59',
             'is_unavailable' => true,
             'is_all_day' => true,
-            'is_archived' => false,
         ]);
 
         $this->dispatch('toast', type: 'success', message: 'Fravær lagt til');

@@ -393,19 +393,30 @@
 
             {{-- Footer --}}
             <div class="flex items-center justify-between px-5 py-4 border-t border-border">
-                {{-- Slett-knapp (kun for eksisterende vakter) --}}
-                <div>
+                {{-- Slett/Arkiver-knapper (kun for eksisterende vakter) --}}
+                <div class="flex items-center gap-2">
                     @if($editingShiftId)
                         @php
                             $editingShift = \App\Models\Shift::find($editingShiftId);
                             $isRecurringShift = $editingShift && $editingShift->isRecurring();
                         @endphp
                         <button
+                            wire:click="archiveShift"
+                            @unless($isRecurringShift)
+                                wire:confirm="Er du sikker på at du vil arkivere denne oppføringen?"
+                            @endunless
+                            class="px-4 py-2 text-sm font-medium text-warning hover:text-white hover:bg-warning rounded-lg transition-colors cursor-pointer"
+                            title="Arkiver (kan gjenopprettes)"
+                        >
+                            Arkiver
+                        </button>
+                        <button
                             wire:click="deleteShift"
                             @unless($isRecurringShift)
-                                wire:confirm="Er du sikker på at du vil slette denne oppføringen?"
+                                wire:confirm="Er du sikker på at du vil slette denne oppføringen permanent?"
                             @endunless
                             class="px-4 py-2 text-sm font-medium text-destructive hover:text-white hover:bg-destructive rounded-lg transition-colors cursor-pointer"
+                            title="Slett permanent"
                         >
                             Slett
                         </button>
@@ -487,6 +498,8 @@
                 <h3 class="text-lg font-semibold text-foreground">
                     @if($recurringAction === 'delete')
                         Slett gjentakende oppføring
+                    @elseif($recurringAction === 'archive')
+                        Arkiver gjentakende oppføring
                     @else
                         Rediger gjentakende oppføring
                     @endif
@@ -496,30 +509,43 @@
                 </p>
             </div>
 
+            @php
+                $actionMethod = match($recurringAction) {
+                    'delete' => 'confirmDeleteShift',
+                    'archive' => 'confirmArchiveShift',
+                    default => 'confirmEditRecurring',
+                };
+                $actionLabel = match($recurringAction) {
+                    'delete' => 'Slett',
+                    'archive' => 'Arkiver',
+                    default => 'Endre',
+                };
+            @endphp
+
             {{-- Options --}}
             <div class="p-5 space-y-3">
                 <button
-                    wire:click="{{ $recurringAction === 'delete' ? 'confirmDeleteShift' : 'confirmEditRecurring' }}('single')"
+                    wire:click="{{ $actionMethod }}('single')"
                     class="w-full text-left px-4 py-3 rounded-lg border border-border hover:bg-card-hover transition-colors cursor-pointer"
                 >
                     <span class="block text-sm font-medium text-foreground">Kun denne</span>
-                    <span class="block text-xs text-muted mt-0.5">{{ $recurringAction === 'delete' ? 'Slett' : 'Endre' }} bare denne ene oppføringen</span>
+                    <span class="block text-xs text-muted mt-0.5">{{ $actionLabel }} bare denne ene oppføringen</span>
                 </button>
 
                 <button
-                    wire:click="{{ $recurringAction === 'delete' ? 'confirmDeleteShift' : 'confirmEditRecurring' }}('future')"
+                    wire:click="{{ $actionMethod }}('future')"
                     class="w-full text-left px-4 py-3 rounded-lg border border-border hover:bg-card-hover transition-colors cursor-pointer"
                 >
                     <span class="block text-sm font-medium text-foreground">Denne og fremtidige</span>
-                    <span class="block text-xs text-muted mt-0.5">{{ $recurringAction === 'delete' ? 'Slett' : 'Endre' }} denne og alle fremtidige i serien</span>
+                    <span class="block text-xs text-muted mt-0.5">{{ $actionLabel }} denne og alle fremtidige i serien</span>
                 </button>
 
                 <button
-                    wire:click="{{ $recurringAction === 'delete' ? 'confirmDeleteShift' : 'confirmEditRecurring' }}('all')"
+                    wire:click="{{ $actionMethod }}('all')"
                     class="w-full text-left px-4 py-3 rounded-lg border border-border hover:bg-card-hover transition-colors cursor-pointer"
                 >
                     <span class="block text-sm font-medium text-foreground">Alle i serien</span>
-                    <span class="block text-xs text-muted mt-0.5">{{ $recurringAction === 'delete' ? 'Slett' : 'Endre' }} alle oppføringer i denne serien</span>
+                    <span class="block text-xs text-muted mt-0.5">{{ $actionLabel }} alle oppføringer i denne serien</span>
                 </button>
             </div>
 

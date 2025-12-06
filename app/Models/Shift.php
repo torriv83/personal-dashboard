@@ -11,19 +11,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
- * @property int $assistant_id
+ * @property int|null $assistant_id
  * @property Carbon $starts_at
  * @property Carbon $ends_at
  * @property int $duration_minutes
  * @property bool $is_unavailable
  * @property bool $is_all_day
- * @property bool $is_archived
  * @property string|null $recurring_group_id
  * @property string|null $note
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
  * @property-read Assistant|null $assistant
+ * @property-read string $assistant_name
  */
 class Shift extends Model
 {
@@ -36,7 +36,6 @@ class Shift extends Model
         'duration_minutes',
         'is_unavailable',
         'is_all_day',
-        'is_archived',
         'recurring_group_id',
         'note',
     ];
@@ -50,7 +49,6 @@ class Shift extends Model
             'duration_minutes' => 'integer',
             'is_unavailable' => 'boolean',
             'is_all_day' => 'boolean',
-            'is_archived' => 'boolean',
         ];
     }
 
@@ -74,6 +72,16 @@ class Shift extends Model
     public function assistant(): BelongsTo
     {
         return $this->belongsTo(Assistant::class);
+    }
+
+    /**
+     * Get the assistant's name, or "Tidligere ansatt" if no assistant is assigned.
+     */
+    protected function assistantName(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): string => $this->assistant?->name ?? 'Tidligere ansatt'
+        );
     }
 
     /**
@@ -121,19 +129,20 @@ class Shift extends Model
 
     /**
      * Scope: Only active (non-archived) shifts.
+     * Note: SoftDeletes already excludes soft-deleted records by default.
      */
     public function scopeActive($query)
     {
-        return $query->where('is_archived', false);
+        return $query;
     }
 
     /**
      * Scope: Only actual worked shifts (non-archived, non-unavailable).
+     * Note: SoftDeletes already excludes soft-deleted (archived) records by default.
      */
     public function scopeWorked($query)
     {
-        return $query->where('is_archived', false)
-            ->where('is_unavailable', false);
+        return $query->where('is_unavailable', false);
     }
 
     /**

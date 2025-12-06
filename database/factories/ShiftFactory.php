@@ -26,7 +26,6 @@ class ShiftFactory extends Factory
             'duration_minutes' => $duration,
             'is_unavailable' => false,
             'is_all_day' => false,
-            'is_archived' => false,
             'note' => fake()->optional(0.3)->sentence(),
         ];
     }
@@ -77,7 +76,7 @@ class ShiftFactory extends Factory
     public function archived(): static
     {
         return $this->state(fn (array $attributes) => [
-            'is_archived' => true,
+            'deleted_at' => now(),
         ]);
     }
 

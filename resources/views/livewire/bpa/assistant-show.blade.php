@@ -201,13 +201,14 @@
                         <th class="px-4 sm:px-6 py-3">Tid</th>
                         <th class="px-4 sm:px-6 py-3">Varighet</th>
                         <th class="px-4 sm:px-6 py-3">Notat</th>
+                        <th class="px-4 sm:px-6 py-3 w-24"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
                     @forelse($this->shifts as $shift)
-                        <tr class="hover:bg-card-hover transition-colors {{ $shift->is_unavailable ? 'bg-warning/5' : '' }}">
+                        <tr class="hover:bg-card-hover transition-colors {{ $shift->trashed() ? 'opacity-50' : '' }} {{ $shift->is_unavailable ? 'bg-warning/5' : '' }}" wire:key="shift-{{ $shift->id }}">
                             {{-- Mobil: Kompakt layout --}}
-                            <td class="sm:hidden px-4 py-3" colspan="4">
+                            <td class="sm:hidden px-4 py-3" colspan="5">
                                 <div class="flex items-center justify-between">
                                     <div>
                                         <div class="font-medium text-foreground">
@@ -242,8 +243,41 @@
                                             <div class="text-sm text-muted-foreground mt-1">{{ $shift->note }}</div>
                                         @endif
                                     </div>
-                                    <div class="text-right">
+                                    <div class="flex items-center gap-3">
                                         <span class="text-foreground font-medium">{{ $shift->formatted_duration }}</span>
+                                        <div class="flex items-center gap-1">
+                                            <button
+                                                wire:click="openEditShiftModal({{ $shift->id }})"
+                                                class="p-1.5 text-muted hover:text-accent transition-colors cursor-pointer"
+                                                title="Rediger"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                </svg>
+                                            </button>
+                                            @if($shift->trashed())
+                                                <button
+                                                    wire:click="forceDeleteShift({{ $shift->id }})"
+                                                    wire:confirm="Er du sikker på at du vil slette denne oppføringen permanent? Dette kan ikke angres."
+                                                    class="p-1.5 text-muted hover:text-destructive transition-colors cursor-pointer"
+                                                    title="Slett permanent"
+                                                >
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            @else
+                                                <button
+                                                    wire:click="archiveShift({{ $shift->id }})"
+                                                    class="p-1.5 text-muted hover:text-muted-foreground transition-colors cursor-pointer"
+                                                    title="Arkiver"
+                                                >
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                                    </svg>
+                                                </button>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </td>
@@ -285,10 +319,48 @@
                             <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-muted-foreground">
                                 {{ $shift->note ?? '-' }}
                             </td>
+                            <td class="hidden sm:table-cell px-4 sm:px-6 py-3">
+                                <div class="flex items-center justify-end gap-2">
+                                    {{-- Rediger --}}
+                                    <button
+                                        wire:click="openEditShiftModal({{ $shift->id }})"
+                                        class="p-1.5 text-muted hover:text-accent transition-colors cursor-pointer"
+                                        title="Rediger"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                        </svg>
+                                    </button>
+                                    @if($shift->trashed())
+                                        {{-- Slett permanent --}}
+                                        <button
+                                            wire:click="forceDeleteShift({{ $shift->id }})"
+                                            wire:confirm="Er du sikker på at du vil slette denne oppføringen permanent? Dette kan ikke angres."
+                                            class="p-1.5 text-muted hover:text-destructive transition-colors cursor-pointer"
+                                            title="Slett permanent"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    @else
+                                        {{-- Arkiver --}}
+                                        <button
+                                            wire:click="archiveShift({{ $shift->id }})"
+                                            class="p-1.5 text-muted hover:text-muted-foreground transition-colors cursor-pointer"
+                                            title="Arkiver"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-4 sm:px-6 py-8 text-center text-muted">
+                            <td colspan="5" class="px-4 sm:px-6 py-8 text-center text-muted">
                                 Ingen vakter registrert for {{ $year }}.
                             </td>
                         </tr>
@@ -413,4 +485,92 @@
             </div>
         </div>
     </x-modal>
+
+    {{-- Rediger vakt modal --}}
+    @if($showShiftModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            {{-- Backdrop --}}
+            <div class="fixed inset-0 bg-black/50 transition-opacity" wire:click="closeShiftModal"></div>
+
+            {{-- Modal panel --}}
+            <div class="relative z-10 w-full max-w-lg bg-card rounded-lg text-left overflow-hidden shadow-xl border border-border">
+                <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <h3 class="text-lg font-semibold text-foreground mb-4">Rediger oppføring</h3>
+
+                    <div class="space-y-4">
+                        {{-- Dato --}}
+                        <div>
+                            <label class="block text-sm font-medium text-muted mb-1">Dato <span class="text-destructive">*</span></label>
+                            <input
+                                type="date"
+                                wire:model="shiftDate"
+                                class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent"
+                                required
+                            >
+                        </div>
+
+                        {{-- Tid --}}
+                        @unless($shiftIsAllDay)
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-muted mb-1">Fra</label>
+                                    <input
+                                        type="time"
+                                        wire:model="shiftStartTime"
+                                        class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-muted mb-1">Til</label>
+                                    <input
+                                        type="time"
+                                        wire:model="shiftEndTime"
+                                        class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent"
+                                    >
+                                </div>
+                            </div>
+                        @endunless
+
+                        {{-- Notat --}}
+                        <div>
+                            <label class="block text-sm font-medium text-muted mb-1">Notat</label>
+                            <input
+                                type="text"
+                                wire:model="shiftNote"
+                                class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent"
+                                placeholder="Valgfritt notat..."
+                            >
+                        </div>
+
+                        {{-- Checkboxer --}}
+                        <div class="flex items-center gap-6">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" wire:model.live="shiftIsUnavailable" class="rounded border-border bg-input text-accent focus:ring-accent cursor-pointer">
+                                <span class="text-sm text-foreground">Borte</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" wire:model.live="shiftIsAllDay" class="rounded border-border bg-input text-accent focus:ring-accent cursor-pointer">
+                                <span class="text-sm text-foreground">Hel dag</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-card-hover px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                    <button
+                        wire:click="saveShift"
+                        class="w-full sm:w-auto px-4 py-2 bg-accent text-black text-sm rounded-md hover:opacity-90 transition-opacity cursor-pointer"
+                    >
+                        Lagre
+                    </button>
+                    <button
+                        wire:click="closeShiftModal"
+                        class="mt-2 sm:mt-0 w-full sm:w-auto px-4 py-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
+                    >
+                        Avbryt
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

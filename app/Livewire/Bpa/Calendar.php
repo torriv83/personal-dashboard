@@ -51,6 +51,10 @@ class Calendar extends Component
 
     public ?string $quickCreateEndTime = null;
 
+    public int $quickCreateX = 0;
+
+    public int $quickCreateY = 0;
+
     // Form data
     public ?int $assistantId = null;
 
@@ -250,6 +254,33 @@ class Calendar extends Component
     public function getShiftsForDate(string $date): array
     {
         return $this->shiftsByDate[$date] ?? [];
+    }
+
+    /**
+     * Get available years from actual shift data.
+     *
+     * @return array<int>
+     */
+    #[Computed]
+    public function availableYears(): array
+    {
+        $years = Shift::query()
+            ->withTrashed()
+            ->pluck('starts_at')
+            ->map(fn ($date) => Carbon::parse($date)->year)
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        // Always include current year
+        $currentYear = Carbon::now('Europe/Oslo')->year;
+        if (! in_array($currentYear, $years)) {
+            $years[] = $currentYear;
+            sort($years);
+        }
+
+        return $years;
     }
 
     public function render()

@@ -581,3 +581,42 @@ it('can save shift and create another', function () {
         ->assertSet('showModal', true) // Modal stays open
         ->assertSet('editingShiftId', null); // Form is reset
 });
+
+// Direct navigation tests
+it('can go to specific month', function () {
+    Livewire::test(Calendar::class)
+        ->assertSet('month', 6)
+        ->call('goToMonth', 3)
+        ->assertSet('month', 3)
+        ->assertSet('year', 2024); // Year should not change
+});
+
+it('can go to specific year', function () {
+    Livewire::test(Calendar::class)
+        ->assertSet('year', 2024)
+        ->call('goToYear', 2023)
+        ->assertSet('year', 2023)
+        ->assertSet('month', 6); // Month should not change
+});
+
+it('returns available years from shift data', function () {
+    // Create shifts in different years
+    $assistant = Assistant::factory()->create();
+    Shift::factory()->create([
+        'assistant_id' => $assistant->id,
+        'starts_at' => Carbon::parse('2022-05-15 08:00'),
+        'ends_at' => Carbon::parse('2022-05-15 12:00'),
+    ]);
+    Shift::factory()->create([
+        'assistant_id' => $assistant->id,
+        'starts_at' => Carbon::parse('2023-08-20 08:00'),
+        'ends_at' => Carbon::parse('2023-08-20 12:00'),
+    ]);
+
+    $component = Livewire::test(Calendar::class);
+    $years = $component->get('availableYears');
+
+    expect($years)->toContain(2022)
+        ->and($years)->toContain(2023)
+        ->and($years)->toContain(2024); // Current year always included
+});
