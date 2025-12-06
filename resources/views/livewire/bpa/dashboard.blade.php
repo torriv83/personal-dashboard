@@ -48,88 +48,10 @@
             $previousYear = $currentYear - 1;
         @endphp
         <div
-            x-data="{
-                expanded: false,
-                chart: null,
-                fullChart: null,
-                chartConfig: {
-                    chart: {
-                        type: 'area',
-                        background: 'transparent',
-                        toolbar: { show: false },
-                        zoom: { enabled: false },
-                    },
-                    series: [
-                        { name: '{{ $currentYear }}', data: {{ json_encode($currentYearValues) }} },
-                        { name: '{{ $previousYear }}', data: {{ json_encode($previousYearValues) }} }
-                    ],
-                    colors: ['#c8ff00', '#f97316'],
-                    fill: {
-                        type: 'gradient',
-                        gradient: {
-                            shadeIntensity: 1,
-                            opacityFrom: 0.7,
-                            opacityTo: 0.2,
-                        }
-                    },
-                    stroke: { curve: 'smooth', width: 2 },
-                    xaxis: {
-                        categories: ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'],
-                        labels: { style: { colors: '#a3a3a3', fontSize: '12px' } },
-                        axisBorder: { show: false },
-                        axisTicks: { show: false },
-                    },
-                    yaxis: {
-                        labels: { style: { colors: '#a3a3a3', fontSize: '12px' } },
-                    },
-                    grid: {
-                        borderColor: '#333',
-                        strokeDashArray: 3,
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: { colors: '#a3a3a3' },
-                        markers: { radius: 2 },
-                    },
-                    tooltip: {
-                        theme: 'dark',
-                        x: { show: true },
-                    },
-                    dataLabels: { enabled: false },
-                },
-                renderChart() {
-                    if (this.chart) this.chart.destroy();
-                    this.chart = new ApexCharts(this.$refs.chart, { ...this.chartConfig, chart: { ...this.chartConfig.chart, height: 200 } });
-                    this.chart.render();
-                },
-                getFullChartDimensions() {
-                    // Use 90% of viewport minus padding
-                    const height = Math.max(400, Math.floor(window.innerHeight * 0.90) - 140);
-                    const width = Math.max(600, Math.floor(window.innerWidth * 0.90) - 80);
-                    return { height, width };
-                },
-                renderFullChart() {
-                    if (this.fullChart) this.fullChart.destroy();
-                    this.$nextTick(() => {
-                        const { height, width } = this.getFullChartDimensions();
-                        this.fullChart = new ApexCharts(this.$refs.fullChart, { ...this.chartConfig, chart: { ...this.chartConfig.chart, height, width } });
-                        this.fullChart.render();
-                    });
-                },
-                openExpanded() {
-                    this.expanded = true;
-                    this.renderFullChart();
-                    document.body.style.overflow = 'hidden';
-                },
-                closeExpanded() {
-                    this.expanded = false;
-                    if (this.fullChart) this.fullChart.destroy();
-                    document.body.style.overflow = '';
-                }
-            }"
-            x-init="$nextTick(() => renderChart())"
+            x-data="monthlyHoursChart({{ Js::from($currentYearValues) }}, {{ Js::from($previousYearValues) }}, {{ $currentYear }}, {{ $previousYear }})"
+            x-init="init()"
             @keydown.escape.window="closeExpanded()"
-            @resize.window.debounce.100ms="if (expanded) renderFullChart()"
+            @resize.window.debounce.100ms="handleResize()"
             class="bg-card border border-border rounded-lg p-5 overflow-hidden"
             wire:ignore
         >
@@ -181,98 +103,14 @@
             $prevYearPercent = array_column($percentageData, $prevYearKey);
             $currYearPercent = array_column($percentageData, $currYearKey);
             $remainingPercent = array_column($percentageData, 'remaining');
+            $pCurrentYear = now()->year;
+            $pPreviousYear = $pCurrentYear - 1;
         @endphp
         <div
-            x-data="{
-                expanded: false,
-                chart: null,
-                fullChart: null,
-                chartConfig: {
-                    chart: {
-                        type: 'bar',
-                        background: 'transparent',
-                        toolbar: { show: false },
-                        zoom: { enabled: false },
-                    },
-                    series: [
-                        { name: '{{ now()->year - 1 }}', type: 'bar', data: {{ json_encode($prevYearPercent) }} },
-                        { name: '{{ now()->year }}', type: 'bar', data: {{ json_encode($currYearPercent) }} },
-                        { name: 'Gjenstår', type: 'line', data: {{ json_encode($remainingPercent) }} }
-                    ],
-                    colors: ['#666666', '#3b82f6', '#c8ff00'],
-                    plotOptions: {
-                        bar: {
-                            columnWidth: '70%',
-                            borderRadius: 2,
-                        }
-                    },
-                    stroke: {
-                        width: [0, 0, 2],
-                        curve: 'smooth',
-                    },
-                    xaxis: {
-                        categories: ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des'],
-                        labels: { style: { colors: '#a3a3a3', fontSize: '12px' } },
-                        axisBorder: { show: false },
-                        axisTicks: { show: false },
-                    },
-                    yaxis: {
-                        max: 100,
-                        labels: {
-                            style: { colors: '#a3a3a3', fontSize: '12px' },
-                            formatter: (val) => val + '%'
-                        },
-                    },
-                    grid: {
-                        borderColor: '#333',
-                        strokeDashArray: 3,
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: { colors: '#a3a3a3' },
-                        markers: { radius: 2 },
-                    },
-                    tooltip: {
-                        shared: true,
-                        intersect: false,
-                        theme: 'dark',
-                        y: { formatter: (val) => val + '%' }
-                    },
-                    dataLabels: { enabled: false },
-                },
-                renderChart() {
-                    if (this.chart) this.chart.destroy();
-                    this.chart = new ApexCharts(this.$refs.chart, { ...this.chartConfig, chart: { ...this.chartConfig.chart, height: 200 } });
-                    this.chart.render();
-                },
-                getFullChartDimensions() {
-                    // Use 90% of viewport minus padding
-                    const height = Math.max(400, Math.floor(window.innerHeight * 0.90) - 140);
-                    const width = Math.max(600, Math.floor(window.innerWidth * 0.90) - 80);
-                    return { height, width };
-                },
-                renderFullChart() {
-                    if (this.fullChart) this.fullChart.destroy();
-                    this.$nextTick(() => {
-                        const { height, width } = this.getFullChartDimensions();
-                        this.fullChart = new ApexCharts(this.$refs.fullChart, { ...this.chartConfig, chart: { ...this.chartConfig.chart, height, width } });
-                        this.fullChart.render();
-                    });
-                },
-                openExpanded() {
-                    this.expanded = true;
-                    this.renderFullChart();
-                    document.body.style.overflow = 'hidden';
-                },
-                closeExpanded() {
-                    this.expanded = false;
-                    if (this.fullChart) this.fullChart.destroy();
-                    document.body.style.overflow = '';
-                }
-            }"
-            x-init="$nextTick(() => renderChart())"
+            x-data="percentageChart({{ Js::from($prevYearPercent) }}, {{ Js::from($currYearPercent) }}, {{ Js::from($remainingPercent) }}, {{ $pCurrentYear }}, {{ $pPreviousYear }})"
+            x-init="init()"
             @keydown.escape.window="closeExpanded()"
-            @resize.window.debounce.100ms="if (expanded) renderFullChart()"
+            @resize.window.debounce.100ms="handleResize()"
             class="bg-card border border-border rounded-lg p-5 overflow-hidden"
             wire:ignore
         >

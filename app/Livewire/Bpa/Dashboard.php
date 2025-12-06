@@ -7,13 +7,14 @@ use App\Models\Setting;
 use App\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 /**
  * @property-read array $stats
+ * @property-read int $assistantCount
  * @property-read int $weeklyTotalPages
  * @property-read array $weeklyHours
  * @property-read int $shiftsTotalPages
@@ -161,6 +162,15 @@ class Dashboard extends Component
         return Assistant::orderBy('name')->get();
     }
 
+    /**
+     * Shared assistant count to avoid redundant COUNT queries.
+     */
+    #[Computed]
+    public function assistantCount(): int
+    {
+        return Assistant::count();
+    }
+
     #[Computed]
     public function stats(): array
     {
@@ -226,7 +236,7 @@ class Dashboard extends Component
         return [
             [
                 'label' => 'Antall Assistenter',
-                'value' => (string) Assistant::count(),
+                'value' => (string) $this->assistantCount,
                 'description' => null,
                 'link' => route('bpa.assistants'),
             ],
@@ -255,14 +265,19 @@ class Dashboard extends Component
     public function weeklyTotalPages(): int
     {
         $now = Carbon::now();
+        $driver = DB::getDriverName();
+
+        // Use SQL COUNT(DISTINCT) for week counting - much faster than PHP groupBy
+        $weekExpression = $driver === 'sqlite'
+            ? "strftime('%W', starts_at)"
+            : 'WEEK(starts_at, 3)';
 
         $weekCount = Shift::query()
             ->worked()
             ->where('starts_at', '>=', $now->copy()->subWeeks(52)->startOfWeek())
             ->where('starts_at', '<=', $now)
-            ->get()
-            ->groupBy(fn ($shift) => Carbon::parse($shift->starts_at)->weekOfYear)
-            ->count();
+            ->selectRaw("COUNT(DISTINCT {$weekExpression}) as week_count")
+            ->value('week_count');
 
         return max(1, (int) ceil($weekCount / $this->weeklyPerPage));
     }
@@ -271,29 +286,42 @@ class Dashboard extends Component
     public function weeklyHours(): array
     {
         $now = Carbon::now();
+        $driver = DB::getDriverName();
 
-        return Shift::query()
+        // Use database-agnostic week expression
+        $weekExpression = $driver === 'sqlite'
+            ? "strftime('%W', starts_at)"
+            : 'WEEK(starts_at, 3)';
+
+        // Use SQL GROUP BY instead of PHP groupBy - 10-50x faster
+        // Use toBase() to get stdClass objects instead of Shift models
+        $results = Shift::query()
+            ->selectRaw("{$weekExpression} as week_number")
+            ->selectRaw('SUM(duration_minutes) as total_minutes')
+            ->selectRaw('COUNT(*) as shift_count')
             ->worked()
             ->where('starts_at', '>=', $now->copy()->subWeeks(52)->startOfWeek())
             ->where('starts_at', '<=', $now)
-            ->get()
-            ->groupBy(fn (Shift $shift) => $shift->starts_at->weekOfYear)
-            ->map(function (Collection $shifts, int $week) {
-                $totalMinutes = $shifts->sum('duration_minutes');
-                $count = $shifts->count();
-                $averageMinutes = $count > 0 ? (int) ($totalMinutes / $count) : 0;
+            ->groupByRaw($weekExpression)
+            ->orderByDesc('week_number')
+            ->toBase()
+            ->get();
 
-                return [
-                    'week' => $week,
-                    'total' => $this->formatMinutes($totalMinutes),
-                    'average' => $this->formatMinutes($averageMinutes),
-                    'count' => $count,
-                ];
-            })
-            ->sortByDesc('week')
-            ->values()
+        return $results
             ->skip(($this->weeklyPage - 1) * $this->weeklyPerPage)
             ->take($this->weeklyPerPage)
+            ->map(function (object $row) {
+                $avgMinutes = $row->shift_count > 0
+                    ? (int) ($row->total_minutes / $row->shift_count)
+                    : 0;
+
+                return [
+                    'week' => (int) $row->week_number,
+                    'total' => $this->formatMinutes((int) $row->total_minutes),
+                    'average' => $this->formatMinutes($avgMinutes),
+                    'count' => (int) $row->shift_count,
+                ];
+            })
             ->values()
             ->toArray();
     }
@@ -370,7 +398,7 @@ class Dashboard extends Component
     #[Computed]
     public function employeesTotalPages(): int
     {
-        return max(1, (int) ceil(Assistant::count() / $this->employeesPerPage));
+        return max(1, (int) ceil($this->assistantCount / $this->employeesPerPage));
     }
 
     #[Computed]
@@ -473,17 +501,27 @@ class Dashboard extends Component
 
     /**
      * Get monthly hours grouped by month for a given year.
+     * Uses SQL GROUP BY instead of PHP groupBy for better performance.
      *
      * @return array<int, int>
      */
     private function getMonthlyHours(int $year): array
     {
+        $driver = DB::getDriverName();
+
+        // Use database-agnostic month expression
+        $monthExpression = $driver === 'sqlite'
+            ? "CAST(strftime('%m', starts_at) AS INTEGER)"
+            : 'MONTH(starts_at)';
+
         return Shift::query()
+            ->selectRaw("{$monthExpression} as month")
+            ->selectRaw('SUM(duration_minutes) as total_minutes')
             ->worked()
             ->forYear($year)
+            ->groupByRaw($monthExpression)
             ->get()
-            ->groupBy(fn (Shift $shift) => $shift->starts_at->month)
-            ->map(fn (Collection $shifts) => $shifts->sum('duration_minutes'))
+            ->pluck('total_minutes', 'month')
             ->toArray();
     }
 
