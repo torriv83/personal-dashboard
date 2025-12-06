@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 // Backup scheduling - runs weekly
 Schedule::command('backup:clean')->weekly();
 Schedule::command('backup:run')->weekly();
+
+// Archive past absence entries daily at midnight
+Schedule::command('shifts:archive-past-absences')->daily();
