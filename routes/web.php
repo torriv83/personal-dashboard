@@ -13,6 +13,7 @@ use App\Livewire\Economy\Index as EconomyIndex;
 use App\Livewire\Medical\Dashboard as MedicalDashboard;
 use App\Livewire\Medical\Equipment;
 use App\Livewire\Medical\Prescriptions;
+use App\Livewire\Medical\Weight;
 use App\Livewire\Tools\PortGenerator;
 use App\Livewire\User\Profile;
 use App\Livewire\User\Settings;
@@ -49,6 +50,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', MedicalDashboard::class)->name('dashboard');
         Route::get('/utstyr', Equipment::class)->name('equipment');
         Route::get('/resepter', Prescriptions::class)->name('prescriptions');
+        Route::get('/vekt', Weight::class)->name('weight');
     });
 
     // Økonomi

@@ -68,6 +68,9 @@
             <x-sidebar-sublink href="{{ route('medical.prescriptions') }}" :active="request()->routeIs('medical.prescriptions')">
                 Resepter
             </x-sidebar-sublink>
+            <x-sidebar-sublink href="{{ route('medical.weight') }}" :active="request()->routeIs('medical.weight')">
+                Vekt
+            </x-sidebar-sublink>
         </x-sidebar-group>
 
         {{-- Økonomi - no submenu --}}

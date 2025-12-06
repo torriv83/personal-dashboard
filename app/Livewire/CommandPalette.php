@@ -33,6 +33,7 @@ class CommandPalette extends Component
             ['name' => 'Ny vakt', 'url' => route('bpa.calendar', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
             ['name' => 'Legg til utstyr', 'url' => route('medical.equipment', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
             ['name' => 'Legg til resept', 'url' => route('medical.prescriptions', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
+            ['name' => 'Registrer vekt', 'url' => route('medical.weight'), 'icon' => 'plus', 'category' => 'Handlinger'],
             ['name' => 'Legg til ønske', 'url' => route('wishlist', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
             ['name' => 'Ny assistent', 'url' => route('bpa.assistants', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
 
@@ -45,6 +46,7 @@ class CommandPalette extends Component
             ['name' => 'Gå til Medisinsk', 'url' => route('medical.dashboard'), 'icon' => 'heart', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Utstyr', 'url' => route('medical.equipment'), 'icon' => 'package', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Resepter', 'url' => route('medical.prescriptions'), 'icon' => 'file-plus', 'category' => 'Navigasjon'],
+            ['name' => 'Gå til Vekt', 'url' => route('medical.weight'), 'icon' => 'activity', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Økonomi', 'url' => route('economy'), 'icon' => 'dollar-sign', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Ønskeliste', 'url' => route('wishlist'), 'icon' => 'gift', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Innstillinger', 'url' => route('settings'), 'icon' => 'settings', 'category' => 'Navigasjon'],
