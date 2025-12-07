@@ -71,14 +71,22 @@ trait HandlesRecurringShifts
      * Create multiple shifts for recurring unavailability.
      *
      * @param  array<string, mixed>  $baseData
+     * @param  bool  $skipFirstDate  Skip first date (used when adding recurring from existing shift)
      */
-    private function createRecurringShifts(array $baseData): void
+    private function createRecurringShifts(array $baseData, bool $skipFirstDate = false): void
     {
         $dates = $this->getRecurringPreviewDates();
 
+        // Skip first date if requested (when editing existing shift)
+        if ($skipFirstDate && ! empty($dates)) {
+            array_shift($dates);
+        }
+
         if (empty($dates)) {
-            Shift::create($baseData);
-            $this->dispatch('toast', type: 'success', message: 'Vakten ble opprettet');
+            if (! $skipFirstDate) {
+                Shift::create($baseData);
+                $this->dispatch('toast', type: 'success', message: 'Vakten ble opprettet');
+            }
 
             return;
         }
@@ -88,6 +96,11 @@ trait HandlesRecurringShifts
         $baseEndsAt = $baseData['ends_at'];
         $startTime = $baseStartsAt->format('H:i:s');
         $endTime = $baseEndsAt->format('H:i:s');
+
+        // If editing existing shift, also update its recurring_group_id
+        if ($skipFirstDate && $this->editingShiftId) {
+            Shift::where('id', $this->editingShiftId)->update(['recurring_group_id' => $recurringGroupId]);
+        }
 
         foreach ($dates as $date) {
             $startsAt = $this->isAllDay

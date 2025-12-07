@@ -119,108 +119,124 @@
                         </label>
                     </div>
 
-                    {{-- Gjentakende (kun for "Ikke tilgjengelig" og kun ved opprettelse) --}}
-                    @unless($editingShiftId)
-                        <div
-                            x-show="$wire.isUnavailable"
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 -translate-y-2"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-150"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 -translate-y-2"
-                            class="mt-4 p-4 bg-card-hover rounded-lg border border-border space-y-4"
-                        >
-                            <label class="inline-flex items-center gap-2.5 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    wire:model.live="isRecurring"
-                                    class="w-5 h-5 rounded border-border text-accent focus:ring-accent/50 cursor-pointer"
-                                >
-                                <span class="text-sm font-medium text-foreground select-none">Gjentakende</span>
-                            </label>
+                    {{-- Gjentakende (kun for "Ikke tilgjengelig") --}}
+                    <div
+                        x-show="$wire.isUnavailable"
+                        x-cloak
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
+                        class="mt-4 p-4 bg-card-hover rounded-lg border border-border space-y-4"
+                    >
+                        <label class="inline-flex items-center gap-2.5 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                wire:model.live="isRecurring"
+                                class="w-5 h-5 rounded border-border text-accent focus:ring-accent/50 cursor-pointer"
+                            >
+                            <span class="text-sm font-medium text-foreground select-none">Gjentakende</span>
+                        </label>
 
-                            @if($isRecurring)
-                                <div class="space-y-4 pt-2">
-                                    {{-- Intervall --}}
-                                    <div>
-                                        <label class="block text-sm font-medium text-foreground mb-1.5">Gjenta</label>
-                                        <select
-                                            wire:model.live="recurringInterval"
-                                            class="w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors appearance-none cursor-pointer"
-                                        >
-                                            <option value="weekly">Ukentlig</option>
-                                            <option value="biweekly">Hver 2. uke</option>
-                                            <option value="monthly">Månedlig</option>
-                                        </select>
-                                    </div>
+                        @if($isRecurring)
+                            <div class="space-y-4 pt-2">
+                                @if($editingShiftId)
+                                    <p class="text-xs text-muted-foreground">
+                                        Oppretter nye gjentakende oppføringer basert på denne vakten.
+                                    </p>
+                                @endif
 
-                                    {{-- Avslutt --}}
-                                    <div class="space-y-3">
-                                        <label class="block text-sm font-medium text-foreground">Avslutt</label>
-
-                                        <label class="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                wire:model.live="recurringEndType"
-                                                value="count"
-                                                class="w-4 h-4 text-accent focus:ring-accent/50 cursor-pointer"
-                                            >
-                                            <span class="text-sm text-foreground">Etter</span>
-                                            <input
-                                                type="number"
-                                                wire:model.live="recurringCount"
-                                                min="1"
-                                                max="52"
-                                                class="w-16 bg-input border border-border rounded-lg px-2 py-1 text-foreground text-center focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
-                                                @if($recurringEndType !== 'count') disabled @endif
-                                            >
-                                            <span class="text-sm text-foreground">ganger</span>
-                                        </label>
-
-                                        <label class="flex items-center gap-3 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                wire:model.live="recurringEndType"
-                                                value="date"
-                                                class="w-4 h-4 text-accent focus:ring-accent/50 cursor-pointer"
-                                            >
-                                            <span class="text-sm text-foreground">På dato</span>
-                                            <input
-                                                type="date"
-                                                wire:model.live="recurringEndDate"
-                                                class="bg-input border border-border rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent cursor-pointer"
-                                                @if($recurringEndType !== 'date') disabled @endif
-                                            >
-                                        </label>
-                                    </div>
-
-                                    {{-- Forhåndsvisning --}}
-                                    @php $previewDates = $this->getRecurringPreviewDates(); @endphp
-                                    @if(count($previewDates) > 0)
-                                        <div class="pt-2 border-t border-border">
-                                            <p class="text-xs text-muted mb-2">
-                                                Forhåndsvisning: {{ count($previewDates) }} oppføringer
-                                            </p>
-                                            <div class="flex flex-wrap gap-1.5">
-                                                @foreach(array_slice($previewDates, 0, 8) as $date)
-                                                    <span class="text-xs px-2 py-1 bg-destructive/20 text-destructive rounded">
-                                                        {{ \Carbon\Carbon::parse($date)->format('d.m') }}
-                                                    </span>
-                                                @endforeach
-                                                @if(count($previewDates) > 8)
-                                                    <span class="text-xs px-2 py-1 bg-muted/20 text-muted rounded">
-                                                        +{{ count($previewDates) - 8 }} til
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @endif
+                                {{-- Intervall --}}
+                                <div>
+                                    <label class="block text-sm font-medium text-foreground mb-1.5">Gjenta</label>
+                                    <select
+                                        wire:model.live="recurringInterval"
+                                        class="w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors appearance-none cursor-pointer"
+                                    >
+                                        <option value="weekly">Ukentlig</option>
+                                        <option value="biweekly">Hver 2. uke</option>
+                                        <option value="monthly">Månedlig</option>
+                                    </select>
                                 </div>
-                            @endif
-                        </div>
-                    @endunless
+
+                                {{-- Avslutt --}}
+                                <div class="space-y-3">
+                                    <label class="block text-sm font-medium text-foreground">Avslutt</label>
+
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            wire:model.live="recurringEndType"
+                                            value="count"
+                                            class="w-4 h-4 text-accent focus:ring-accent/50 cursor-pointer"
+                                        >
+                                        <span class="text-sm text-foreground">Etter</span>
+                                        <input
+                                            type="number"
+                                            wire:model.live="recurringCount"
+                                            min="1"
+                                            max="52"
+                                            class="w-16 bg-input border border-border rounded-lg px-2 py-1 text-foreground text-center focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+                                            @if($recurringEndType !== 'count') disabled @endif
+                                        >
+                                        <span class="text-sm text-foreground">ganger</span>
+                                    </label>
+
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            wire:model.live="recurringEndType"
+                                            value="date"
+                                            class="w-4 h-4 text-accent focus:ring-accent/50 cursor-pointer"
+                                        >
+                                        <span class="text-sm text-foreground">På dato</span>
+                                        <input
+                                            type="date"
+                                            wire:model.live="recurringEndDate"
+                                            class="bg-input border border-border rounded-lg px-2 py-1 text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent cursor-pointer"
+                                            @if($recurringEndType !== 'date') disabled @endif
+                                        >
+                                    </label>
+                                </div>
+
+                                {{-- Forhåndsvisning --}}
+                                @php
+                                    $previewDates = $this->getRecurringPreviewDates();
+                                    // Skip first date when editing (it's the current shift)
+                                    if ($editingShiftId && count($previewDates) > 0) {
+                                        $previewDates = array_slice($previewDates, 1);
+                                    }
+                                @endphp
+                                @if(count($previewDates) > 0)
+                                    <div class="pt-2 border-t border-border">
+                                        <p class="text-xs text-muted mb-2">
+                                            Forhåndsvisning: {{ count($previewDates) }} {{ $editingShiftId ? 'nye' : '' }} oppføringer
+                                        </p>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @foreach(array_slice($previewDates, 0, 8) as $date)
+                                                <span class="text-xs px-2 py-1 bg-destructive/20 text-destructive rounded">
+                                                    {{ \Carbon\Carbon::parse($date)->format('d.m') }}
+                                                </span>
+                                            @endforeach
+                                            @if(count($previewDates) > 8)
+                                                <span class="text-xs px-2 py-1 bg-muted/20 text-muted rounded">
+                                                    +{{ count($previewDates) - 8 }} til
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @elseif($editingShiftId)
+                                    <div class="pt-2 border-t border-border">
+                                        <p class="text-xs text-muted">
+                                            Velg flere ganger for å opprette nye oppføringer
+                                        </p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Separator --}}

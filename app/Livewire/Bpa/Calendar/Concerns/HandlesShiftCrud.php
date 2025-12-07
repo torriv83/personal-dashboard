@@ -155,7 +155,14 @@ trait HandlesShiftCrud
         if ($this->editingShiftId) {
             $shift = Shift::findOrFail($this->editingShiftId);
             $shift->update($data);
-            $this->dispatch('toast', type: 'success', message: 'Vakten ble oppdatert');
+
+            // If editing and recurring is enabled, create new recurring entries (excluding current date)
+            if ($this->isUnavailable && $this->isRecurring) {
+                $this->createRecurringShifts($data, skipFirstDate: true);
+                $this->dispatch('toast', type: 'success', message: 'Vakten ble oppdatert og gjentakende oppføringer opprettet');
+            } else {
+                $this->dispatch('toast', type: 'success', message: 'Vakten ble oppdatert');
+            }
         } else {
             // Handle recurring unavailability
             if ($this->isUnavailable && $this->isRecurring) {

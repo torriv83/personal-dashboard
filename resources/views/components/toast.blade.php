@@ -8,10 +8,13 @@
     Types: success, error, warning, info
 --}}
 <div
+    wire:ignore
     x-data="{
         toasts: [],
+        counter: 0,
         add(toast) {
-            const id = Date.now()
+            this.counter++
+            const id = this.counter
             this.toasts.push({ id, ...toast })
             setTimeout(() => this.remove(id), toast.duration || 5000)
         },
