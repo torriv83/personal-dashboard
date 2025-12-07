@@ -154,6 +154,7 @@
                             <div
                                 @mousedown="startCreate($event, '{{ $weekDay['date'] }}', '{{ $slot['label'] }}', $el.closest('[data-slot-height]'))"
                                 @dblclick.stop="openQuickCreate($event, '{{ $weekDay['date'] }}', '{{ $slot['label'] }}')"
+                                @contextmenu="showSlotContextMenu($event, '{{ $weekDay['date'] }}', '{{ $slot['label'] }}')"
                                 class="absolute inset-0 hover:bg-card-hover/30 transition-colors cursor-pointer group"
                                 title="Dra for å velge tid, dobbeltklikk for 3t"
                             >
@@ -204,6 +205,7 @@
                                     {{-- Mobil: Farget blokk uten tekst --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
+                                        @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                         class="md:hidden absolute left-0 right-0 bg-destructive/30 border-l-2 border-destructive pointer-events-auto cursor-pointer z-10"
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%;"
@@ -211,6 +213,7 @@
                                     {{-- Desktop: Full info --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
+                                        @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                         data-shift="{{ $shift->id }}"
                                         draggable="true"
                                         @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
@@ -235,6 +238,7 @@
                                     {{-- Mobil: Farget blokk uten tekst --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
+                                        @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                         class="md:hidden absolute left-0 right-0 border-l-2 pointer-events-auto cursor-pointer z-10"
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $assistantColor }}30; border-color: {{ $assistantColor }}"
@@ -242,6 +246,7 @@
                                     {{-- Desktop: Full info --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
+                                        @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                         data-shift="{{ $shift->id }}"
                                         draggable="true"
                                         @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"

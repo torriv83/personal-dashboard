@@ -30,6 +30,7 @@
                     <div
                         wire:key="day-{{ $day['date'] }}"
                         wire:click="goToDay('{{ $day['date'] }}')"
+                        @contextmenu="showSlotContextMenu($event, '{{ $day['date'] }}', null)"
                         @dragover="allowDrop($event, null, '{{ $day['date'] }}')"
                         @dragleave="leaveDrop($event)"
                         @drop.stop="handleDrop($event, '{{ $day['date'] }}')"
@@ -61,12 +62,14 @@
                                         @if($shift->is_unavailable)
                                             <span
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
+                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                                 class="w-2 h-2 rounded-full bg-destructive cursor-pointer"
                                                 title="{{ $shift->assistant?->initials ?? '?' }} - Borte"
                                             ></span>
                                         @else
                                             <span
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
+                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                                 class="w-2 h-2 rounded-full cursor-pointer"
                                                 style="background-color: {{ $shift->assistant?->color ?? '#6b7280' }}"
                                                 title="{{ $shift->assistant?->initials ?? '?' }} {{ $shift->time_range }}"
@@ -82,6 +85,7 @@
                                         @if($shift->is_unavailable)
                                             <div
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
+                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                                 draggable="true"
                                                 @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
                                                 @dragend="endDrag($event)"
@@ -96,6 +100,7 @@
                                         @else
                                             <div
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
+                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                                 draggable="true"
                                                 @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
                                                 @dragend="endDrag($event)"

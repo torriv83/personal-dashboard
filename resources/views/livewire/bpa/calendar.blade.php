@@ -18,4 +18,7 @@
 
     {{-- Quick Create Popover --}}
     @include('livewire.bpa.calendar._quick-create')
+
+    {{-- Context Menu (Høyreklikk-meny) --}}
+    @include('livewire.bpa.calendar._context-menu')
 </div>

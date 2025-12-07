@@ -151,6 +151,7 @@
                                 <div
                                     @mousedown="startCreate($event, '{{ $this->currentDate->format('Y-m-d') }}', '{{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }}', $el.closest('[data-slot-height]'))"
                                     @dblclick.stop="openQuickCreate($event, '{{ $this->currentDate->format('Y-m-d') }}', '{{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }}')"
+                                    @contextmenu="showSlotContextMenu($event, '{{ $this->currentDate->format('Y-m-d') }}', '{{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }}')"
                                     class="flex-1 hover:bg-card-hover/50 transition-colors cursor-pointer group/quarter"
                                     title="Kl {{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }} (dra for å velge tid, dobbeltklikk for 3t)"
                                 >
@@ -204,6 +205,7 @@
                             @if($shift->is_unavailable)
                                 <div
                                     @click="handleShiftClick({{ $shift->id }})"
+                                    @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                     data-shift="{{ $shift->id }}"
                                     draggable="true"
                                     @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
@@ -230,6 +232,7 @@
                             @else
                                 <div
                                     @click="handleShiftClick({{ $shift->id }})"
+                                    @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                     data-shift="{{ $shift->id }}"
                                     draggable="true"
                                     @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"

@@ -42,6 +42,12 @@ export default (initialView) => ({
     _createMoveHandler: null,
     _createUpHandler: null,
 
+    // Context menu state is now in Alpine.store('contextMenu')
+    // This getter provides backward compatibility for existing code
+    get contextMenu() {
+        return this.$store.contextMenu;
+    },
+
     /**
      * Initialize component - set day view as default on mobile
      */
@@ -59,9 +65,84 @@ export default (initialView) => ({
      */
     handleKeydown(e) {
         if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+        // Close context menu on Escape
+        if (e.key === 'Escape' && this.$store.contextMenu.show) {
+            this.$store.contextMenu.hide();
+            return;
+        }
         if (e.key === 'm' || e.key === 'M') this.$wire.setView('month');
         if (e.key === 'u' || e.key === 'U') this.$wire.setView('week');
         if (e.key === 'd' || e.key === 'D') this.$wire.setView('day');
+    },
+
+    // =========================================================================
+    // Context Menu
+    // =========================================================================
+
+    /**
+     * Show context menu for empty slot
+     */
+    showSlotContextMenu(e, date, time) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Calculate position
+        const x = Math.min(e.clientX, window.innerWidth - 200);
+        const y = Math.min(e.clientY, window.innerHeight - 250);
+
+        // Use the global store (persists across Livewire re-renders)
+        this.$store.contextMenu.showSlot(x, y, date, time);
+    },
+
+    /**
+     * Show context menu for existing shift
+     */
+    showShiftContextMenu(e, shiftId, isUnavailable = false) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Calculate position
+        const x = Math.min(e.clientX, window.innerWidth - 200);
+        const y = Math.min(e.clientY, window.innerHeight - 250);
+
+        // Use the global store (persists across Livewire re-renders)
+        this.$store.contextMenu.showShift(x, y, shiftId, isUnavailable);
+    },
+
+    /**
+     * Hide context menu
+     */
+    hideContextMenu() {
+        this.$store.contextMenu.hide();
+    },
+
+    /**
+     * Handle context menu action
+     */
+    contextMenuAction(action) {
+        const menu = this.contextMenu;
+
+        if (menu.type === 'slot') {
+            // Slot actions - openModal(date, time, assistantId, endTime, isUnavailable)
+            if (action === 'create') {
+                this.$wire.openModal(menu.date, menu.time, null, null, false);
+            } else if (action === 'unavailable') {
+                this.$wire.openModal(menu.date, menu.time, null, null, true);
+            }
+        } else if (menu.type === 'shift') {
+            // Shift actions
+            if (action === 'edit') {
+                this.$wire.editShift(menu.shiftId);
+            } else if (action === 'duplicate') {
+                this.$wire.duplicateShiftWithModal(menu.shiftId);
+            } else if (action === 'delete') {
+                this.$wire.deleteShift(menu.shiftId);
+            } else if (action === 'archive') {
+                this.$wire.archiveShift(menu.shiftId);
+            }
+        }
+
+        this.hideContextMenu();
     },
 
     // =========================================================================

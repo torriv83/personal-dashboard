@@ -11,7 +11,7 @@ trait HandlesShiftCrud
     /**
      * Open the modal for creating a new shift.
      */
-    public function openModal(?string $date = null, ?string $time = null, ?int $assistantId = null, ?string $endTime = null): void
+    public function openModal(?string $date = null, ?string $time = null, ?int $assistantId = null, ?string $endTime = null, bool $isUnavailable = false): void
     {
         $this->resetForm();
         $this->showModal = true;
@@ -40,6 +40,10 @@ trait HandlesShiftCrud
 
         if ($assistantId) {
             $this->assistantId = $assistantId;
+        }
+
+        if ($isUnavailable) {
+            $this->isUnavailable = true;
         }
     }
 
@@ -194,8 +198,12 @@ trait HandlesShiftCrud
     /**
      * Initiate delete - check if recurring and show dialog if needed.
      */
-    public function deleteShift(): void
+    public function deleteShift(?int $shiftId = null): void
     {
+        if ($shiftId) {
+            $this->editingShiftId = $shiftId;
+        }
+
         if (! $this->editingShiftId) {
             return;
         }
@@ -283,8 +291,12 @@ trait HandlesShiftCrud
     /**
      * Initiate archive - check if recurring and show dialog if needed.
      */
-    public function archiveShift(): void
+    public function archiveShift(?int $shiftId = null): void
     {
+        if ($shiftId) {
+            $this->editingShiftId = $shiftId;
+        }
+
         if (! $this->editingShiftId) {
             return;
         }
@@ -682,5 +694,25 @@ trait HandlesShiftCrud
         // Clear computed property cache
         unset($this->shifts, $this->shiftsByDate);
         $this->dispatch('toast', type: 'success', message: 'Vakten ble duplisert');
+    }
+
+    /**
+     * Open modal with shift data for duplication (clone).
+     */
+    public function duplicateShiftWithModal(int $shiftId): void
+    {
+        $shift = Shift::findOrFail($shiftId);
+
+        $this->resetForm();
+        $this->assistantId = $shift->assistant_id;
+        $this->fromDate = $shift->starts_at->format('Y-m-d');
+        $this->fromTime = $shift->starts_at->format('H:i');
+        $this->toDate = $shift->ends_at->format('Y-m-d');
+        $this->toTime = $shift->ends_at->format('H:i');
+        $this->isUnavailable = $shift->is_unavailable;
+        $this->isAllDay = $shift->is_all_day;
+        $this->note = $shift->note ?? '';
+        $this->showModal = true;
+        // Note: editingShiftId is NOT set, so saving will create a new shift
     }
 }
