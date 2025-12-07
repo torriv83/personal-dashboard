@@ -119,9 +119,24 @@
                         </label>
                     </div>
 
+                    {{-- Eksisterende gjentakende indikator --}}
+                    @if($isExistingRecurring && $editingShiftId)
+                        <div class="mt-4 p-3 bg-destructive/10 rounded-lg border border-destructive/30">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-destructive shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                <span class="text-sm font-medium text-destructive">Del av gjentakende serie</span>
+                            </div>
+                            <p class="text-xs text-muted mt-1.5">
+                                Endringer i denne vakten kan påvirke andre vakter i serien.
+                            </p>
+                        </div>
+                    @endif
+
                     {{-- Gjentakende (kun for "Ikke tilgjengelig") --}}
                     <div
-                        x-show="$wire.isUnavailable"
+                        x-show="$wire.isUnavailable && !{{ $isExistingRecurring ? 'true' : 'false' }}"
                         x-cloak
                         x-transition:enter="transition ease-out duration-200"
                         x-transition:enter-start="opacity-0 -translate-y-2"
@@ -516,6 +531,8 @@
                         Slett gjentakende oppføring
                     @elseif($recurringAction === 'archive')
                         Arkiver gjentakende oppføring
+                    @elseif($recurringAction === 'move')
+                        Flytt gjentakende oppføring
                     @else
                         Rediger gjentakende oppføring
                     @endif
@@ -529,11 +546,13 @@
                 $actionMethod = match($recurringAction) {
                     'delete' => 'confirmDeleteShift',
                     'archive' => 'confirmArchiveShift',
+                    'move' => 'confirmMoveRecurring',
                     default => 'confirmEditRecurring',
                 };
                 $actionLabel = match($recurringAction) {
                     'delete' => 'Slett',
                     'archive' => 'Arkiver',
+                    'move' => 'Flytt',
                     default => 'Endre',
                 };
             @endphp

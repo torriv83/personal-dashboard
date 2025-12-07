@@ -80,7 +80,7 @@ class Shift extends Model
     protected function assistantName(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => $this->assistant?->name ?? 'Tidligere ansatt'
+            get: fn (): string => $this->assistant !== null ? $this->assistant->name : 'Tidligere ansatt'
         );
     }
 

@@ -59,6 +59,7 @@ trait HandlesShiftCrud
         $this->isUnavailable = $shift->is_unavailable;
         $this->isAllDay = $shift->is_all_day;
         $this->note = $shift->note ?? '';
+        $this->isExistingRecurring = $shift->isRecurring();
         $this->showModal = true;
     }
 
@@ -93,6 +94,9 @@ trait HandlesShiftCrud
         $this->showRecurringDialog = false;
         $this->recurringAction = '';
         $this->recurringScope = 'single';
+        $this->isExistingRecurring = false;
+        $this->pendingMoveDate = null;
+        $this->pendingMoveTime = null;
     }
 
     /**
@@ -382,6 +386,30 @@ trait HandlesShiftCrud
     {
         $shift = Shift::findOrFail($shiftId);
 
+        // If recurring, show dialog to ask about scope
+        if ($shift->isRecurring()) {
+            $this->editingShiftId = $shiftId;
+            $this->pendingMoveDate = $newDate;
+            $this->pendingMoveTime = $newTime;
+            $this->recurringAction = 'move';
+            $this->showRecurringDialog = true;
+
+            return;
+        }
+
+        // Non-recurring: move directly
+        $this->executeMoveShift($shift, $newDate, $newTime);
+
+        // Clear computed property cache
+        unset($this->shifts, $this->shiftsByDate);
+        $this->dispatch('toast', type: 'success', message: 'Vakten ble flyttet');
+    }
+
+    /**
+     * Execute the actual move operation on a shift.
+     */
+    private function executeMoveShift(Shift $shift, string $newDate, ?string $newTime = null): void
+    {
         $oldStart = $shift->starts_at;
         $oldEnd = $shift->ends_at;
         $duration = $oldStart->diffInMinutes($oldEnd);
@@ -401,7 +429,7 @@ trait HandlesShiftCrud
                 $shift->assistant_id,
                 $newStart,
                 $newEnd,
-                $shiftId
+                $shift->id
             );
 
             if ($conflict) {
@@ -419,10 +447,88 @@ trait HandlesShiftCrud
             'starts_at' => $newStart,
             'ends_at' => $newEnd,
         ]);
+    }
+
+    /**
+     * Confirm and execute move for recurring shifts based on scope.
+     */
+    public function confirmMoveRecurring(string $scope): void
+    {
+        if (! $this->editingShiftId || ! $this->pendingMoveDate) {
+            return;
+        }
+
+        $shift = Shift::findOrFail($this->editingShiftId);
+        $newDate = $this->pendingMoveDate;
+        $newTime = $this->pendingMoveTime;
+
+        // Calculate the day difference for moving the series
+        $daysDiff = (int) Carbon::parse($shift->starts_at->format('Y-m-d'))
+            ->diffInDays(Carbon::parse($newDate), false);
+
+        $movedCount = match ($scope) {
+            'single' => $this->moveSingleShift($shift, $newDate, $newTime),
+            'future' => $this->moveFutureShifts($shift, $daysDiff, $newTime),
+            'all' => $this->moveAllRecurringShifts($shift, $daysDiff, $newTime),
+            default => $this->moveSingleShift($shift, $newDate, $newTime),
+        };
 
         // Clear computed property cache
         unset($this->shifts, $this->shiftsByDate);
-        $this->dispatch('toast', type: 'success', message: 'Vakten ble flyttet');
+
+        $this->showRecurringDialog = false;
+        $this->pendingMoveDate = null;
+        $this->pendingMoveTime = null;
+        $this->editingShiftId = null;
+
+        $message = $movedCount > 1
+            ? "{$movedCount} oppføringer ble flyttet"
+            : 'Oppføringen ble flyttet';
+
+        $this->dispatch('toast', type: 'success', message: $message);
+    }
+
+    private function moveSingleShift(Shift $shift, string $newDate, ?string $newTime): int
+    {
+        // When moving single, remove from recurring group
+        $shift->recurring_group_id = null;
+        $this->executeMoveShift($shift, $newDate, $newTime);
+
+        return 1;
+    }
+
+    private function moveFutureShifts(Shift $shift, int $daysDiff, ?string $newTime): int
+    {
+        if (! $shift->isRecurring()) {
+            return $this->moveSingleShift($shift, $this->pendingMoveDate, $newTime);
+        }
+
+        $futureShifts = $shift->getFutureRecurringShifts();
+        $count = $futureShifts->count();
+
+        foreach ($futureShifts as $futureShift) {
+            $newDate = $futureShift->starts_at->copy()->addDays($daysDiff)->format('Y-m-d');
+            $this->executeMoveShift($futureShift, $newDate, $newTime);
+        }
+
+        return $count;
+    }
+
+    private function moveAllRecurringShifts(Shift $shift, int $daysDiff, ?string $newTime): int
+    {
+        if (! $shift->isRecurring()) {
+            return $this->moveSingleShift($shift, $this->pendingMoveDate, $newTime);
+        }
+
+        $allShifts = $shift->getRecurringGroupShifts();
+        $count = $allShifts->count();
+
+        foreach ($allShifts as $groupShift) {
+            $newDate = $groupShift->starts_at->copy()->addDays($daysDiff)->format('Y-m-d');
+            $this->executeMoveShift($groupShift, $newDate, $newTime);
+        }
+
+        return $count;
     }
 
     /**

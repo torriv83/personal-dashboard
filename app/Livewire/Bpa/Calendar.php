@@ -83,12 +83,20 @@ class Calendar extends Component
 
     public string $recurringEndDate = '';
 
-    // Dialog for editing/deleting recurring shifts
+    // Dialog for editing/deleting/moving recurring shifts
     public bool $showRecurringDialog = false;
 
-    public string $recurringAction = ''; // edit, delete
+    public string $recurringAction = ''; // edit, delete, archive, move
 
     public string $recurringScope = 'single'; // single, future, all
+
+    // Track if shift being edited is already recurring
+    public bool $isExistingRecurring = false;
+
+    // Pending move data for recurring shifts
+    public ?string $pendingMoveDate = null;
+
+    public ?string $pendingMoveTime = null;
 
     protected $listeners = ['refreshCalendar' => '$refresh'];
 

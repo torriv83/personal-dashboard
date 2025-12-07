@@ -259,8 +259,8 @@ it('can delete a shift', function () {
         ->call('confirmDeleteShift', 'single') // Call directly since non-recurring shifts bypass dialog
         ->assertDispatched('toast');
 
-    // Shift uses SoftDeletes, so check it was soft deleted
-    $this->assertSoftDeleted('shifts', ['id' => $shift->id]);
+    // Delete uses forceDelete (permanent), so check it's completely removed
+    $this->assertDatabaseMissing('shifts', ['id' => $shift->id]);
 });
 
 // Unavailable entries tests
@@ -381,14 +381,13 @@ it('preserves shift duration when moving', function () {
 it('can create shift from drag', function () {
     $assistant = Assistant::factory()->create();
 
+    // createShiftFromDrag now opens modal with pre-filled data instead of creating directly
     Livewire::test(Calendar::class)
         ->call('createShiftFromDrag', $assistant->id, '2024-06-20', '10:00')
-        ->assertDispatched('toast', type: 'success');
-
-    $this->assertDatabaseHas('shifts', [
-        'assistant_id' => $assistant->id,
-        'is_unavailable' => false,
-    ]);
+        ->assertSet('showModal', true)
+        ->assertSet('assistantId', $assistant->id)
+        ->assertSet('fromDate', '2024-06-20')
+        ->assertSet('fromTime', '10:00');
 });
 
 it('can resize shift', function () {
