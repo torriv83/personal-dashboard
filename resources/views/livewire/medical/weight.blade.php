@@ -15,6 +15,7 @@
                 wire:keydown.enter="save"
                 class="w-24 bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                 placeholder="Vekt"
+                autofocus
             >
             <span class="text-sm text-muted-foreground">kg</span>
             <button
