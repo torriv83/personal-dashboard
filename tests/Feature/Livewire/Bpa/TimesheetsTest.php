@@ -72,7 +72,6 @@ it('can toggle shift fields', function () {
     $shift = Shift::factory()->create([
         'is_unavailable' => false,
         'is_all_day' => false,
-        'is_archived' => false,
     ]);
 
     Livewire::test(Timesheets::class)
@@ -86,10 +85,4 @@ it('can toggle shift fields', function () {
 
     $shift->refresh();
     expect($shift->is_all_day)->toBeTrue();
-
-    Livewire::test(Timesheets::class)
-        ->call('toggleField', $shift->id, 'archived');
-
-    $shift->refresh();
-    expect($shift->is_archived)->toBeTrue();
 });

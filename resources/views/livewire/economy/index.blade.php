@@ -225,6 +225,7 @@
             $net = $chartData->map(fn($m) => $m['income'] + $m['activity'])->toArray();
         @endphp
         <div
+        wire:key="chart-{{ $chartVersion }}"
         x-data="{
             expanded: false,
             chart: null,

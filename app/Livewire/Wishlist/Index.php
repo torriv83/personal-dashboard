@@ -25,6 +25,15 @@ class Index extends Component
 
     public bool $showGroupModal = false;
 
+    public bool $showShareModal = false;
+
+    // Share modal state
+    public ?int $sharingGroupId = null;
+
+    public ?string $shareUrl = null;
+
+    public bool $sharingEnabled = false;
+
     // Form data for single item
     public ?int $editingItemId = null;
 
@@ -104,6 +113,7 @@ class Index extends Component
                 'status_value' => null,
                 'prioritet' => $group->sort_order,
                 'is_group' => true,
+                'is_shared' => $group->is_shared,
                 'items' => $group->items->map(fn (WishlistItem $item): array => [
                     'id' => $item->id,
                     'navn' => $item->name,
@@ -182,6 +192,15 @@ class Index extends Component
     public function getGroupTotal(array $items): int
     {
         return collect($items)->sum(fn ($item) => $item['pris'] * $item['antall']);
+    }
+
+    public function mount(): void
+    {
+        // Open create modal if ?create=1 is in URL
+        if (request()->query('create')) {
+            $this->openItemModal();
+            $this->dispatch('clear-url-params');
+        }
     }
 
     public function openItemModal(?int $id = null, ?int $groupId = null): void
@@ -459,6 +478,66 @@ class Index extends Component
 
         unset($this->wishlists, $this->totalAll, $this->totalRemaining);
         $this->dispatch('toast', type: 'success', message: 'Status oppdatert');
+    }
+
+    public function openShareModal(int $groupId): void
+    {
+        $group = WishlistGroup::find($groupId);
+        if (! $group) {
+            return;
+        }
+
+        $this->sharingGroupId = $groupId;
+        $this->sharingEnabled = $group->is_shared;
+        $this->shareUrl = $group->getShareUrl();
+        $this->showShareModal = true;
+    }
+
+    public function closeShareModal(): void
+    {
+        $this->showShareModal = false;
+        $this->sharingGroupId = null;
+        $this->shareUrl = null;
+        $this->sharingEnabled = false;
+    }
+
+    public function toggleSharing(): void
+    {
+        $group = WishlistGroup::find($this->sharingGroupId);
+        if (! $group) {
+            return;
+        }
+
+        if ($group->is_shared) {
+            // Turn off sharing
+            $group->update(['is_shared' => false]);
+            $this->sharingEnabled = false;
+            $this->shareUrl = null;
+            $this->dispatch('toast', type: 'success', message: 'Deling er deaktivert');
+        } else {
+            // Turn on sharing - generate token if needed
+            if (! $group->share_token) {
+                $group->generateShareToken();
+            }
+            $group->update(['is_shared' => true]);
+            $this->sharingEnabled = true;
+            $this->shareUrl = $group->getShareUrl();
+            $this->dispatch('toast', type: 'success', message: 'Deling er aktivert');
+        }
+
+        unset($this->wishlists);
+    }
+
+    public function regenerateShareToken(): void
+    {
+        $group = WishlistGroup::find($this->sharingGroupId);
+        if (! $group || ! $group->is_shared) {
+            return;
+        }
+
+        $group->generateShareToken();
+        $this->shareUrl = $group->getShareUrl();
+        $this->dispatch('toast', type: 'success', message: 'Ny delingslenke er generert');
     }
 
     public function render()

@@ -14,10 +14,16 @@ use App\Livewire\Games\Rommers;
 use App\Livewire\Medical\Dashboard as MedicalDashboard;
 use App\Livewire\Medical\Equipment;
 use App\Livewire\Medical\Prescriptions;
+use App\Livewire\Medical\Weight;
+use App\Livewire\Tools\PortGenerator;
 use App\Livewire\User\Profile;
 use App\Livewire\User\Settings;
 use App\Livewire\Wishlist\Index as WishlistIndex;
+use App\Livewire\Wishlist\SharedView as WishlistSharedView;
 use Illuminate\Support\Facades\Route;
+
+// Offentlig delt ønskeliste (ingen innlogging krevd)
+Route::get('/delt/{token}', WishlistSharedView::class)->name('wishlist.shared');
 
 // Auth (gjester - redirect til dashboard hvis allerede innlogget)
 Route::middleware('guest')->group(function () {
@@ -49,6 +55,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/', MedicalDashboard::class)->name('dashboard');
         Route::get('/utstyr', Equipment::class)->name('equipment');
         Route::get('/resepter', Prescriptions::class)->name('prescriptions');
+        Route::get('/vekt', Weight::class)->name('weight');
     });
 
     // Økonomi
@@ -60,5 +67,10 @@ Route::middleware('auth')->group(function () {
     // Spill
     Route::prefix('spill')->name('games.')->group(function () {
         Route::get('/rommers', Rommers::class)->name('rommers');
+    });
+
+    // Verktøy
+    Route::prefix('verktoy')->name('tools.')->group(function () {
+        Route::get('/port-generator', PortGenerator::class)->name('port-generator');
     });
 });

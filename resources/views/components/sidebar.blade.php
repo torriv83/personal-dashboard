@@ -68,6 +68,9 @@
             <x-sidebar-sublink href="{{ route('medical.prescriptions') }}" :active="request()->routeIs('medical.prescriptions')">
                 Resepter
             </x-sidebar-sublink>
+            <x-sidebar-sublink href="{{ route('medical.weight') }}" :active="request()->routeIs('medical.weight')">
+                Vekt
+            </x-sidebar-sublink>
         </x-sidebar-group>
 
         {{-- Økonomi - no submenu --}}
@@ -127,8 +130,8 @@
             <x-sidebar-sublink :disabled="true">
                 Pdf til Markdown (kommer snart)
             </x-sidebar-sublink>
-            <x-sidebar-sublink :disabled="true">
-                Portvelger (kommer snart)
+            <x-sidebar-sublink href="{{ route('tools.port-generator') }}" :active="request()->routeIs('tools.port-generator')">
+                Portvelger
             </x-sidebar-sublink>
         </x-sidebar-group>
     </nav>

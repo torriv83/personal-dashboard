@@ -3,6 +3,7 @@
 namespace App\Livewire\User;
 
 use App\Models\Setting;
+use App\Services\WeatherService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -24,10 +25,26 @@ class Settings extends Component
 
     public float $bpaHoursPerWeek = 0;
 
+    public string $weatherLocationSearch = '';
+
+    public string $weatherLocationName = 'Halden';
+
+    public string $weatherLatitude = '59.1229';
+
+    public string $weatherLongitude = '11.3875';
+
+    public bool $weatherEnabled = true;
+
     public function mount(): void
     {
         $this->lockTimeoutMinutes = Auth::user()->lock_timeout_minutes ?? 30;
         $this->bpaHoursPerWeek = Setting::getBpaHoursPerWeek();
+
+        $this->weatherEnabled = (bool) Setting::get('weather_enabled', true);
+        $this->weatherLocationName = Setting::get('weather_location_name', 'Halden');
+        $this->weatherLatitude = (string) Setting::get('weather_latitude', '59.1229');
+        $this->weatherLongitude = (string) Setting::get('weather_longitude', '11.3875');
+        $this->weatherLocationSearch = $this->weatherLocationName;
     }
 
     public function openPinModal(): void
@@ -121,6 +138,44 @@ class Settings extends Component
         Setting::setBpaHoursPerWeek($this->bpaHoursPerWeek);
 
         $this->dispatch('bpa-saved');
+    }
+
+    public function searchWeatherLocation(): void
+    {
+        $this->validate([
+            'weatherLocationSearch' => ['required', 'string', 'min:2', 'max:100'],
+        ], [
+            'weatherLocationSearch.required' => 'Skriv inn et stedsnavn.',
+            'weatherLocationSearch.min' => 'Stedsnavn må være minst 2 tegn.',
+        ]);
+
+        $result = app(WeatherService::class)->searchLocation($this->weatherLocationSearch);
+
+        if (! $result) {
+            $this->addError('weatherLocationSearch', 'Fant ikke stedet. Prøv et annet søk.');
+
+            return;
+        }
+
+        $this->weatherLocationName = $result['name'];
+        $this->weatherLatitude = (string) $result['lat'];
+        $this->weatherLongitude = (string) $result['lon'];
+        $this->weatherLocationSearch = $result['name'];
+
+        Setting::set('weather_location_name', $this->weatherLocationName);
+        Setting::set('weather_latitude', $this->weatherLatitude);
+        Setting::set('weather_longitude', $this->weatherLongitude);
+
+        app(WeatherService::class)->clearCache();
+
+        $this->dispatch('weather-saved');
+    }
+
+    public function toggleWeather(): void
+    {
+        $this->weatherEnabled = ! $this->weatherEnabled;
+        Setting::set('weather_enabled', $this->weatherEnabled);
+        $this->dispatch('weather-toggled');
     }
 
     public function render()

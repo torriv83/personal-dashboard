@@ -45,6 +45,12 @@
             "short_name": "Ønsker",
             "url": "/onskeliste",
             "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Portvelger",
+            "short_name": "Port",
+            "url": "/verktoy/port-generator",
+            "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
         }
     ]
 }

@@ -1,0 +1,502 @@
+/**
+ * Alpine.js component for BPA Calendar
+ *
+ * Handles drag & drop, resize, and drag-to-create functionality
+ */
+export default (initialView) => ({
+    // Sidebar state
+    showAssistants: false,
+
+    // Drag & drop state for assistants
+    draggedAssistant: null,
+
+    // Drag & drop state for shifts
+    draggedShift: null,
+    draggedShiftStart: null,
+    draggedShiftDuration: null,
+    dragPreviewTime: null,
+    dragOverDate: null,
+
+    // Resize state
+    resizingShift: null,
+    resizeStartY: 0,
+    resizeStartHeight: 0,
+    resizeShiftStartTime: null,
+    resizePreviewEndTime: null,
+
+    // Click protection flags
+    justDragged: false,
+    justResized: false,
+
+    // Drag-to-create state
+    isCreatingShift: false,
+    createPending: false,
+    createTimeout: null,
+    createSessionId: 0, // Incremented each drag to invalidate stale timeouts
+    createDate: null,
+    createStartTime: null,
+    createEndTime: null,
+    createStartY: 0,
+    createStartSlotTop: 0,
+    createSlotHeight: 0,
+    _createMoveHandler: null,
+    _createUpHandler: null,
+
+    // Context menu state is now in Alpine.store('contextMenu')
+    // This getter provides backward compatibility for existing code
+    get contextMenu() {
+        return this.$store.contextMenu;
+    },
+
+    /**
+     * Initialize component - set day view as default on mobile
+     */
+    init() {
+        if (window.innerWidth < 768 && !sessionStorage.getItem('calendar-initialized')) {
+            sessionStorage.setItem('calendar-initialized', 'true');
+            if (initialView === 'month') {
+                this.$wire.setView('day');
+            }
+        }
+    },
+
+    /**
+     * Handle keyboard shortcuts
+     */
+    handleKeydown(e) {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+        // Close context menu on Escape
+        if (e.key === 'Escape' && this.$store.contextMenu.show) {
+            this.$store.contextMenu.hide();
+            return;
+        }
+        if (e.key === 'm' || e.key === 'M') this.$wire.setView('month');
+        if (e.key === 'u' || e.key === 'U') this.$wire.setView('week');
+        if (e.key === 'd' || e.key === 'D') this.$wire.setView('day');
+    },
+
+    // =========================================================================
+    // Context Menu
+    // =========================================================================
+
+    /**
+     * Show context menu for empty slot
+     */
+    showSlotContextMenu(e, date, time) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Calculate position
+        const x = Math.min(e.clientX, window.innerWidth - 200);
+        const y = Math.min(e.clientY, window.innerHeight - 250);
+
+        // Use the global store (persists across Livewire re-renders)
+        this.$store.contextMenu.showSlot(x, y, date, time);
+    },
+
+    /**
+     * Show context menu for existing shift
+     */
+    showShiftContextMenu(e, shiftId, isUnavailable = false) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Calculate position
+        const x = Math.min(e.clientX, window.innerWidth - 200);
+        const y = Math.min(e.clientY, window.innerHeight - 250);
+
+        // Use the global store (persists across Livewire re-renders)
+        this.$store.contextMenu.showShift(x, y, shiftId, isUnavailable);
+    },
+
+    /**
+     * Hide context menu
+     */
+    hideContextMenu() {
+        this.$store.contextMenu.hide();
+    },
+
+    /**
+     * Handle context menu action
+     */
+    contextMenuAction(action) {
+        const menu = this.contextMenu;
+
+        if (menu.type === 'slot') {
+            // Slot actions - openModal(date, time, assistantId, endTime, isUnavailable)
+            if (action === 'create') {
+                this.$wire.openModal(menu.date, menu.time, null, null, false);
+            } else if (action === 'unavailable') {
+                this.$wire.openModal(menu.date, menu.time, null, null, true);
+            }
+        } else if (menu.type === 'shift') {
+            // Shift actions
+            if (action === 'edit') {
+                this.$wire.editShift(menu.shiftId);
+            } else if (action === 'duplicate') {
+                this.$wire.duplicateShiftWithModal(menu.shiftId);
+            } else if (action === 'delete') {
+                this.$wire.deleteShift(menu.shiftId);
+            } else if (action === 'archive') {
+                this.$wire.archiveShift(menu.shiftId);
+            }
+        }
+
+        this.hideContextMenu();
+    },
+
+    // =========================================================================
+    // Drag & Drop: Assistants from sidebar
+    // =========================================================================
+
+    startDragAssistant(e, assistantId) {
+        this.draggedAssistant = assistantId;
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'assistant', id: assistantId }));
+    },
+
+    // =========================================================================
+    // Drag & Drop: Existing shifts
+    // =========================================================================
+
+    startDragShift(e, shiftId, startTime, durationMinutes) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'shift', id: shiftId }));
+        this.draggedShiftStart = startTime;
+        this.draggedShiftDuration = durationMinutes;
+        // Delay applying pointer-events-none so drag can initiate first
+        setTimeout(() => {
+            this.draggedShift = shiftId;
+        }, 0);
+    },
+
+    endDrag() {
+        this.draggedAssistant = null;
+        this.draggedShift = null;
+        this.draggedShiftStart = null;
+        this.draggedShiftDuration = null;
+        this.dragPreviewTime = null;
+        this.dragOverDate = null;
+        this.justDragged = true;
+        setTimeout(() => this.justDragged = false, 200);
+    },
+
+    // =========================================================================
+    // Shift interactions
+    // =========================================================================
+
+    handleShiftClick(shiftId) {
+        if (this.justDragged || this.justResized) return;
+        if (typeof this.$wire.editShift !== 'function') return;
+        this.$wire.editShift(shiftId);
+    },
+
+    openQuickCreate(e, date, time, endTime = null) {
+        if (typeof this.$wire.openQuickCreate !== 'function') return;
+        // Cancel any pending drag-to-create (for double-click)
+        if (this.createTimeout) {
+            clearTimeout(this.createTimeout);
+            this.createTimeout = null;
+            this.createPending = false;
+        }
+        // Calculate position and pass to Livewire (stored server-side to survive re-renders)
+        const x = Math.min(e.clientX, window.innerWidth - 280);
+        const y = Math.min(e.clientY, window.innerHeight - 300);
+        this.$wire.openQuickCreate(date, time, endTime, x, y);
+    },
+
+    // =========================================================================
+    // Drag-to-create shift
+    // =========================================================================
+
+    startCreate(e, date, time, slotElement) {
+        // Don't start if clicking on a shift
+        if (e.target.closest('[data-shift]')) return;
+        // Only left mouse button
+        if (e.button !== 0) return;
+
+        // Clean up any existing drag state (may be stale after Livewire re-render)
+        if (this.createTimeout) {
+            clearTimeout(this.createTimeout);
+        }
+        if (this._createMoveHandler) {
+            document.removeEventListener('mousemove', this._createMoveHandler);
+        }
+        if (this._createUpHandler) {
+            document.removeEventListener('mouseup', this._createUpHandler);
+        }
+
+        // Reset all drag-to-create state and increment session ID
+        this.isCreatingShift = false;
+        this.createPending = true;
+        this.createTimeout = null;
+        this.createSessionId++;
+        this.createDate = date;
+        this.createStartTime = time;
+        this.createEndTime = time;
+        this.createStartY = e.clientY;
+
+        // Get slot dimensions for calculating time
+        const slot = slotElement || e.target.closest('[data-slot-height]');
+        if (slot) {
+            const rect = slot.getBoundingClientRect();
+            this.createStartSlotTop = rect.top;
+            this.createSlotHeight = rect.height;
+        }
+
+        // Store handlers on component so we can clean them up later
+        this._createMoveHandler = (moveE) => this.updateCreate(moveE);
+        this._createUpHandler = (upE) => {
+            this.endCreate(upE);
+            document.removeEventListener('mousemove', this._createMoveHandler);
+            document.removeEventListener('mouseup', this._createUpHandler);
+            this._createMoveHandler = null;
+            this._createUpHandler = null;
+        };
+
+        document.addEventListener('mousemove', this._createMoveHandler);
+        document.addEventListener('mouseup', this._createUpHandler);
+
+        // Delay before showing visual feedback (allows double-click to cancel)
+        // Capture session ID to verify timeout is still valid when it fires
+        const sessionId = this.createSessionId;
+        const component = this;
+        this.createTimeout = setTimeout(() => {
+            // Only proceed if this is still the current drag session
+            if (component.createSessionId === sessionId && component.createPending) {
+                component.isCreatingShift = true;
+                // Force Alpine to recognize the state change
+                component.$nextTick(() => {});
+            }
+            component.createTimeout = null;
+        }, 150);
+    },
+
+    updateCreate(e) {
+        if (!this.isCreatingShift) return;
+
+        // Calculate new end time based on mouse position
+        const [startH, startM] = this.createStartTime.split(':').map(Number);
+        const startMinutes = startH * 60 + startM;
+
+        // Calculate minutes per pixel based on slot height (1 hour per slot)
+        const minutesPerPixel = 60 / this.createSlotHeight;
+        const diffY = e.clientY - this.createStartY;
+        const diffMinutes = Math.round((diffY * minutesPerPixel) / 15) * 15; // Snap to 15 min
+
+        // Calculate end time (minimum 15 minutes)
+        const endMinutes = Math.max(startMinutes + 15, startMinutes + diffMinutes);
+        const clampedEndMinutes = Math.min(endMinutes, 24 * 60); // Cap at midnight
+
+        const endH = Math.floor(clampedEndMinutes / 60);
+        const endM = clampedEndMinutes % 60;
+        this.createEndTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+    },
+
+    endCreate(e) {
+        // Clear timeout if still pending
+        if (this.createTimeout) {
+            clearTimeout(this.createTimeout);
+            this.createTimeout = null;
+        }
+
+        // If we never started showing the visual (quick click), just clean up
+        if (!this.isCreatingShift) {
+            this.createPending = false;
+            this.createDate = null;
+            this.createStartTime = null;
+            this.createEndTime = null;
+            return;
+        }
+
+        const [startH, startM] = this.createStartTime.split(':').map(Number);
+        const [endH, endM] = this.createEndTime.split(':').map(Number);
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = endH * 60 + endM;
+
+        // Only create if dragged at least 15 minutes
+        if (endMinutes > startMinutes) {
+            this.openQuickCreate(e, this.createDate, this.createStartTime, this.createEndTime);
+        }
+
+        this.isCreatingShift = false;
+        this.createPending = false;
+        this.createDate = null;
+        this.createStartTime = null;
+        this.createEndTime = null;
+    },
+
+    getCreatePreviewStyle(date, slotHour) {
+        if (!this.isCreatingShift || this.createDate !== date) return null;
+
+        const [startH, startM] = this.createStartTime.split(':').map(Number);
+        const [endH, endM] = this.createEndTime.split(':').map(Number);
+
+        // Only show in slots within the time range
+        if (slotHour < startH || slotHour > endH) return null;
+        if (slotHour === endH && endM === 0 && slotHour !== startH) return null;
+
+        const startMinutes = startH * 60 + startM;
+        const endMinutes = endH * 60 + endM;
+        const slotStartMinutes = slotHour * 60;
+
+        // Calculate top and height relative to this slot
+        let topPercent = 0;
+        if (slotHour === startH) {
+            topPercent = (startM / 60) * 100;
+        }
+
+        let heightPercent = 100 - topPercent;
+        if (slotHour === endH || (slotHour < endH && endMinutes <= (slotHour + 1) * 60)) {
+            const effectiveEndInSlot = Math.min(endMinutes, (slotHour + 1) * 60) - slotStartMinutes;
+            heightPercent = (effectiveEndInSlot / 60) * 100 - topPercent;
+        }
+
+        // isFirst: only true for the starting slot
+        const isFirst = slotHour === startH;
+        // isLast: true for the ending slot
+        const isLast = slotHour === endH || (slotHour < endH && endMinutes <= (slotHour + 1) * 60);
+
+        return { top: topPercent, height: heightPercent, isFirst, isLast };
+    },
+
+    // =========================================================================
+    // Drop handling
+    // =========================================================================
+
+    handleDrop(e, date, time = null) {
+        e.preventDefault();
+
+        // Safely parse transfer data
+        let data = {};
+        try {
+            const raw = e.dataTransfer.getData('text/plain');
+            if (raw) {
+                data = JSON.parse(raw);
+            }
+        } catch (err) {
+            // Not valid JSON (might be from drag-to-create or other source)
+            return;
+        }
+
+        // Guard: ensure $wire has the expected methods
+        if (typeof this.$wire.createShiftFromDrag !== 'function') {
+            console.warn('Calendar component not ready');
+            return;
+        }
+
+        if (data.type === 'assistant') {
+            this.$wire.createShiftFromDrag(data.id, date, time);
+        } else if (data.type === 'shift') {
+            // Ctrl+drag = duplicate, normal drag = move
+            if (e.ctrlKey) {
+                this.$wire.duplicateShift(data.id, date);
+            } else {
+                this.$wire.moveShift(data.id, date, time);
+            }
+        }
+
+        this.draggedAssistant = null;
+        this.draggedShift = null;
+    },
+
+    allowDrop(e, time = null, date = null) {
+        e.preventDefault();
+        e.currentTarget.classList.add('bg-accent/20');
+        // Track which date we're hovering over (for month view)
+        if (date) {
+            this.dragOverDate = date;
+        }
+        // Calculate preview time for shift drag
+        if (this.draggedShift && time && this.draggedShiftDuration) {
+            const [h, m] = time.split(':').map(Number);
+            const startMinutes = h * 60 + m;
+            const endMinutes = startMinutes + this.draggedShiftDuration;
+            const endH = Math.floor(endMinutes / 60);
+            const endM = endMinutes % 60;
+            this.dragPreviewTime = `${time} - ${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+        }
+    },
+
+    leaveDrop(e) {
+        e.currentTarget.classList.remove('bg-accent/20');
+        this.dragOverDate = null;
+    },
+
+    // =========================================================================
+    // Resize functionality
+    // =========================================================================
+
+    startResize(e, shiftId, currentDuration, startTime) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.resizingShift = shiftId;
+        this.resizeStartY = e.clientY;
+        this.resizeStartHeight = currentDuration;
+        this.resizeShiftStartTime = startTime;
+
+        const calcEndTime = (startTime, durationMinutes) => {
+            const [h, m] = startTime.split(':').map(Number);
+            const startMins = h * 60 + m;
+            const endMins = startMins + durationMinutes;
+            const endH = Math.floor(endMins / 60);
+            const endM = endMins % 60;
+            return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+        };
+
+        // Get actual slot height for accurate calculations
+        const slot = e.target.closest('[data-slot-height]');
+        const slotHeight = slot ? slot.getBoundingClientRect().height : 64;
+        const minutesPerPixel = 60 / slotHeight;
+
+        const moveHandler = (moveE) => {
+            if (!this.resizingShift) return;
+            const diff = moveE.clientY - this.resizeStartY;
+            const newMinutes = Math.max(15, Math.round((this.resizeStartHeight + diff * minutesPerPixel) / 15) * 15);
+            e.target.closest('[data-shift]').style.height = `${(newMinutes / 60) * 100}%`;
+            this.resizePreviewEndTime = `${this.resizeShiftStartTime} - ${calcEndTime(this.resizeShiftStartTime, newMinutes)}`;
+        };
+
+        const upHandler = (upE) => {
+            if (this.resizingShift && typeof this.$wire.resizeShift === 'function') {
+                const diff = upE.clientY - this.resizeStartY;
+                const newMinutes = Math.max(15, Math.round((this.resizeStartHeight + diff * minutesPerPixel) / 15) * 15);
+                this.$wire.resizeShift(this.resizingShift, newMinutes);
+            }
+            this.resizingShift = null;
+            this.resizePreviewEndTime = null;
+            this.justResized = true;
+            setTimeout(() => this.justResized = false, 200);
+            document.removeEventListener('mousemove', moveHandler);
+            document.removeEventListener('mouseup', upHandler);
+        };
+
+        document.addEventListener('mousemove', moveHandler);
+        document.addEventListener('mouseup', upHandler);
+    },
+
+    // =========================================================================
+    // Computed: Total time display for shift modal
+    // =========================================================================
+
+    get totalTime() {
+        if (!this.$wire.fromDate || !this.$wire.toDate) return '';
+        if (this.$wire.isAllDay) return 'Hele dagen';
+
+        const [fromH, fromM] = this.$wire.fromTime.split(':').map(Number);
+        const [toH, toM] = this.$wire.toTime.split(':').map(Number);
+
+        const fromMinutes = fromH * 60 + fromM;
+        const toMinutes = toH * 60 + toM;
+        const diffMinutes = toMinutes - fromMinutes;
+
+        if (diffMinutes <= 0) return 'Ugyldig tid';
+
+        const hours = Math.floor(diffMinutes / 60);
+        const mins = diffMinutes % 60;
+
+        if (hours === 0) return mins + ' min';
+        if (mins === 0) return hours + ' t';
+        return hours + ' t ' + mins + ' min';
+    },
+});

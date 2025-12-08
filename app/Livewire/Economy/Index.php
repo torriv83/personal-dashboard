@@ -26,6 +26,8 @@ class Index extends Component
 
     public bool $isLoadingYnab = true;
 
+    public int $chartVersion = 0;
+
     #[Validate('required|numeric|min:0')]
     public string $monthly_gross = '';
 
@@ -88,6 +90,9 @@ class Index extends Component
 
         // Reload data
         $this->loadYnabData();
+
+        // Increment chart version to force re-render (bypasses wire:ignore)
+        $this->chartVersion++;
 
         $this->dispatch('toast', type: 'success', message: 'YNAB-data oppdatert');
         $this->dispatch('syncCompleted');

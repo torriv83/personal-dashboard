@@ -89,10 +89,10 @@ it('can paginate upcoming shifts', function () {
     expect($component->get('upcomingShifts'))->toHaveCount(10);
 
     // Go to next page
-    $component->call('nextShiftsPage');
+    $component->call('nextPage', 'shifts');
     expect($component->get('upcomingShifts'))->toHaveCount(5);
 
     // Go back
-    $component->call('prevShiftsPage');
+    $component->call('prevPage', 'shifts');
     expect($component->get('upcomingShifts'))->toHaveCount(10);
 });

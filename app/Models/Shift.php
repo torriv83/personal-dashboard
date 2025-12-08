@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,19 +11,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
- * @property int $assistant_id
+ * @property int|null $assistant_id
  * @property Carbon $starts_at
  * @property Carbon $ends_at
  * @property int $duration_minutes
  * @property bool $is_unavailable
  * @property bool $is_all_day
- * @property bool $is_archived
  * @property string|null $recurring_group_id
  * @property string|null $note
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
  * @property-read Assistant|null $assistant
+ * @property-read string $assistant_name
  */
 class Shift extends Model
 {
@@ -35,7 +36,6 @@ class Shift extends Model
         'duration_minutes',
         'is_unavailable',
         'is_all_day',
-        'is_archived',
         'recurring_group_id',
         'note',
     ];
@@ -49,7 +49,6 @@ class Shift extends Model
             'duration_minutes' => 'integer',
             'is_unavailable' => 'boolean',
             'is_all_day' => 'boolean',
-            'is_archived' => 'boolean',
         ];
     }
 
@@ -76,47 +75,74 @@ class Shift extends Model
     }
 
     /**
+     * Get the assistant's name, or "Tidligere ansatt" if no assistant is assigned.
+     */
+    protected function assistantName(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): string => $this->assistant !== null ? $this->assistant->name : 'Tidligere ansatt'
+        );
+    }
+
+    /**
      * Get formatted duration (e.g., "4:30").
      */
-    public function getFormattedDurationAttribute(): string
+    protected function formattedDuration(): Attribute
     {
-        if ($this->is_all_day) {
-            return 'Hele dagen';
-        }
+        return Attribute::make(
+            get: function (): string {
+                if ($this->is_all_day) {
+                    return 'Hele dagen';
+                }
 
-        $hours = intdiv($this->duration_minutes, 60);
-        $minutes = $this->duration_minutes % 60;
+                $hours = intdiv($this->duration_minutes, 60);
+                $minutes = $this->duration_minutes % 60;
 
-        return sprintf('%d:%02d', $hours, $minutes);
+                return sprintf('%d:%02d', $hours, $minutes);
+            }
+        );
     }
 
     /**
      * Get formatted time range (e.g., "08:00 - 12:30").
      */
-    public function getTimeRangeAttribute(): string
+    protected function timeRange(): Attribute
     {
-        if ($this->is_all_day) {
-            return 'Hele dagen';
-        }
+        return Attribute::make(
+            get: fn (): string => $this->is_all_day
+                ? 'Hele dagen'
+                : $this->starts_at->format('H:i').' - '.$this->ends_at->format('H:i')
+        );
+    }
 
-        return $this->starts_at->format('H:i').' - '.$this->ends_at->format('H:i');
+    /**
+     * Get compact time range for copying (e.g., "0800-1230").
+     */
+    protected function compactTimeRange(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): string => $this->is_all_day
+                ? 'Hele dagen'
+                : $this->starts_at->format('Hi').'-'.$this->ends_at->format('Hi')
+        );
     }
 
     /**
      * Scope: Only active (non-archived) shifts.
+     * Note: SoftDeletes already excludes soft-deleted records by default.
      */
     public function scopeActive($query)
     {
-        return $query->where('is_archived', false);
+        return $query;
     }
 
     /**
      * Scope: Only actual worked shifts (non-archived, non-unavailable).
+     * Note: SoftDeletes already excludes soft-deleted (archived) records by default.
      */
     public function scopeWorked($query)
     {
-        return $query->where('is_archived', false)
-            ->where('is_unavailable', false);
+        return $query->where('is_unavailable', false);
     }
 
     /**

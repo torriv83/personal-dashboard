@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 class IncomeSetting extends Model
@@ -38,28 +39,32 @@ class IncomeSetting extends Model
     /**
      * Calculate yearly gross income (includes tax-free base support).
      */
-    public function getYearlyGrossAttribute(): float
+    protected function yearlyGross(): Attribute
     {
-        return ($this->monthly_gross + $this->base_support) * 12;
+        return Attribute::make(
+            get: fn (): float => ($this->monthly_gross + $this->base_support) * 12
+        );
     }
 
     /**
      * Calculate yearly net income (includes tax-free base support).
      */
-    public function getYearlyNetAttribute(): float
+    protected function yearlyNet(): Attribute
     {
-        return ($this->monthly_net + $this->base_support) * 12;
+        return Attribute::make(
+            get: fn (): float => ($this->monthly_net + $this->base_support) * 12
+        );
     }
 
     /**
      * Calculate tax percentage.
      */
-    public function getTaxPercentageAttribute(): float
+    protected function taxPercentage(): Attribute
     {
-        if ($this->monthly_gross <= 0) {
-            return 0;
-        }
-
-        return round((1 - ($this->monthly_net / $this->monthly_gross)) * 100, 1);
+        return Attribute::make(
+            get: fn (): float => $this->monthly_gross <= 0
+                ? 0
+                : round((1 - ($this->monthly_net / $this->monthly_gross)) * 100, 1)
+        );
     }
 }

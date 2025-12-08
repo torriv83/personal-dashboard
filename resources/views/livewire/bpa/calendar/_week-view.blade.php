@@ -95,23 +95,24 @@
                 @php $allDayShifts = collect($this->getShiftsForDate($weekDay['date']))->where('is_all_day', true); @endphp
                 <div class="p-0.5 md:p-1 border-r border-border last:border-r-0 min-h-6 md:min-h-8 {{ $weekDay['isToday'] ? 'bg-accent/5' : '' }}">
                     @foreach($allDayShifts as $shift)
+                        @php $assistantColor = $shift->assistant?->color ?? '#6b7280'; @endphp
                         @if($shift->is_unavailable)
                             {{-- Mobil: Farget prikk --}}
                             <div class="md:hidden flex justify-center">
-                                <span class="w-2 h-2 rounded-full bg-destructive" title="{{ $shift->assistant->name }} - Borte"></span>
+                                <span class="w-2 h-2 rounded-full bg-destructive" title="{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte"></span>
                             </div>
                             {{-- Desktop: Full info --}}
                             <div class="hidden md:block bg-destructive/20 border border-destructive/50 rounded px-1.5 py-0.5 cursor-pointer hover:bg-destructive/30 transition-colors">
-                                <div class="text-[10px] font-medium text-destructive truncate">{{ $shift->assistant->name }} - Borte</div>
+                                <div class="text-[10px] font-medium text-destructive truncate">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte</div>
                             </div>
                         @else
                             {{-- Mobil: Farget prikk --}}
                             <div class="md:hidden flex justify-center">
-                                <span class="w-2 h-2 rounded-full" style="background-color: {{ $shift->assistant->color ?? '#3b82f6' }}" title="{{ $shift->assistant->name }}"></span>
+                                <span class="w-2 h-2 rounded-full" style="background-color: {{ $assistantColor }}" title="{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}"></span>
                             </div>
                             {{-- Desktop: Full info --}}
-                            <div class="hidden md:block rounded px-1.5 py-0.5 cursor-pointer hover:opacity-80 transition-opacity" style="background-color: {{ $shift->assistant->color ?? '#3b82f6' }}20; border: 1px solid {{ $shift->assistant->color ?? '#3b82f6' }}50">
-                                <div class="text-[10px] font-medium truncate" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">{{ $shift->assistant->name }}</div>
+                            <div class="hidden md:block rounded px-1.5 py-0.5 cursor-pointer hover:opacity-80 transition-opacity" style="background-color: {{ $assistantColor }}20; border: 1px solid {{ $assistantColor }}50">
+                                <div class="text-[10px] font-medium truncate" style="color: {{ $assistantColor }}">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
                             </div>
                         @endif
                     @endforeach
@@ -153,6 +154,7 @@
                             <div
                                 @mousedown="startCreate($event, '{{ $weekDay['date'] }}', '{{ $slot['label'] }}', $el.closest('[data-slot-height]'))"
                                 @dblclick.stop="openQuickCreate($event, '{{ $weekDay['date'] }}', '{{ $slot['label'] }}')"
+                                @contextmenu="showSlotContextMenu($event, '{{ $weekDay['date'] }}', '{{ $slot['label'] }}')"
                                 class="absolute inset-0 hover:bg-card-hover/30 transition-colors cursor-pointer group"
                                 title="Dra for å velge tid, dobbeltklikk for 3t"
                             >
@@ -169,20 +171,20 @@
                             </div>
 
                             {{-- Drag-to-create preview overlay --}}
-                            <template x-if="getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }})">
-                                <div
-                                    class="absolute left-0 right-0 bg-accent/30 pointer-events-none z-20 border-x-2 border-accent border-dashed"
-                                    :class="{
-                                        'border-t-2 rounded-t': getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }}).isFirst,
-                                        'border-b-2 rounded-b': getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }}).isLast
-                                    }"
-                                    :style="`top: ${getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }}).top}%; height: ${getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }}).height}%;`"
-                                >
-                                    <div class="px-0.5 text-[9px] font-medium text-accent truncate hidden md:block" x-show="getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }}).isFirst">
-                                        <span x-text="createStartTime + '-' + createEndTime"></span>
-                                    </div>
+                            <div
+                                x-show="isCreatingShift && createDate === '{{ $weekDay['date'] }}' && getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }})"
+                                x-cloak
+                                class="absolute left-0 right-0 bg-accent/30 pointer-events-none z-20 border-x-2 border-accent border-dashed"
+                                :class="{
+                                    'border-t-2 rounded-t': getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }})?.isFirst,
+                                    'border-b-2 rounded-b': getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }})?.isLast
+                                }"
+                                :style="`top: ${getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }})?.top ?? 0}%; height: ${getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }})?.height ?? 0}%;`"
+                            >
+                                <div class="px-0.5 text-[9px] font-medium text-accent truncate hidden md:block" x-show="getCreatePreviewStyle('{{ $weekDay['date'] }}', {{ $slot['hour'] }})?.isFirst">
+                                    <span x-text="createStartTime + '-' + createEndTime"></span>
                                 </div>
-                            </template>
+                            </div>
 
                             {{-- Vakter i dette time-slottet --}}
                             @php
@@ -197,11 +199,13 @@
                                     $topPercent = ($startMinute / 60) * 100;
                                     $durationHours = $shift->duration_minutes / 60;
                                     $heightPercent = $durationHours * 100;
+                                    $assistantColor = $shift->assistant?->color ?? '#6b7280';
                                 @endphp
                                 @if($shift->is_unavailable)
                                     {{-- Mobil: Farget blokk uten tekst --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
+                                        @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                         class="md:hidden absolute left-0 right-0 bg-destructive/30 border-l-2 border-destructive pointer-events-auto cursor-pointer z-10"
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%;"
@@ -209,6 +213,7 @@
                                     {{-- Desktop: Full info --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
+                                        @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                         data-shift="{{ $shift->id }}"
                                         draggable="true"
                                         @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
@@ -217,7 +222,7 @@
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%;"
                                     >
-                                        <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant->name }}</div>
+                                        <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
                                         <div class="text-[10px] truncate" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
                                             <span x-show="resizingShift !== {{ $shift->id }}">Borte {{ $shift->time_range }}</span>
                                             <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>
@@ -233,22 +238,24 @@
                                     {{-- Mobil: Farget blokk uten tekst --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
+                                        @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                         class="md:hidden absolute left-0 right-0 border-l-2 pointer-events-auto cursor-pointer z-10"
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
-                                        style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $shift->assistant->color ?? '#3b82f6' }}30; border-color: {{ $shift->assistant->color ?? '#3b82f6' }}"
+                                        style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $assistantColor }}30; border-color: {{ $assistantColor }}"
                                     ></div>
                                     {{-- Desktop: Full info --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
+                                        @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                         data-shift="{{ $shift->id }}"
                                         draggable="true"
                                         @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
                                         @dragend="endDrag($event)"
                                         class="hidden md:block absolute left-0.5 right-0.5 rounded px-1 py-0.5 pointer-events-auto cursor-pointer hover:opacity-80 transition-opacity z-10 border-l-2 group/shift"
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
-                                        style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $shift->assistant->color ?? '#3b82f6' }}20; border-color: {{ $shift->assistant->color ?? '#3b82f6' }}"
+                                        style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }}"
                                     >
-                                        <div class="text-xs font-medium truncate" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">{{ $shift->assistant->name }}</div>
+                                        <div class="text-xs font-medium truncate" style="color: {{ $assistantColor }}">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
                                         <div class="text-[10px] truncate" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
                                             <span x-show="resizingShift !== {{ $shift->id }}">{{ $shift->time_range }}</span>
                                             <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>
@@ -257,7 +264,7 @@
                                         <div
                                             @mousedown="startResize($event, {{ $shift->id }}, {{ $shift->duration_minutes }}, '{{ $shift->starts_at->format('H:i') }}')"
                                             class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover/shift:opacity-100 rounded-b transition-opacity"
-                                            style="background-color: {{ $shift->assistant->color ?? '#3b82f6' }}50"
+                                            style="background-color: {{ $assistantColor }}50"
                                             @click.stop
                                         ></div>
                                     </div>

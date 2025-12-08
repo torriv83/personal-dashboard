@@ -30,6 +30,7 @@
                     <div
                         wire:key="day-{{ $day['date'] }}"
                         wire:click="goToDay('{{ $day['date'] }}')"
+                        @contextmenu="showSlotContextMenu($event, '{{ $day['date'] }}', null)"
                         @dragover="allowDrop($event, null, '{{ $day['date'] }}')"
                         @dragleave="leaveDrop($event)"
                         @drop.stop="handleDrop($event, '{{ $day['date'] }}')"
@@ -61,15 +62,17 @@
                                         @if($shift->is_unavailable)
                                             <span
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
+                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                                 class="w-2 h-2 rounded-full bg-destructive cursor-pointer"
-                                                title="{{ $shift->assistant->initials }} - Borte"
+                                                title="{{ $shift->assistant?->initials ?? '?' }} - Borte"
                                             ></span>
                                         @else
                                             <span
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
+                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                                 class="w-2 h-2 rounded-full cursor-pointer"
-                                                style="background-color: {{ $shift->assistant->color ?? '#3b82f6' }}"
-                                                title="{{ $shift->assistant->initials }} {{ $shift->time_range }}"
+                                                style="background-color: {{ $shift->assistant?->color ?? '#6b7280' }}"
+                                                title="{{ $shift->assistant?->initials ?? '?' }} {{ $shift->time_range }}"
                                             ></span>
                                         @endif
                                     @endforeach
@@ -78,16 +81,18 @@
                                 {{-- DESKTOP: Full event-info --}}
                                 <div class="hidden md:block space-y-0.5">
                                     @foreach($dayShifts as $shift)
+                                        @php $assistantColor = $shift->assistant?->color ?? '#6b7280'; @endphp
                                         @if($shift->is_unavailable)
                                             <div
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
+                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                                 draggable="true"
                                                 @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
                                                 @dragend="endDrag($event)"
                                                 class="px-1.5 py-0.5 rounded bg-destructive/20 border-l-2 border-destructive cursor-pointer hover:bg-destructive/30 transition-colors"
                                                 :class="draggedShift === {{ $shift->id }} && 'opacity-50'"
                                             >
-                                                <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant->name }} - Borte</div>
+                                                <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte</div>
                                                 @unless($shift->is_all_day)
                                                     <div class="text-[9px] text-muted truncate">{{ $shift->time_range }}</div>
                                                 @endunless
@@ -95,14 +100,15 @@
                                         @else
                                             <div
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
+                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                                 draggable="true"
                                                 @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
                                                 @dragend="endDrag($event)"
                                                 class="px-1.5 py-0.5 rounded border-l-2 cursor-pointer hover:opacity-80 transition-opacity"
                                                 :class="draggedShift === {{ $shift->id }} && 'opacity-50'"
-                                                style="background-color: {{ $shift->assistant->color ?? '#3b82f6' }}20; border-color: {{ $shift->assistant->color ?? '#3b82f6' }}"
+                                                style="background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }}"
                                             >
-                                                <div class="text-xs font-medium truncate" style="color: {{ $shift->assistant->color ?? '#3b82f6' }}">{{ $shift->assistant->name }}</div>
+                                                <div class="text-xs font-medium truncate" style="color: {{ $assistantColor }}">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
                                                 <div class="text-[9px] text-muted truncate">{{ $shift->time_range }}</div>
                                             </div>
                                         @endif

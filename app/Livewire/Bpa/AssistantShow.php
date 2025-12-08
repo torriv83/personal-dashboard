@@ -30,9 +30,11 @@ class AssistantShow extends Component
     #[Url]
     public ?int $month = null;
 
+    public ?string $typeFilter = null;
+
     public int $perPage = 25;
 
-    // Edit form properties
+    // Edit assistant form properties
     public string $editName = '';
 
     public ?int $editEmployeeNumber = null;
@@ -44,6 +46,23 @@ class AssistantShow extends Component
     public string $editType = 'primary';
 
     public string $editHiredAt = '';
+
+    // Edit shift form properties
+    public bool $showShiftModal = false;
+
+    public ?int $editingShiftId = null;
+
+    public string $shiftDate = '';
+
+    public string $shiftStartTime = '';
+
+    public string $shiftEndTime = '';
+
+    public string $shiftNote = '';
+
+    public bool $shiftIsUnavailable = false;
+
+    public bool $shiftIsAllDay = false;
 
     public function mount(Assistant $assistant): void
     {
@@ -103,6 +122,16 @@ class AssistantShow extends Component
         if ($this->month) {
             $query->whereMonth('starts_at', $this->month);
         }
+
+        // Apply type filter
+        // Note: 'archived' uses onlyTrashed(), 'all' uses withTrashed(), others exclude trashed by default
+        match ($this->typeFilter) {
+            'worked' => $query->where('is_unavailable', false),
+            'away' => $query->where('is_unavailable', true),
+            'fullday' => $query->where('is_all_day', true),
+            'archived' => $query->onlyTrashed(),
+            default => $query->withTrashed(), // Show all including archived
+        };
 
         return $query->orderBy('starts_at', 'desc')
             ->paginate($this->perPage);
@@ -171,6 +200,12 @@ class AssistantShow extends Component
         $this->resetPage();
     }
 
+    public function setTypeFilter(?string $type): void
+    {
+        $this->typeFilter = $type;
+        $this->resetPage();
+    }
+
     public function updatedPerPage(): void
     {
         $this->resetPage();
@@ -201,6 +236,89 @@ class AssistantShow extends Component
 
         $this->dispatch('close-modal', name: 'edit-assistant');
         $this->dispatch('toast', type: 'success', message: 'Assistenten ble oppdatert');
+    }
+
+    public function openEditShiftModal(int $shiftId): void
+    {
+        $shift = Shift::withTrashed()->find($shiftId);
+        if (! $shift) {
+            return;
+        }
+
+        $this->editingShiftId = $shiftId;
+        $this->shiftDate = $shift->starts_at->format('Y-m-d');
+        $this->shiftStartTime = $shift->starts_at->format('H:i');
+        $this->shiftEndTime = $shift->ends_at->format('H:i');
+        $this->shiftNote = $shift->note ?? '';
+        $this->shiftIsUnavailable = $shift->is_unavailable;
+        $this->shiftIsAllDay = $shift->is_all_day;
+        $this->showShiftModal = true;
+    }
+
+    public function closeShiftModal(): void
+    {
+        $this->showShiftModal = false;
+        $this->resetShiftForm();
+    }
+
+    public function saveShift(): void
+    {
+        $this->validate([
+            'shiftDate' => 'required|date',
+            'shiftStartTime' => 'required_without:shiftIsAllDay',
+            'shiftEndTime' => 'required_without:shiftIsAllDay',
+        ]);
+
+        $shift = Shift::withTrashed()->find($this->editingShiftId);
+        if (! $shift) {
+            return;
+        }
+
+        $startsAt = $this->shiftDate.' '.($this->shiftIsAllDay ? '00:00' : $this->shiftStartTime);
+        $endsAt = $this->shiftDate.' '.($this->shiftIsAllDay ? '23:59' : $this->shiftEndTime);
+
+        $shift->update([
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'note' => $this->shiftNote ?: null,
+            'is_unavailable' => $this->shiftIsUnavailable,
+            'is_all_day' => $this->shiftIsAllDay,
+        ]);
+
+        $this->closeShiftModal();
+        unset($this->shifts, $this->stats);
+        $this->dispatch('toast', type: 'success', message: 'Oppføringen ble oppdatert');
+    }
+
+    private function resetShiftForm(): void
+    {
+        $this->editingShiftId = null;
+        $this->shiftDate = '';
+        $this->shiftStartTime = '';
+        $this->shiftEndTime = '';
+        $this->shiftNote = '';
+        $this->shiftIsUnavailable = false;
+        $this->shiftIsAllDay = false;
+    }
+
+    public function archiveShift(int $shiftId): void
+    {
+        $shift = Shift::find($shiftId);
+        if ($shift) {
+            $shift->delete();
+            unset($this->shifts, $this->stats);
+            $this->dispatch('toast', type: 'success', message: 'Oppføring arkivert');
+        }
+    }
+
+    public function forceDeleteShift(int $shiftId): void
+    {
+        $shift = Shift::withTrashed()->find($shiftId);
+        if ($shift) {
+            $shift->forceDelete();
+            unset($this->shifts, $this->stats);
+            $this->dispatch('toast', type: 'success', message: 'Oppføring permanent slettet');
+        }
     }
 
     private function formatMinutes(int $minutes): string
