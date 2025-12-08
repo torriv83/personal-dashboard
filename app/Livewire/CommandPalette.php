@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Assistant;
 use App\Models\Equipment;
 use App\Models\Prescription;
+use App\Models\WeightEntry;
 use App\Models\WishlistItem;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -20,10 +21,14 @@ class CommandPalette extends Component
 
     public bool $isOpen = false;
 
+    public ?string $actionMode = null;
+
+    public string $weightInput = '';
+
     /**
      * Quick actions available in the command palette.
      *
-     * @return array<int, array{name: string, url: string, icon: string, category: string}>
+     * @return array<int, array{name: string, url?: string, action?: string, icon: string, category: string}>
      */
     #[Computed]
     public function quickActions(): array
@@ -33,7 +38,7 @@ class CommandPalette extends Component
             ['name' => 'Ny vakt', 'url' => route('bpa.calendar', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
             ['name' => 'Legg til utstyr', 'url' => route('medical.equipment', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
             ['name' => 'Legg til resept', 'url' => route('medical.prescriptions', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
-            ['name' => 'Registrer vekt', 'url' => route('medical.weight'), 'icon' => 'plus', 'category' => 'Handlinger'],
+            ['name' => 'Registrer vekt', 'action' => 'weight', 'icon' => 'scale', 'category' => 'Handlinger'],
             ['name' => 'Legg til ønske', 'url' => route('wishlist', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
             ['name' => 'Ny assistent', 'url' => route('bpa.assistants', ['create' => 1]), 'icon' => 'plus', 'category' => 'Handlinger'],
 
@@ -148,6 +153,40 @@ class CommandPalette extends Component
     {
         $this->isOpen = false;
         $this->search = '';
+        $this->actionMode = null;
+        $this->weightInput = '';
+    }
+
+    public function startWeightRegistration(): void
+    {
+        $this->actionMode = 'weight';
+        $this->weightInput = '';
+    }
+
+    public function cancelAction(): void
+    {
+        $this->actionMode = null;
+        $this->weightInput = '';
+    }
+
+    public function saveWeight(): void
+    {
+        $this->validate([
+            'weightInput' => 'required|numeric|min:20|max:300',
+        ], [
+            'weightInput.required' => 'Vekt er påkrevd',
+            'weightInput.numeric' => 'Vekt må være et tall',
+            'weightInput.min' => 'Vekt må være minst 20 kg',
+            'weightInput.max' => 'Vekt kan ikke være over 300 kg',
+        ]);
+
+        WeightEntry::create([
+            'weight' => $this->weightInput,
+            'recorded_at' => now(),
+        ]);
+
+        $this->dispatch('toast', type: 'success', message: 'Vekt registrert: '.$this->weightInput.' kg');
+        $this->close();
     }
 
     public function render()

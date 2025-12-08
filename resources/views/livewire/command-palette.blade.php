@@ -42,9 +42,14 @@
         navigateToSelected() {
             const selected = document.querySelector(`[data-result-item][data-index='${this.selectedIndex}']`);
             if (selected) {
-                const url = selected.dataset.url;
-                if (url) {
-                    window.location.href = url;
+                const action = selected.dataset.action;
+                if (action) {
+                    selected.click();
+                } else {
+                    const url = selected.dataset.url;
+                    if (url) {
+                        window.location.href = url;
+                    }
                 }
             }
         },
@@ -145,27 +150,97 @@
                         </kbd>
                     </div>
 
-                    {{-- Results --}}
-                    <div class="max-h-80 overflow-y-auto py-2" wire:loading.class="opacity-50" x-ref="resultsContainer">
-                        @php
-                            $allResults = $this->results->values()->all();
-                            $globalIndex = 0;
-                        @endphp
+                    {{-- Weight Registration Mode --}}
+                    @if($actionMode === 'weight')
+                        <div class="p-4">
+                            <div class="flex items-center gap-3 mb-4">
+                                <button
+                                    wire:click="cancelAction"
+                                    class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-card-hover rounded-lg transition-colors cursor-pointer"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                        </svg>
+                                    </div>
+                                    <span class="font-medium text-foreground">Registrer vekt</span>
+                                </div>
+                            </div>
 
-                        @if(count($allResults) > 0)
+                            <div class="flex items-center gap-3">
+                                <div class="relative flex-1">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        wire:model="weightInput"
+                                        wire:keydown.enter="saveWeight"
+                                        wire:keydown.escape="cancelAction"
+                                        x-init="$nextTick(() => $el.focus())"
+                                        class="w-full bg-input border border-border rounded-lg px-4 py-3 pr-12 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent text-lg"
+                                        placeholder="75.5"
+                                        autofocus
+                                    >
+                                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">kg</span>
+                                </div>
+                                <button
+                                    wire:click="saveWeight"
+                                    class="px-5 py-3 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer flex items-center gap-2"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Lagre
+                                </button>
+                            </div>
+
+                            @error('weightInput')
+                                <p class="text-red-400 text-sm mt-2">{{ $message }}</p>
+                            @enderror
+
+                            <p class="text-xs text-muted-foreground mt-3">
+                                Trykk <kbd class="px-1.5 py-0.5 rounded border border-border bg-background">Enter</kbd> for å lagre
+                            </p>
+                        </div>
+                    @else
+                        {{-- Results --}}
+                        <div class="max-h-80 overflow-y-auto py-2" wire:loading.class="opacity-50" x-ref="resultsContainer">
+                            @php
+                                $allResults = $this->results->values()->all();
+                                $globalIndex = 0;
+                            @endphp
+
+                            @if(count($allResults) > 0)
                             <div class="px-3 py-2">
                                 <ul class="space-y-0.5" x-ref="resultsList">
                                     @foreach($allResults as $item)
                                         <li>
-                                            <a
-                                                href="{{ $item['url'] }}"
-                                                data-result-item
-                                                data-index="{{ $globalIndex }}"
-                                                data-url="{{ $item['url'] }}"
-                                                @mouseenter="selectedIndex = parseInt($el.dataset.index)"
-                                                :class="selectedIndex === parseInt($el.dataset.index) ? 'bg-accent/10 text-accent' : 'text-foreground hover:bg-card-hover'"
-                                                class="flex items-center gap-3 px-2 py-2 rounded-lg transition-colors cursor-pointer"
-                                            >
+                                            @if(isset($item['action']))
+                                                <button
+                                                    type="button"
+                                                    wire:click="{{ $item['action'] === 'weight' ? 'startWeightRegistration' : '' }}"
+                                                    data-result-item
+                                                    data-index="{{ $globalIndex }}"
+                                                    data-action="{{ $item['action'] }}"
+                                                    @mouseenter="selectedIndex = parseInt($el.dataset.index)"
+                                                    :class="selectedIndex === parseInt($el.dataset.index) ? 'bg-accent/10 text-accent' : 'text-foreground hover:bg-card-hover'"
+                                                    class="w-full flex items-center gap-3 px-2 py-2 rounded-lg transition-colors cursor-pointer text-left"
+                                                >
+                                            @else
+                                                <a
+                                                    href="{{ $item['url'] }}"
+                                                    data-result-item
+                                                    data-index="{{ $globalIndex }}"
+                                                    data-url="{{ $item['url'] }}"
+                                                    @mouseenter="selectedIndex = parseInt($el.dataset.index)"
+                                                    :class="selectedIndex === parseInt($el.dataset.index) ? 'bg-accent/10 text-accent' : 'text-foreground hover:bg-card-hover'"
+                                                    class="flex items-center gap-3 px-2 py-2 rounded-lg transition-colors cursor-pointer"
+                                                >
+                                            @endif
                                                 {{-- Icon --}}
                                                 <span class="w-8 h-8 flex items-center justify-center rounded-lg bg-background shrink-0">
                                                     @switch($item['icon'])
@@ -240,6 +315,11 @@
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
                                                             </svg>
                                                             @break
+                                                        @case('scale')
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                                                            </svg>
+                                                            @break
                                                         @default
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -259,33 +339,39 @@
                                                     @endif
                                                 </div>
 
-                                                {{-- Favorite star --}}
-                                                <button
-                                                    type="button"
-                                                    @click="toggleFavorite('{{ $item['url'] }}', $event)"
-                                                    class="p-1 rounded hover:bg-background transition-colors cursor-pointer"
-                                                    :class="isFavorite('{{ $item['url'] }}') ? 'text-yellow-400' : 'text-muted-foreground/50 hover:text-muted-foreground'"
-                                                >
-                                                    <svg
-                                                        class="w-4 h-4"
-                                                        :fill="isFavorite('{{ $item['url'] }}') ? 'currentColor' : 'none'"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
+                                                @if(isset($item['url']))
+                                                    {{-- Favorite star (only for URL items) --}}
+                                                    <button
+                                                        type="button"
+                                                        @click="toggleFavorite('{{ $item['url'] }}', $event)"
+                                                        class="p-1 rounded hover:bg-background transition-colors cursor-pointer"
+                                                        :class="isFavorite('{{ $item['url'] }}') ? 'text-yellow-400' : 'text-muted-foreground/50 hover:text-muted-foreground'"
                                                     >
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                                    </svg>
-                                                </button>
+                                                        <svg
+                                                            class="w-4 h-4"
+                                                            :fill="isFavorite('{{ $item['url'] }}') ? 'currentColor' : 'none'"
+                                                            stroke="currentColor"
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                                        </svg>
+                                                    </button>
+                                                @endif
 
                                                 {{-- Arrow indicator for selected --}}
                                                 <span
-                                                    x-show="selectedIndex === parseInt($el.closest('a').dataset.index)"
+                                                    x-show="selectedIndex === parseInt($el.closest('[data-result-item]').dataset.index)"
                                                     class="text-accent"
                                                 >
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                                     </svg>
                                                 </span>
-                                            </a>
+                                            @if(isset($item['action']))
+                                                </button>
+                                            @else
+                                                </a>
+                                            @endif
                                         </li>
                                         @php $globalIndex++; @endphp
                                     @endforeach
@@ -299,7 +385,8 @@
                                 <p class="text-sm">Ingen resultater for "{{ $search }}"</p>
                             </div>
                         @endif
-                    </div>
+                        </div>
+                    @endif
 
                     {{-- Footer --}}
                     <div class="flex items-center justify-between gap-4 px-4 py-2 border-t border-border bg-background/50 text-xs text-muted-foreground">

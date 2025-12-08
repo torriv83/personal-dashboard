@@ -166,7 +166,57 @@ it('has create actions with create=1 parameter', function () {
     $component = Livewire::test(CommandPalette::class);
 
     $quickActions = $component->get('quickActions');
-    $createActions = collect($quickActions)->filter(fn ($a) => str_contains($a['url'], 'create=1'));
+    $createActions = collect($quickActions)
+        ->filter(fn ($a) => isset($a['url']) && str_contains($a['url'], 'create=1'));
 
     expect($createActions)->toHaveCount(5);
+});
+
+it('can start weight registration action', function () {
+    Livewire::test(CommandPalette::class)
+        ->call('startWeightRegistration')
+        ->assertSet('actionMode', 'weight')
+        ->assertSet('weightInput', '');
+});
+
+it('can cancel weight registration action', function () {
+    Livewire::test(CommandPalette::class)
+        ->set('actionMode', 'weight')
+        ->set('weightInput', '75.5')
+        ->call('cancelAction')
+        ->assertSet('actionMode', null)
+        ->assertSet('weightInput', '');
+});
+
+it('can save weight from command palette', function () {
+    Livewire::test(CommandPalette::class)
+        ->call('startWeightRegistration')
+        ->set('weightInput', '75.5')
+        ->call('saveWeight')
+        ->assertSet('actionMode', null)
+        ->assertSet('isOpen', false)
+        ->assertDispatched('toast');
+
+    $this->assertDatabaseHas('weight_entries', [
+        'weight' => 75.5,
+    ]);
+});
+
+it('validates weight input', function () {
+    Livewire::test(CommandPalette::class)
+        ->call('startWeightRegistration')
+        ->set('weightInput', '15')
+        ->call('saveWeight')
+        ->assertHasErrors(['weightInput' => 'min']);
+});
+
+it('has weight action in quick actions', function () {
+    $component = Livewire::test(CommandPalette::class);
+
+    $quickActions = $component->get('quickActions');
+    $weightAction = collect($quickActions)->firstWhere('name', 'Registrer vekt');
+
+    expect($weightAction)
+        ->toHaveKey('action', 'weight')
+        ->not->toHaveKey('url');
 });
