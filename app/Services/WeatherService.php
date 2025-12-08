@@ -199,7 +199,7 @@ class WeatherService
             $hourlyData = [];
 
             foreach ($timeseries as $entry) {
-                $time = \Carbon\Carbon::parse($entry['time']);
+                $time = \Carbon\Carbon::parse($entry['time'])->setTimezone(config('app.timezone'));
                 $dateKey = $time->format('Y-m-d');
 
                 // Only include today's hours
@@ -295,7 +295,7 @@ class WeatherService
             // Group by date and extract daily data
             $dailyData = [];
             foreach ($timeseries as $entry) {
-                $time = \Carbon\Carbon::parse($entry['time']);
+                $time = \Carbon\Carbon::parse($entry['time'])->setTimezone(config('app.timezone'));
                 $dateKey = $time->format('Y-m-d');
 
                 // Skip today - we already show current weather
