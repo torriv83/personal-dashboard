@@ -39,6 +39,22 @@ class Dashboard extends Component
         'employees' => ['employeesPage', 'employees'],
     ];
 
+    /**
+     * Default widget order configuration.
+     */
+    private const DEFAULT_STAT_ORDER = ['stat_assistants', 'stat_hours_used', 'stat_hours_remaining', 'stat_hours_week'];
+
+    private const DEFAULT_WIDGET_ORDER = ['chart_monthly', 'chart_percentage', 'table_weekly', 'table_shifts', 'table_unavailable', 'table_employees'];
+
+    // Edit mode for drag & drop
+    public bool $editMode = false;
+
+    /** @var array<int, string> */
+    public array $statCardOrder = [];
+
+    /** @var array<int, string> */
+    public array $widgetOrder = [];
+
     // Pagination state
     public int $weeklyPerPage = 10;
 
@@ -65,6 +81,45 @@ class Dashboard extends Component
 
     #[Validate('required|date|after_or_equal:quickAddFromDate')]
     public string $quickAddToDate = '';
+
+    public function mount(): void
+    {
+        // Load saved order from settings, or use defaults
+        $savedStatOrder = Setting::get('bpa_dashboard_stat_order');
+        $this->statCardOrder = $savedStatOrder ? json_decode($savedStatOrder, true) : self::DEFAULT_STAT_ORDER;
+
+        $savedWidgetOrder = Setting::get('bpa_dashboard_widget_order');
+        $this->widgetOrder = $savedWidgetOrder ? json_decode($savedWidgetOrder, true) : self::DEFAULT_WIDGET_ORDER;
+    }
+
+    public function toggleEditMode(): void
+    {
+        $this->editMode = ! $this->editMode;
+    }
+
+    public function updateStatCardOrder(string $item, int $position): void
+    {
+        // Remove the item from its current position
+        $order = array_values(array_diff($this->statCardOrder, [$item]));
+
+        // Insert at the new position
+        array_splice($order, $position, 0, $item);
+
+        $this->statCardOrder = $order;
+        Setting::set('bpa_dashboard_stat_order', json_encode($order));
+    }
+
+    public function updateWidgetOrder(string $item, int $position): void
+    {
+        // Remove the item from its current position
+        $order = array_values(array_diff($this->widgetOrder, [$item]));
+
+        // Insert at the new position
+        array_splice($order, $position, 0, $item);
+
+        $this->widgetOrder = $order;
+        Setting::set('bpa_dashboard_widget_order', json_encode($order));
+    }
 
     // Generic pagination methods
     public function nextPage(string $section): void
@@ -233,25 +288,29 @@ class Dashboard extends Component
         $averageRemainingWithPlannedPerWeekMinutes = (int) ($remainingWithPlannedMinutes / $weeksRemainingInYear);
 
         return [
-            [
+            'stat_assistants' => [
+                'id' => 'stat_assistants',
                 'label' => 'Antall Assistenter',
                 'value' => (string) $this->assistantCount,
                 'description' => null,
                 'link' => route('bpa.assistants'),
             ],
-            [
+            'stat_hours_used' => [
+                'id' => 'stat_hours_used',
                 'label' => 'Timer brukt i år',
                 'value' => $this->formatMinutes($usedThisYearMinutes),
                 'valueSuffix' => '('.$this->formatMinutes($usedThisYearMinutes + $plannedMinutes).' med planlagt)',
                 'description' => $this->formatMinutes($usedThisMonthMinutes).' brukt av '.$this->formatMinutes((int) $monthlyQuotaMinutes).' denne måneden | '.$this->formatMinutes($plannedMinutes).' planlagt ut året',
             ],
-            [
+            'stat_hours_remaining' => [
+                'id' => 'stat_hours_remaining',
                 'label' => 'Timer igjen',
                 'value' => $this->formatMinutes($remainingMinutes),
                 'valueSuffix' => '('.$this->formatMinutes($remainingWithPlannedMinutes).' med planlagt)',
                 'description' => $this->formatMinutes($averageRemainingPerWeekMinutes).' snitt/uke ut året | '.$this->formatMinutes($averageRemainingWithPlannedPerWeekMinutes).' snitt/uke med planlagt',
             ],
-            [
+            'stat_hours_week' => [
+                'id' => 'stat_hours_week',
                 'label' => 'Timer brukt denne uka',
                 'value' => $this->formatMinutes($usedThisWeekMinutes),
                 'valueSuffix' => '('.$this->formatMinutes($usedThisWeekMinutes + $plannedThisWeekMinutes).' med planlagt)',

@@ -31,8 +31,8 @@ it('shows correct assistant count', function () {
     $component = Livewire::test(Dashboard::class);
     $stats = $component->get('stats');
 
-    expect($stats[0]['label'])->toBe('Antall Assistenter');
-    expect($stats[0]['value'])->toBe('3');
+    expect($stats['stat_assistants']['label'])->toBe('Antall Assistenter');
+    expect($stats['stat_assistants']['value'])->toBe('3');
 });
 
 it('shows upcoming shifts', function () {
