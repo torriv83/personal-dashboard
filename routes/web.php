@@ -10,6 +10,7 @@ use App\Livewire\Bpa\Dashboard as BpaDashboard;
 use App\Livewire\Bpa\Timesheets;
 use App\Livewire\Dashboard\Index as DashboardIndex;
 use App\Livewire\Economy\Index as EconomyIndex;
+use App\Livewire\Games\Rommers;
 use App\Livewire\Medical\Dashboard as MedicalDashboard;
 use App\Livewire\Medical\Equipment;
 use App\Livewire\Medical\Prescriptions;
@@ -62,6 +63,11 @@ Route::middleware('auth')->group(function () {
 
     // Ønskeliste
     Route::get('/onskeliste', WishlistIndex::class)->name('wishlist');
+
+    // Spill
+    Route::prefix('spill')->name('games.')->group(function () {
+        Route::get('/rommers', Rommers::class)->name('rommers');
+    });
 
     // Verktøy
     Route::prefix('verktoy')->name('tools.')->group(function () {
