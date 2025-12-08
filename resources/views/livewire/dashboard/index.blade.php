@@ -381,7 +381,7 @@
         </div>
     @endif
 
-    {{-- Weekly Forecast Modal --}}
+    {{-- Weather Forecast Modal --}}
     @if($showForecastModal)
         <div
             class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
@@ -402,128 +402,148 @@
                     </button>
                 </div>
 
+                {{-- Tab buttons --}}
+                <div class="flex gap-1 p-4 pb-0">
+                    <button
+                        wire:click="$set('forecastTab', 'hourly')"
+                        class="px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer {{ $forecastTab === 'hourly' ? 'bg-accent text-black' : 'bg-background text-muted-foreground hover:text-foreground' }}"
+                    >
+                        I dag
+                    </button>
+                    <button
+                        wire:click="$set('forecastTab', 'daily')"
+                        class="px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer {{ $forecastTab === 'daily' ? 'bg-accent text-black' : 'bg-background text-muted-foreground hover:text-foreground' }}"
+                    >
+                        7 dager
+                    </button>
+                </div>
+
                 <div class="p-4">
-                    @if(count($this->forecast) > 0)
-                        <div class="grid grid-cols-1 gap-3">
-                            @foreach($this->forecast as $day)
-                                @php
-                                    $iconType = app(\App\Services\WeatherService::class)->getIconSvg($day['symbol']);
-                                    $bgColor = match(true) {
-                                        $iconType === 'clearsky' => 'bg-yellow-500/20',
-                                        $iconType === 'clearsky-night' => 'bg-blue-900/30',
-                                        str_contains($iconType, 'night') => 'bg-indigo-500/20',
-                                        $iconType === 'rain' => 'bg-blue-500/20',
-                                        $iconType === 'snow' => 'bg-blue-200/30',
-                                        $iconType === 'sleet' => 'bg-blue-300/20',
-                                        $iconType === 'thunder' => 'bg-purple-500/20',
-                                        $iconType === 'fog' => 'bg-gray-500/20',
-                                        default => 'bg-gray-500/15',
-                                    };
-                                @endphp
-                                <div class="flex items-center gap-4 p-3 bg-background border border-border rounded-lg">
-                                    {{-- Day name --}}
-                                    <div class="w-24 shrink-0">
-                                        <div class="font-medium text-foreground">{{ $day['day_name'] }}</div>
-                                        <div class="text-xs text-muted">{{ \Carbon\Carbon::parse($day['date'])->format('d.m') }}</div>
-                                    </div>
+                    @if($forecastTab === 'hourly')
+                        {{-- Hourly forecast (today) --}}
+                        @if(count($this->hourlyForecast) > 0)
+                            <div class="grid grid-cols-1 gap-2 max-h-96 overflow-y-auto">
+                                @foreach($this->hourlyForecast as $hour)
+                                    @php
+                                        $iconType = app(\App\Services\WeatherService::class)->getIconSvg($hour['symbol']);
+                                        $bgColor = match(true) {
+                                            $iconType === 'clearsky' => 'bg-yellow-500/20',
+                                            $iconType === 'clearsky-night' => 'bg-blue-900/30',
+                                            str_contains($iconType, 'night') => 'bg-indigo-500/20',
+                                            $iconType === 'rain' => 'bg-blue-500/20',
+                                            $iconType === 'snow' => 'bg-blue-200/30',
+                                            $iconType === 'sleet' => 'bg-blue-300/20',
+                                            $iconType === 'thunder' => 'bg-purple-500/20',
+                                            $iconType === 'fog' => 'bg-gray-500/20',
+                                            default => 'bg-gray-500/15',
+                                        };
+                                    @endphp
+                                    <div class="flex items-center gap-4 p-3 bg-background border border-border rounded-lg">
+                                        {{-- Time --}}
+                                        <div class="w-14 shrink-0 font-medium text-foreground">
+                                            {{ $hour['hour'] }}
+                                        </div>
 
-                                    {{-- Weather Icon --}}
-                                    <div class="flex items-center justify-center w-10 h-10 rounded-lg {{ $bgColor }} shrink-0">
-                                        @switch($iconType)
-                                            @case('clearsky')
-                                                <svg class="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z" />
-                                                </svg>
-                                                @break
-                                            @case('clearsky-night')
-                                                <svg class="w-6 h-6 text-blue-300" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 01.818.162z" clip-rule="evenodd" />
-                                                </svg>
-                                                @break
-                                            @case('fair')
-                                            @case('partlycloudy')
-                                                <svg class="w-6 h-6 text-accent" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M4.5 12a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm2.03-4.06a.75.75 0 101.06-1.061L6.53 5.818a.75.75 0 10-1.06 1.06l1.06 1.061zM9 3a.75.75 0 00-1.5 0v1.5a.75.75 0 001.5 0V3zm5.47 2.818a.75.75 0 10-1.06 1.06l1.06 1.061a.75.75 0 001.06-1.06l-1.06-1.06zM16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-                                                    <path fill-rule="evenodd" d="M6.75 17.25A2.25 2.25 0 019 15h9a3 3 0 100-6h-.35a4.5 4.5 0 00-8.4 1.5H9a2.25 2.25 0 00-2.25 2.25v4.5z" clip-rule="evenodd" />
-                                                </svg>
-                                                @break
-                                            @case('fair-night')
-                                            @case('partlycloudy-night')
-                                                <svg class="w-6 h-6 text-blue-300" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a4 4 0 001 2M18 12a3 3 0 11-6 0h-.35a4.5 4.5 0 00-8.4 1.5H3a2.25 2.25 0 00-2.25 2.25v1.5A2.25 2.25 0 003 19.5h12a3 3 0 100-6h-.35z" clip-rule="evenodd" />
-                                                </svg>
-                                                @break
-                                            @case('cloudy')
-                                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path fill-rule="evenodd" d="M4.5 9.75a6 6 0 0111.573-2.226 3.75 3.75 0 014.133 4.303A4.5 4.5 0 0118 20.25H6.75a5.25 5.25 0 01-2.23-10.004 6.072 6.072 0 01-.02-.496z" clip-rule="evenodd" />
-                                                </svg>
-                                                @break
-                                            @case('rain')
-                                                <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 19.5v2M12 19.5v2M15 19.5v2" />
-                                                </svg>
-                                                @break
-                                            @case('snow')
-                                                <svg class="w-6 h-6 text-blue-200" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m0-18l-3 3m3-3l3 3m-3 15l-3-3m3 3l3-3M3 12h18M3 12l3-3m-3 3l3 3m15-3l-3-3m3 3l-3 3" />
-                                                </svg>
-                                                @break
-                                            @case('sleet')
-                                                <svg class="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 19l1 2M12 19v2M16 19l-1 2" />
-                                                </svg>
-                                                @break
-                                            @case('thunder')
-                                                <svg class="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" />
-                                                </svg>
-                                                @break
-                                            @case('fog')
-                                                <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 15h18M3 12h18M3 9h18" />
-                                                </svg>
-                                                @break
-                                            @default
-                                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path fill-rule="evenodd" d="M4.5 9.75a6 6 0 0111.573-2.226 3.75 3.75 0 014.133 4.303A4.5 4.5 0 0118 20.25H6.75a5.25 5.25 0 01-2.23-10.004 6.072 6.072 0 01-.02-.496z" clip-rule="evenodd" />
-                                                </svg>
-                                        @endswitch
-                                    </div>
+                                        {{-- Weather Icon --}}
+                                        <div class="flex items-center justify-center w-8 h-8 rounded-lg {{ $bgColor }} shrink-0">
+                                            @include('livewire.dashboard.partials.weather-icon', ['iconType' => $iconType, 'size' => 'w-5 h-5'])
+                                        </div>
 
-                                    {{-- Description --}}
-                                    <div class="flex-1 text-sm text-muted">{{ $day['description'] }}</div>
+                                        {{-- Temperature --}}
+                                        <div class="w-12 text-center font-medium text-foreground shrink-0">
+                                            {{ $hour['temperature'] }}°
+                                        </div>
 
-                                    {{-- Temps --}}
-                                    <div class="text-right shrink-0">
-                                        <span class="font-medium text-foreground">{{ $day['temp_high'] }}°</span>
-                                        <span class="text-muted">/</span>
-                                        <span class="text-muted">{{ $day['temp_low'] }}°</span>
-                                    </div>
+                                        {{-- Description --}}
+                                        <div class="flex-1 text-sm text-muted truncate">{{ $hour['description'] }}</div>
 
-                                    {{-- Extra info --}}
-                                    <div class="flex items-center gap-3 text-xs text-muted shrink-0">
-                                        @if($day['precipitation'] > 0)
-                                            <span class="flex items-center gap-1" title="Nedbør">
+                                        {{-- Extra info --}}
+                                        <div class="flex items-center gap-3 text-xs text-muted shrink-0">
+                                            @if($hour['precipitation'] > 0)
+                                                <span class="flex items-center gap-1" title="Nedbør">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                                    </svg>
+                                                    {{ $hour['precipitation'] }} mm
+                                                </span>
+                                            @endif
+                                            <span class="flex items-center gap-1" title="Vind">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                                 </svg>
-                                                {{ $day['precipitation'] }} mm
+                                                {{ $hour['wind_speed'] }} m/s
                                             </span>
-                                        @endif
-                                        <span class="flex items-center gap-1" title="Vind">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                            </svg>
-                                            {{ $day['wind_speed'] }} m/s
-                                        </span>
+                                        </div>
                                     </div>
-                                </div>
-                            @endforeach
-                        </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-center text-muted py-8">Ingen timedata tilgjengelig for i dag</p>
+                        @endif
                     @else
-                        <p class="text-center text-muted py-8">Kunne ikke hente værmelding</p>
+                        {{-- Daily forecast (7 days) --}}
+                        @if(count($this->forecast) > 0)
+                            <div class="grid grid-cols-1 gap-3">
+                                @foreach($this->forecast as $day)
+                                    @php
+                                        $iconType = app(\App\Services\WeatherService::class)->getIconSvg($day['symbol']);
+                                        $bgColor = match(true) {
+                                            $iconType === 'clearsky' => 'bg-yellow-500/20',
+                                            $iconType === 'clearsky-night' => 'bg-blue-900/30',
+                                            str_contains($iconType, 'night') => 'bg-indigo-500/20',
+                                            $iconType === 'rain' => 'bg-blue-500/20',
+                                            $iconType === 'snow' => 'bg-blue-200/30',
+                                            $iconType === 'sleet' => 'bg-blue-300/20',
+                                            $iconType === 'thunder' => 'bg-purple-500/20',
+                                            $iconType === 'fog' => 'bg-gray-500/20',
+                                            default => 'bg-gray-500/15',
+                                        };
+                                    @endphp
+                                    <div class="flex items-center gap-4 p-3 bg-background border border-border rounded-lg">
+                                        {{-- Day name --}}
+                                        <div class="w-24 shrink-0">
+                                            <div class="font-medium text-foreground">{{ $day['day_name'] }}</div>
+                                            <div class="text-xs text-muted">{{ \Carbon\Carbon::parse($day['date'])->format('d.m') }}</div>
+                                        </div>
+
+                                        {{-- Weather Icon --}}
+                                        <div class="flex items-center justify-center w-10 h-10 rounded-lg {{ $bgColor }} shrink-0">
+                                            @include('livewire.dashboard.partials.weather-icon', ['iconType' => $iconType, 'size' => 'w-6 h-6'])
+                                        </div>
+
+                                        {{-- Description --}}
+                                        <div class="flex-1 text-sm text-muted">{{ $day['description'] }}</div>
+
+                                        {{-- Temps --}}
+                                        <div class="text-right shrink-0">
+                                            <span class="font-medium text-foreground">{{ $day['temp_high'] }}°</span>
+                                            <span class="text-muted">/</span>
+                                            <span class="text-muted">{{ $day['temp_low'] }}°</span>
+                                        </div>
+
+                                        {{-- Extra info --}}
+                                        <div class="flex items-center gap-3 text-xs text-muted shrink-0">
+                                            @if($day['precipitation'] > 0)
+                                                <span class="flex items-center gap-1" title="Nedbør">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                                    </svg>
+                                                    {{ $day['precipitation'] }} mm
+                                                </span>
+                                            @endif
+                                            <span class="flex items-center gap-1" title="Vind">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                                </svg>
+                                                {{ $day['wind_speed'] }} m/s
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-center text-muted py-8">Kunne ikke hente værmelding</p>
+                        @endif
                     @endif
                 </div>
 

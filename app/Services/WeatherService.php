@@ -139,6 +139,102 @@ class WeatherService
         $lon = $this->getLongitude();
         Cache::forget(self::CACHE_KEY.".$lat.$lon");
         Cache::forget(self::CACHE_KEY.".forecast.$lat.$lon");
+        Cache::forget(self::CACHE_KEY.".hourly.$lat.$lon");
+    }
+
+    /**
+     * Get hourly forecast for today.
+     *
+     * @return array<int, array{
+     *     time: string,
+     *     hour: string,
+     *     temperature: float,
+     *     symbol: string,
+     *     description: string,
+     *     precipitation: float,
+     *     wind_speed: float
+     * }>
+     */
+    public function getHourlyForecast(): array
+    {
+        if (! $this->isConfigured()) {
+            return [];
+        }
+
+        $lat = $this->getLatitude();
+        $lon = $this->getLongitude();
+
+        return Cache::remember(self::CACHE_KEY.".hourly.$lat.$lon", self::CACHE_TTL, function () use ($lat, $lon) {
+            return $this->fetchHourlyForecast($lat, $lon);
+        });
+    }
+
+    /**
+     * Fetch hourly forecast from Met.no API.
+     */
+    private function fetchHourlyForecast(float $lat, float $lon): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'PersonalDashboard/1.0 github.com/personal-dashboard',
+            ])
+                ->accept('application/json')
+                ->get(self::BASE_URL, [
+                    'lat' => round($lat, 4),
+                    'lon' => round($lon, 4),
+                ]);
+
+            if (! $response->successful()) {
+                return [];
+            }
+
+            $data = $response->json();
+            $timeseries = $data['properties']['timeseries'] ?? [];
+
+            if (empty($timeseries)) {
+                return [];
+            }
+
+            $today = now()->format('Y-m-d');
+            $hourlyData = [];
+
+            foreach ($timeseries as $entry) {
+                $time = \Carbon\Carbon::parse($entry['time']);
+                $dateKey = $time->format('Y-m-d');
+
+                // Only include today's hours
+                if ($dateKey !== $today) {
+                    continue;
+                }
+
+                // Skip past hours
+                if ($time->lt(now()->startOfHour())) {
+                    continue;
+                }
+
+                $instant = $entry['data']['instant']['details'] ?? [];
+                $next1Hour = $entry['data']['next_1_hours'] ?? [];
+
+                $symbol = $next1Hour['summary']['symbol_code'] ?? 'cloudy';
+                $precipitation = $next1Hour['details']['precipitation_amount'] ?? 0;
+
+                $hourlyData[] = [
+                    'time' => $time->format('Y-m-d H:i'),
+                    'hour' => $time->format('H:i'),
+                    'temperature' => round($instant['air_temperature'] ?? 0),
+                    'symbol' => $symbol,
+                    'description' => $this->getSymbolDescription($symbol),
+                    'precipitation' => round($precipitation, 1),
+                    'wind_speed' => round($instant['wind_speed'] ?? 0, 1),
+                ];
+            }
+
+            return $hourlyData;
+        } catch (\Exception $e) {
+            report($e);
+
+            return [];
+        }
     }
 
     /**

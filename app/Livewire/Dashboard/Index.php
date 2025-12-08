@@ -21,6 +21,8 @@ class Index extends Component
 
     public bool $showForecastModal = false;
 
+    public string $forecastTab = 'hourly';
+
     /**
      * Default widget configuration.
      */
@@ -273,6 +275,25 @@ class Index extends Component
     }
 
     /**
+     * Get hourly forecast for today.
+     *
+     * @return array<int, array{
+     *     time: string,
+     *     hour: string,
+     *     temperature: float,
+     *     symbol: string,
+     *     description: string,
+     *     precipitation: float,
+     *     wind_speed: float
+     * }>
+     */
+    #[Computed]
+    public function hourlyForecast(): array
+    {
+        return app(WeatherService::class)->getHourlyForecast();
+    }
+
+    /**
      * Refresh weather data.
      */
     public function refreshWeather(): void
@@ -280,6 +301,7 @@ class Index extends Component
         app(WeatherService::class)->clearCache();
         unset($this->weather);
         unset($this->forecast);
+        unset($this->hourlyForecast);
     }
 
     public function render()
