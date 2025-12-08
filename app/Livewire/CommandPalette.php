@@ -56,6 +56,7 @@ class CommandPalette extends Component
             ['name' => 'Gå til Ønskeliste', 'url' => route('wishlist'), 'icon' => 'gift', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Innstillinger', 'url' => route('settings'), 'icon' => 'settings', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Profil', 'url' => route('profile'), 'icon' => 'user', 'category' => 'Navigasjon'],
+            ['name' => 'Gå til Rømmers', 'url' => route('games.rommers'), 'icon' => 'dice', 'category' => 'Navigasjon'],
 
             // Verktøy
             ['name' => 'Portvelger', 'url' => route('tools.port-generator'), 'icon' => 'tool', 'category' => 'Verktøy'],
