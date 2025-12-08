@@ -196,6 +196,46 @@ Alpine.store('timesheetMenu', {
     }
 });
 
+// Register Alpine store for prescription context menu
+Alpine.store('prescriptionMenu', {
+    show: false,
+    x: 0,
+    y: 0,
+    prescriptionId: null,
+
+    open(x, y, prescriptionId) {
+        this.show = true;
+        this.x = x;
+        this.y = y;
+        this.prescriptionId = prescriptionId;
+    },
+
+    hide() {
+        this.show = false;
+    },
+
+    action(actionName) {
+        const prescriptionsEl = document.querySelector('[data-prescriptions-component]');
+        const wireId = prescriptionsEl?.closest('[wire\\:id]')?.getAttribute('wire:id');
+
+        if (!wireId) {
+            console.error('Prescription menu: Could not find Livewire component');
+            this.hide();
+            return;
+        }
+
+        const wire = Livewire.find(wireId);
+
+        if (actionName === 'edit') {
+            wire.call('openModal', this.prescriptionId);
+        } else if (actionName === 'delete') {
+            wire.call('delete', this.prescriptionId);
+        }
+
+        this.hide();
+    }
+});
+
 // Register Alpine components
 Alpine.data('calendar', calendar);
 

@@ -1,4 +1,7 @@
-<div class="p-4 sm:p-6 space-y-6">
+<div class="p-4 sm:p-6 space-y-6" data-prescriptions-component>
+    {{-- Context Menu --}}
+    @include('livewire.medical.prescriptions._context-menu')
+
     {{-- Header --}}
     <div class="flex items-center justify-between gap-4">
         <div>
@@ -26,6 +29,11 @@
                     @elseif($prescription['status'] === 'danger') border-l-red-500
                     @elseif($prescription['status'] === 'warning') border-l-yellow-500
                     @else border-l-accent @endif"
+                @contextmenu.prevent="
+                    const x = Math.min($event.clientX, window.innerWidth - 200);
+                    const y = Math.min($event.clientY, window.innerHeight - 150);
+                    $store.prescriptionMenu.open(x, y, {{ $prescription['id'] }})
+                "
             >
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex-1 min-w-0">

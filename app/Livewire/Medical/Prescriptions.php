@@ -56,6 +56,12 @@ class Prescriptions extends Component
             $this->openModal();
             $this->dispatch('clear-url-params');
         }
+
+        // Open edit modal if ?edit=ID is in URL
+        if ($editId = request()->query('edit')) {
+            $this->openModal((int) $editId);
+            $this->dispatch('clear-url-params');
+        }
     }
 
     public function openModal(?int $id = null): void
