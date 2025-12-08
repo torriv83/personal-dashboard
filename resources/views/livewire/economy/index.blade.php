@@ -19,6 +19,31 @@
         </div>
     @endif
 
+    {{-- YNAB Errors --}}
+    @if(!empty($ynabErrors))
+        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-red-400">Kunne ikke hente all data fra YNAB</p>
+                    <ul class="mt-1 text-sm text-red-400/80 list-disc list-inside">
+                        @foreach($ynabErrors as $source => $error)
+                            <li>{{ ucfirst($source) }}: {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <p class="mt-2 text-xs text-muted-foreground">Prøv å synkronisere på nytt, eller sjekk YNAB API-innstillingene.</p>
+                </div>
+                <button wire:click="$set('ynabErrors', [])" class="text-red-400 hover:text-red-300 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    @endif
+
     {{-- Header --}}
     <div class="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3">
         <h1 class="text-2xl font-bold text-foreground">Økonomi</h1>

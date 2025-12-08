@@ -28,6 +28,9 @@ class Index extends Component
 
     public int $chartVersion = 0;
 
+    /** @var array<string, string> */
+    public array $ynabErrors = [];
+
     #[Validate('required|numeric|min:0')]
     public string $monthly_gross = '';
 
@@ -48,9 +51,15 @@ class Index extends Component
 
     public function loadYnabData(): void
     {
+        $ynab = app(YnabService::class);
+        $ynab->clearErrors();
+
         // Trigger computed properties to load data
         /** @phpstan-ignore expr.resultUnused */
         [$this->accounts, $this->ageOfMoney, $this->monthlyData, $this->lastModifiedAt];
+
+        // Capture any errors that occurred
+        $this->ynabErrors = $ynab->getErrors();
 
         $this->isLoadingYnab = false;
     }
@@ -81,6 +90,7 @@ class Index extends Component
     public function syncYnab(): void
     {
         $this->isLoadingYnab = true;
+        $this->ynabErrors = [];
 
         $ynab = app(YnabService::class);
         $ynab->clearCache();
@@ -94,7 +104,11 @@ class Index extends Component
         // Increment chart version to force re-render (bypasses wire:ignore)
         $this->chartVersion++;
 
-        $this->dispatch('toast', type: 'success', message: 'YNAB-data oppdatert');
+        if (empty($this->ynabErrors)) {
+            $this->dispatch('toast', type: 'success', message: 'YNAB-data oppdatert');
+        } else {
+            $this->dispatch('toast', type: 'error', message: 'Noen data kunne ikke hentes fra YNAB');
+        }
         $this->dispatch('syncCompleted');
     }
 

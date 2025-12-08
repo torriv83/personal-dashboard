@@ -173,6 +173,27 @@ test('lastSyncedAt returns null when never synced', function () {
         ->assertSet('lastSyncedAt', null);
 });
 
+test('ynabErrors displays when API returns errors', function () {
+    mockYnabService([
+        'errors' => ['kontoer' => 'Kunne ikke koble til YNAB'],
+    ]);
+
+    Livewire::test(Index::class)
+        ->call('loadYnabData')
+        ->assertSet('ynabErrors', ['kontoer' => 'Kunne ikke koble til YNAB'])
+        ->assertSee('Kunne ikke hente all data fra YNAB');
+});
+
+test('syncYnab shows error toast when errors occur', function () {
+    mockYnabService([
+        'errors' => ['kontoer' => 'YNAB-serveren er utilgjengelig'],
+    ]);
+
+    Livewire::test(Index::class)
+        ->call('syncYnab')
+        ->assertDispatched('toast', type: 'error', message: 'Noen data kunne ikke hentes fra YNAB');
+});
+
 /**
  * Helper function to mock YnabService.
  */
@@ -184,6 +205,7 @@ function mockYnabService(array $overrides = []): void
         'ageOfMoney' => 42,
         'monthlyData' => [],
         'budgetDetails' => ['name' => 'Test Budget', 'last_modified_on' => '2024-12-04T15:30:00Z'],
+        'errors' => [],
     ];
 
     $data = array_merge($defaults, $overrides);
@@ -199,6 +221,8 @@ function mockYnabService(array $overrides = []): void
     $mock->shouldReceive('getMonthlyData')->andReturn($data['monthlyData']);
     $mock->shouldReceive('getBudgetDetails')->andReturn($data['budgetDetails']);
     $mock->shouldReceive('clearCache')->andReturnNull();
+    $mock->shouldReceive('clearErrors')->andReturnNull();
+    $mock->shouldReceive('getErrors')->andReturn($data['errors']);
 
     app()->instance(YnabService::class, $mock);
 }

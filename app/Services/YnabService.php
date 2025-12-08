@@ -13,11 +13,44 @@ class YnabService
 
     private string $budgetId;
 
+    /**
+     * Errors that occurred during the current request cycle.
+     *
+     * @var array<string, string>
+     */
+    private array $errors = [];
+
     public function __construct()
     {
         $this->baseUrl = config('services.ynab.base_url');
         $this->token = config('services.ynab.token');
         $this->budgetId = config('services.ynab.budget_id');
+    }
+
+    /**
+     * Get any errors that occurred during API calls.
+     *
+     * @return array<string, string>
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
+    }
+
+    /**
+     * Check if any errors occurred.
+     */
+    public function hasErrors(): bool
+    {
+        return ! empty($this->errors);
+    }
+
+    /**
+     * Clear stored errors.
+     */
+    public function clearErrors(): void
+    {
+        $this->errors = [];
     }
 
     /**
@@ -37,28 +70,38 @@ class YnabService
             return [];
         }
 
-        return Cache::rememberForever('ynab.accounts', function () {
-            $response = $this->request("/budgets/{$this->budgetId}/accounts");
+        // Check cache first
+        if (Cache::has('ynab.accounts')) {
+            return Cache::get('ynab.accounts');
+        }
 
-            if (! $response) {
-                return [];
-            }
+        // Fetch from API
+        $response = $this->request("/budgets/{$this->budgetId}/accounts", 'kontoer');
 
+        if (! $response) {
+            return [];
+        }
+
+        $accounts = collect($response['data']['accounts'] ?? [])
+            ->filter(fn ($account) => ! $account['deleted'] && ! $account['closed'])
+            ->map(fn ($account) => [
+                'id' => $account['id'],
+                'name' => $account['name'],
+                'type' => $account['type'],
+                'balance' => $account['balance'] / 1000, // YNAB uses milliunits
+                'cleared_balance' => $account['cleared_balance'] / 1000,
+                'last_reconciled_at' => $account['last_reconciled_at'],
+            ])
+            ->values()
+            ->toArray();
+
+        // Only cache if we got actual data
+        if (! empty($accounts)) {
+            Cache::forever('ynab.accounts', $accounts);
             $this->updateSyncTimestamp();
+        }
 
-            return collect($response['data']['accounts'] ?? [])
-                ->filter(fn ($account) => ! $account['deleted'] && ! $account['closed'])
-                ->map(fn ($account) => [
-                    'id' => $account['id'],
-                    'name' => $account['name'],
-                    'type' => $account['type'],
-                    'balance' => $account['balance'] / 1000, // YNAB uses milliunits
-                    'cleared_balance' => $account['cleared_balance'] / 1000,
-                    'last_reconciled_at' => $account['last_reconciled_at'],
-                ])
-                ->values()
-                ->toArray();
-        });
+        return $accounts;
     }
 
     /**
@@ -70,22 +113,32 @@ class YnabService
             return null;
         }
 
-        return Cache::rememberForever('ynab.budget', function () {
-            $response = $this->request("/budgets/{$this->budgetId}");
+        // Check cache first
+        if (Cache::has('ynab.budget')) {
+            return Cache::get('ynab.budget');
+        }
 
-            if (! $response) {
-                return null;
-            }
+        // Fetch from API
+        $response = $this->request("/budgets/{$this->budgetId}", 'budsjettdetaljer');
 
+        if (! $response) {
+            return null;
+        }
+
+        $budget = $response['data']['budget'] ?? null;
+
+        $details = $budget ? [
+            'name' => $budget['name'],
+            'last_modified_on' => $budget['last_modified_on'],
+        ] : null;
+
+        // Only cache if we got actual data
+        if ($details) {
+            Cache::forever('ynab.budget', $details);
             $this->updateSyncTimestamp();
+        }
 
-            $budget = $response['data']['budget'] ?? null;
-
-            return $budget ? [
-                'name' => $budget['name'],
-                'last_modified_on' => $budget['last_modified_on'],
-            ] : null;
-        });
+        return $details;
     }
 
     /**
@@ -97,18 +150,28 @@ class YnabService
             return null;
         }
 
-        return Cache::rememberForever('ynab.age_of_money', function () {
-            $currentMonth = now()->format('Y-m-01');
-            $response = $this->request("/budgets/{$this->budgetId}/months/{$currentMonth}");
+        // Check cache first
+        if (Cache::has('ynab.age_of_money')) {
+            return Cache::get('ynab.age_of_money');
+        }
 
-            if (! $response) {
-                return null;
-            }
+        // Fetch from API
+        $currentMonth = now()->format('Y-m-01');
+        $response = $this->request("/budgets/{$this->budgetId}/months/{$currentMonth}", 'age of money');
 
+        if (! $response) {
+            return null;
+        }
+
+        $ageOfMoney = $response['data']['month']['age_of_money'] ?? null;
+
+        // Only cache if we got actual data
+        if ($ageOfMoney !== null) {
+            Cache::forever('ynab.age_of_money', $ageOfMoney);
             $this->updateSyncTimestamp();
+        }
 
-            return $response['data']['month']['age_of_money'] ?? null;
-        });
+        return $ageOfMoney;
     }
 
     /**
@@ -120,32 +183,44 @@ class YnabService
             return [];
         }
 
-        return Cache::rememberForever("ynab.months.{$months}", function () use ($months) {
-            $response = $this->request("/budgets/{$this->budgetId}/months");
+        $cacheKey = "ynab.months.{$months}";
 
-            if (! $response) {
-                return [];
-            }
+        // Check cache first
+        if (Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
 
+        // Fetch from API
+        $response = $this->request("/budgets/{$this->budgetId}/months", 'månedsdata');
+
+        if (! $response) {
+            return [];
+        }
+
+        $currentMonth = now()->format('Y-m-01');
+
+        $monthlyData = collect($response['data']['months'] ?? [])
+            ->filter(fn ($month) => $month['month'] <= $currentMonth)
+            ->sortByDesc('month')
+            ->take($months)
+            ->map(fn ($month) => [
+                'month' => $month['month'],
+                'income' => $month['income'] / 1000,
+                'activity' => $month['activity'] / 1000, // Negative = expenses
+                'budgeted' => $month['budgeted'] / 1000,
+                'to_be_budgeted' => $month['to_be_budgeted'] / 1000,
+                'age_of_money' => $month['age_of_money'],
+            ])
+            ->values()
+            ->toArray();
+
+        // Only cache if we got actual data
+        if (! empty($monthlyData)) {
+            Cache::forever($cacheKey, $monthlyData);
             $this->updateSyncTimestamp();
+        }
 
-            $currentMonth = now()->format('Y-m-01');
-
-            return collect($response['data']['months'] ?? [])
-                ->filter(fn ($month) => $month['month'] <= $currentMonth)
-                ->sortByDesc('month')
-                ->take($months)
-                ->map(fn ($month) => [
-                    'month' => $month['month'],
-                    'income' => $month['income'] / 1000,
-                    'activity' => $month['activity'] / 1000, // Negative = expenses
-                    'budgeted' => $month['budgeted'] / 1000,
-                    'to_be_budgeted' => $month['to_be_budgeted'] / 1000,
-                    'age_of_money' => $month['age_of_money'],
-                ])
-                ->values()
-                ->toArray();
-        });
+        return $monthlyData;
     }
 
     /**
@@ -174,19 +249,38 @@ class YnabService
     /**
      * Make a request to the YNAB API.
      */
-    private function request(string $endpoint): ?array
+    private function request(string $endpoint, string $dataName = 'data'): ?array
     {
         try {
             $response = Http::withToken($this->token)
                 ->accept('application/json')
+                ->timeout(30)
                 ->get($this->baseUrl.$endpoint);
 
             if ($response->successful()) {
                 return $response->json();
             }
 
+            // Track the error with user-friendly message
+            $status = $response->status();
+            $this->errors[$dataName] = match (true) {
+                $status === 401 => 'Ugyldig API-token',
+                $status === 404 => 'Budsjett ikke funnet',
+                $status === 429 => 'For mange forespørsler - vent litt',
+                $status >= 500 => 'YNAB-serveren er utilgjengelig',
+                default => "Feil ved henting ({$status})",
+            };
+
+            report(new \Exception("YNAB API error for {$dataName}: HTTP {$status} - {$endpoint}"));
+
+            return null;
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            $this->errors[$dataName] = 'Kunne ikke koble til YNAB';
+            report($e);
+
             return null;
         } catch (\Exception $e) {
+            $this->errors[$dataName] = 'Uventet feil ved henting';
             report($e);
 
             return null;
