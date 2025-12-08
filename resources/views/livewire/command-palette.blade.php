@@ -1,8 +1,21 @@
 <div
     x-data="{
         selectedIndex: 0,
+        favorites: $persist([]).as('command-palette-favorites'),
         get resultsCount() {
             return document.querySelectorAll('[data-result-item]').length;
+        },
+        isFavorite(url) {
+            return this.favorites.includes(url);
+        },
+        toggleFavorite(url, event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (this.isFavorite(url)) {
+                this.favorites = this.favorites.filter(f => f !== url);
+            } else {
+                this.favorites = [...this.favorites, url];
+            }
         },
         selectNext() {
             this.selectedIndex = Math.min(this.selectedIndex + 1, this.resultsCount - 1);
@@ -14,8 +27,16 @@
         },
         scrollToSelected() {
             const selected = document.querySelector(`[data-result-item][data-index='${this.selectedIndex}']`);
-            if (selected) {
-                selected.scrollIntoView({ block: 'nearest' });
+            const container = this.$refs.resultsContainer;
+            if (selected && container) {
+                const selectedRect = selected.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+
+                if (selectedRect.bottom > containerRect.bottom) {
+                    container.scrollTop += selectedRect.bottom - containerRect.bottom + 8;
+                } else if (selectedRect.top < containerRect.top) {
+                    container.scrollTop -= containerRect.top - selectedRect.top + 8;
+                }
             }
         },
         navigateToSelected() {
@@ -26,10 +47,47 @@
                     window.location.href = url;
                 }
             }
+        },
+        sortResults() {
+            const list = this.$refs.resultsList;
+            if (!list) return;
+
+            const items = Array.from(list.querySelectorAll('li'));
+            items.sort((a, b) => {
+                const aUrl = a.querySelector('[data-url]')?.dataset.url;
+                const bUrl = b.querySelector('[data-url]')?.dataset.url;
+                const aFav = this.isFavorite(aUrl);
+                const bFav = this.isFavorite(bUrl);
+
+                if (aFav && !bFav) return -1;
+                if (!aFav && bFav) return 1;
+                return 0;
+            });
+
+            // Reorder DOM and update indexes
+            items.forEach((item, index) => {
+                list.appendChild(item);
+                const link = item.querySelector('[data-result-item]');
+                if (link) {
+                    link.dataset.index = index;
+                }
+            });
+
+            if (this.$refs.resultsContainer) {
+                this.$refs.resultsContainer.scrollTop = 0;
+            }
+
+            // Force Alpine to re-evaluate by toggling selectedIndex
+            this.selectedIndex = -1;
+            this.$nextTick(() => {
+                this.selectedIndex = 0;
+            });
         }
     }"
     x-init="
-        $watch('$wire.search', () => selectedIndex = 0);
+        $watch('$wire.search', () => { selectedIndex = 0; setTimeout(() => sortResults(), 50); });
+        $watch('$wire.isOpen', (value) => { if (value) setTimeout(() => sortResults(), 50); });
+        $watch('favorites', () => $nextTick(() => sortResults()));
     "
     @keydown.ctrl.k.window.prevent="$wire.open()"
     @keydown.escape.window="$wire.isOpen && $wire.close()"
@@ -88,27 +146,24 @@
                     </div>
 
                     {{-- Results --}}
-                    <div class="max-h-80 overflow-y-auto py-2" wire:loading.class="opacity-50">
+                    <div class="max-h-80 overflow-y-auto py-2" wire:loading.class="opacity-50" x-ref="resultsContainer">
                         @php
-                            $groupedResults = $this->results->groupBy('category');
+                            $allResults = $this->results->values()->all();
                             $globalIndex = 0;
                         @endphp
 
-                        @forelse($groupedResults as $category => $items)
+                        @if(count($allResults) > 0)
                             <div class="px-3 py-2">
-                                <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1">
-                                    {{ $category }}
-                                </h3>
-                                <ul class="space-y-0.5">
-                                    @foreach($items as $item)
+                                <ul class="space-y-0.5" x-ref="resultsList">
+                                    @foreach($allResults as $item)
                                         <li>
                                             <a
                                                 href="{{ $item['url'] }}"
                                                 data-result-item
                                                 data-index="{{ $globalIndex }}"
                                                 data-url="{{ $item['url'] }}"
-                                                @mouseenter="selectedIndex = {{ $globalIndex }}"
-                                                :class="selectedIndex === {{ $globalIndex }} ? 'bg-accent/10 text-accent' : 'text-foreground hover:bg-card-hover'"
+                                                @mouseenter="selectedIndex = parseInt($el.dataset.index)"
+                                                :class="selectedIndex === parseInt($el.dataset.index) ? 'bg-accent/10 text-accent' : 'text-foreground hover:bg-card-hover'"
                                                 class="flex items-center gap-3 px-2 py-2 rounded-lg transition-colors cursor-pointer"
                                             >
                                                 {{-- Icon --}}
@@ -204,9 +259,26 @@
                                                     @endif
                                                 </div>
 
+                                                {{-- Favorite star --}}
+                                                <button
+                                                    type="button"
+                                                    @click="toggleFavorite('{{ $item['url'] }}', $event)"
+                                                    class="p-1 rounded hover:bg-background transition-colors cursor-pointer"
+                                                    :class="isFavorite('{{ $item['url'] }}') ? 'text-yellow-400' : 'text-muted-foreground/50 hover:text-muted-foreground'"
+                                                >
+                                                    <svg
+                                                        class="w-4 h-4"
+                                                        :fill="isFavorite('{{ $item['url'] }}') ? 'currentColor' : 'none'"
+                                                        stroke="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                                    </svg>
+                                                </button>
+
                                                 {{-- Arrow indicator for selected --}}
                                                 <span
-                                                    x-show="selectedIndex === {{ $globalIndex }}"
+                                                    x-show="selectedIndex === parseInt($el.closest('a').dataset.index)"
                                                     class="text-accent"
                                                 >
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,14 +291,14 @@
                                     @endforeach
                                 </ul>
                             </div>
-                        @empty
+                        @else
                             <div class="px-4 py-8 text-center text-muted-foreground">
                                 <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <p class="text-sm">Ingen resultater for "{{ $search }}"</p>
                             </div>
-                        @endforelse
+                        @endif
                     </div>
 
                     {{-- Footer --}}

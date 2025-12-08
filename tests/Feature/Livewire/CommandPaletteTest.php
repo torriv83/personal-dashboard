@@ -140,14 +140,17 @@ it('limits results to 15 items total', function () {
     expect($component->get('results')->count())->toBeLessThanOrEqual(15);
 });
 
-it('groups results by category', function () {
+it('includes results from multiple categories', function () {
     Assistant::factory()->create(['name' => 'Test Assistent']);
     Prescription::factory()->create(['name' => 'Test Medisin']);
 
-    Livewire::test(CommandPalette::class)
-        ->set('search', 'Test')
-        ->assertSee('Assistenter')
-        ->assertSee('Resepter');
+    $component = Livewire::test(CommandPalette::class)
+        ->set('search', 'Test');
+
+    $results = $component->get('results');
+    $categories = $results->pluck('category')->unique();
+
+    expect($categories)->toContain('Assistenter', 'Resepter');
 });
 
 it('has correct quick action categories', function () {
