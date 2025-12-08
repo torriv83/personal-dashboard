@@ -40,7 +40,7 @@ class Dashboard extends Component
     ];
 
     // Pagination state
-    public int $weeklyPerPage = 3;
+    public int $weeklyPerPage = 10;
 
     public int $weeklyPage = 1;
 
