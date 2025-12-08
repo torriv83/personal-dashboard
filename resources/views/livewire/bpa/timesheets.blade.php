@@ -1,4 +1,7 @@
-<div class="w-full flex flex-col">
+<div class="w-full flex flex-col" data-timesheets-component>
+    {{-- Context Menu --}}
+    @include('livewire.bpa.timesheets._context-menu')
+
     {{-- Header --}}
     <div class="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 mb-4">
         <div class="flex items-center gap-2">
@@ -315,7 +318,15 @@
                 </thead>
                 <tbody class="divide-y divide-border">
                     @forelse($this->shifts as $shift)
-                        <tr wire:key="shift-{{ $shift->id }}" class="hover:bg-card-hover transition-colors {{ $shift->trashed() ? 'opacity-50' : '' }} {{ $shift->is_unavailable ? 'bg-warning/5' : '' }}">
+                        <tr
+                            wire:key="shift-{{ $shift->id }}"
+                            class="hover:bg-card-hover transition-colors {{ $shift->trashed() ? 'opacity-50' : '' }} {{ $shift->is_unavailable ? 'bg-warning/5' : '' }}"
+                            @contextmenu.prevent="
+                                const x = Math.min($event.clientX, window.innerWidth - 200);
+                                const y = Math.min($event.clientY, window.innerHeight - 250);
+                                $store.timesheetMenu.open(x, y, {{ $shift->id }}, {{ $shift->trashed() ? 'true' : 'false' }}, {{ $shift->is_unavailable ? 'true' : 'false' }}, {{ $shift->is_all_day ? 'true' : 'false' }})
+                            "
+                        >
                             <td class="px-4 py-3 font-medium text-foreground whitespace-nowrap">
                                 {{ $shift->assistant?->name ?? 'Ukjent' }}
                             </td>

@@ -142,6 +142,60 @@ Alpine.store('assistantMenu', {
     }
 });
 
+// Register Alpine store for timesheet context menu
+Alpine.store('timesheetMenu', {
+    show: false,
+    x: 0,
+    y: 0,
+    shiftId: null,
+    isArchived: false,
+    isUnavailable: false,
+    isAllDay: false,
+
+    open(x, y, shiftId, isArchived = false, isUnavailable = false, isAllDay = false) {
+        this.show = true;
+        this.x = x;
+        this.y = y;
+        this.shiftId = shiftId;
+        this.isArchived = isArchived;
+        this.isUnavailable = isUnavailable;
+        this.isAllDay = isAllDay;
+    },
+
+    hide() {
+        this.show = false;
+    },
+
+    action(actionName) {
+        const timesheetsEl = document.querySelector('[data-timesheets-component]');
+        const wireId = timesheetsEl?.closest('[wire\\:id]')?.getAttribute('wire:id');
+
+        if (!wireId) {
+            console.error('Timesheet menu: Could not find Livewire component');
+            this.hide();
+            return;
+        }
+
+        const wire = Livewire.find(wireId);
+
+        if (actionName === 'edit') {
+            wire.call('openEditModal', this.shiftId);
+        } else if (actionName === 'toggleAway') {
+            wire.call('toggleField', this.shiftId, 'away');
+        } else if (actionName === 'toggleFullDay') {
+            wire.call('toggleField', this.shiftId, 'fullDay');
+        } else if (actionName === 'archive') {
+            wire.call('toggleArchived', this.shiftId);
+        } else if (actionName === 'restore') {
+            wire.call('toggleArchived', this.shiftId);
+        } else if (actionName === 'forceDelete') {
+            wire.call('forceDelete', this.shiftId);
+        }
+
+        this.hide();
+    }
+});
+
 // Register Alpine components
 Alpine.data('calendar', calendar);
 
