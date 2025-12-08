@@ -1,4 +1,7 @@
-<div class="w-full h-full flex flex-col">
+<div class="w-full h-full flex flex-col" data-assistants-component>
+    {{-- Context Menu --}}
+    @include('livewire.bpa.assistants._context-menu')
+
     {{-- Header --}}
     <div class="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-3 mb-4">
         <div class="flex items-center gap-2">
@@ -71,7 +74,14 @@
                 @endif
 
                 {{-- Mobil: Kort-layout --}}
-                <div class="md:hidden p-4 hover:bg-card-hover transition-colors {{ $isDeleted ? 'opacity-60' : '' }}">
+                <div
+                    class="md:hidden p-4 hover:bg-card-hover transition-colors {{ $isDeleted ? 'opacity-60' : '' }}"
+                    @contextmenu.prevent="
+                        const x = Math.min($event.clientX, window.innerWidth - 200);
+                        const y = Math.min($event.clientY, window.innerHeight - 200);
+                        $store.assistantMenu.open(x, y, {{ $assistant->id }}, {{ $isDeleted ? 'true' : 'false' }})
+                    "
+                >
                     {{-- Rad 1: Avatar + Navn + Handlinger --}}
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full {{ $isDeleted ? 'bg-muted-foreground/20 border-muted-foreground/30 text-muted-foreground' : 'bg-accent/20 border-accent/30 text-accent' }} border flex items-center justify-center text-sm font-medium shrink-0">
@@ -166,7 +176,14 @@
                 </div>
 
                 {{-- Desktop: Tabell-rad --}}
-                <div class="hidden md:grid grid-cols-[1fr_8rem_12rem_10rem_8rem_5rem] gap-4 px-4 py-3 items-center hover:bg-card-hover transition-colors {{ $isDeleted ? 'opacity-60' : '' }}">
+                <div
+                    class="hidden md:grid grid-cols-[1fr_8rem_12rem_10rem_8rem_5rem] gap-4 px-4 py-3 items-center hover:bg-card-hover transition-colors {{ $isDeleted ? 'opacity-60' : '' }}"
+                    @contextmenu.prevent="
+                        const x = Math.min($event.clientX, window.innerWidth - 200);
+                        const y = Math.min($event.clientY, window.innerHeight - 200);
+                        $store.assistantMenu.open(x, y, {{ $assistant->id }}, {{ $isDeleted ? 'true' : 'false' }})
+                    "
+                >
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-full {{ $isDeleted ? 'bg-muted-foreground/20 border-muted-foreground/30 text-muted-foreground' : 'bg-accent/20 border-accent/30 text-accent' }} border flex items-center justify-center text-sm font-medium">
                             {{ $assistant->initials }}

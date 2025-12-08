@@ -90,6 +90,58 @@ Alpine.store('contextMenu', {
     }
 });
 
+// Register Alpine store for assistant context menu
+Alpine.store('assistantMenu', {
+    show: false,
+    x: 0,
+    y: 0,
+    assistantId: null,
+    isDeleted: false,
+
+    open(x, y, assistantId, isDeleted = false) {
+        this.show = true;
+        this.x = x;
+        this.y = y;
+        this.assistantId = assistantId;
+        this.isDeleted = isDeleted;
+    },
+
+    hide() {
+        this.show = false;
+    },
+
+    action(actionName) {
+        const assistantsEl = document.querySelector('[data-assistants-component]');
+        const wireId = assistantsEl?.closest('[wire\\:id]')?.getAttribute('wire:id');
+
+        if (!wireId) {
+            console.error('Assistant menu: Could not find Livewire component');
+            this.hide();
+            return;
+        }
+
+        const wire = Livewire.find(wireId);
+
+        if (this.isDeleted) {
+            if (actionName === 'restore') {
+                wire.call('restoreAssistant', this.assistantId);
+            } else if (actionName === 'forceDelete') {
+                wire.call('forceDeleteAssistant', this.assistantId);
+            }
+        } else {
+            if (actionName === 'view') {
+                window.location.href = `/bpa/assistenter/${this.assistantId}`;
+            } else if (actionName === 'edit') {
+                wire.call('editAssistant', this.assistantId);
+            } else if (actionName === 'delete') {
+                wire.call('deleteAssistant', this.assistantId);
+            }
+        }
+
+        this.hide();
+    }
+});
+
 // Register Alpine components
 Alpine.data('calendar', calendar);
 
