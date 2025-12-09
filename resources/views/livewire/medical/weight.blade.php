@@ -277,7 +277,7 @@
                 <span class="text-sm text-muted-foreground">{{ $this->entries->count() }} registreringer</span>
             </div>
 
-            <div class="divide-y divide-border">
+            <div class="divide-y divide-border overflow-x-auto">
                 @foreach($this->entries->take(10) as $index => $entry)
                     @php
                         $prevEntry = $this->entries->get($index + 1);
@@ -285,7 +285,7 @@
                     @endphp
                     <div
                         wire:key="entry-{{ $entry->id }}"
-                        class="px-5 py-4 flex items-center gap-4 hover:bg-card-hover/50 transition-colors group"
+                        class="px-5 py-4 flex items-center gap-4 hover:bg-card-hover/50 transition-colors group min-w-max"
                     >
                         {{-- Date indicator --}}
                         <div class="flex flex-col items-center w-14 shrink-0">
