@@ -111,7 +111,7 @@
             </x-slot>
 
             <x-sidebar-sublink href="{{ route('games.rommers') }}" :active="request()->routeIs('games.rommers')">
-                Rommers
+                Rømmers
             </x-sidebar-sublink>
         </x-sidebar-group>
 

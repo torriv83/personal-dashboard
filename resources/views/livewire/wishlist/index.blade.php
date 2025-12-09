@@ -1,4 +1,4 @@
-<div class="p-4 sm:p-6 space-y-6" x-data="{ expanded: [], moveDropdownOpen: null }">
+<div class="py-4 sm:p-6 space-y-6" x-data="{ expanded: [], moveDropdownOpen: null }">
     {{-- Header --}}
     <div class="flex items-center justify-between">
         <div>

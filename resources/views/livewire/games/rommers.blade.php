@@ -1,9 +1,9 @@
-<div class="p-4 sm:p-6 space-y-6">
+<div class="py-4 sm:p-6 space-y-6">
     {{-- Header --}}
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-foreground">Rommers</h1>
-            <p class="text-sm text-muted-foreground mt-1 hidden sm:block">Poengføring for kortspillet Rommers</p>
+            <h1 class="text-2xl font-bold text-foreground">Rømmers</h1>
+            <p class="text-sm text-muted-foreground mt-1 hidden sm:block">Poengføring for kortspillet Rømmers</p>
         </div>
         <button
             wire:click="openNewGameModal"
