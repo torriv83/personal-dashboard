@@ -15,7 +15,10 @@
             <tbody class="divide-y divide-border">
                 @forelse($this->unavailableEmployees as $unavailable)
                     <tr wire:key="unavailable-{{ $unavailable['id'] }}" class="hover:bg-card-hover transition-colors group">
-                        <td class="px-5 py-3 text-sm text-foreground whitespace-nowrap">{{ $unavailable['name'] }}</td>
+                        <td class="px-5 py-3 text-sm text-foreground whitespace-nowrap">
+                                <span class="sm:hidden">{{ Str::before($unavailable['name'], ' ') }}</span>
+                                <span class="hidden sm:inline">{{ $unavailable['name'] }}</span>
+                            </td>
                         <td class="px-5 py-3 text-sm text-foreground whitespace-nowrap">{{ $unavailable['from'] }}</td>
                         <td class="px-5 py-3 text-sm text-foreground whitespace-nowrap">{{ $unavailable['to'] }}</td>
                         <td class="px-5 py-3 text-right">
@@ -23,7 +26,7 @@
                                 wire:click="deleteUnavailable({{ $unavailable['id'] }})"
                                 wire:confirm="Er du sikker på at du vil slette dette fraværet?"
                                 type="button"
-                                class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 rounded transition-colors opacity-0 group-hover:opacity-100 cursor-pointer"
+                                class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 rounded transition-colors sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
                                 title="Slett"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

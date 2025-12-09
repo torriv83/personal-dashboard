@@ -407,9 +407,9 @@ class Dashboard extends Component
             ->take($this->shiftsPerPage)
             ->get()
             ->map(fn (Shift $shift) => [
-                'name' => $shift->assistant->name ?? 'Ukjent',
-                'from' => $shift->starts_at->format('d.m.Y, H:i'),
-                'to' => $shift->ends_at->format('d.m.Y, H:i'),
+                'name' => explode(' ', $shift->assistant->name ?? 'Ukjent')[0],
+                'from' => $shift->starts_at->translatedFormat('j. M H:i'),
+                'to' => $shift->ends_at->translatedFormat('j. M H:i'),
                 'duration' => $this->formatMinutes($shift->duration_minutes),
                 'duration_minutes' => $shift->duration_minutes,
             ])

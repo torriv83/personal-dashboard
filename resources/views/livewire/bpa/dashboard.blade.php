@@ -1,4 +1,4 @@
-<div class="p-4 sm:p-6 space-y-6">
+<div class="space-y-6">
     {{-- Header --}}
     <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-foreground">Dashbord</h1>

@@ -332,7 +332,7 @@
                         </div>
 
                         {{-- Actions --}}
-                        <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <div class="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
                             <button
                                 wire:click="openModal({{ $entry->id }})"
                                 class="p-2 text-muted-foreground hover:text-foreground hover:bg-input rounded-lg transition-colors cursor-pointer"

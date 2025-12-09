@@ -327,18 +327,18 @@
                                 $store.timesheetMenu.open(x, y, {{ $shift->id }}, {{ $shift->trashed() ? 'true' : 'false' }}, {{ $shift->is_unavailable ? 'true' : 'false' }}, {{ $shift->is_all_day ? 'true' : 'false' }})
                             "
                         >
-                            <td class="px-4 py-3 font-medium text-foreground whitespace-nowrap">
+                            <td class="px-4 py-3 text-sm font-medium text-foreground whitespace-nowrap">
                                 <span class="sm:hidden">{{ Str::before($shift->assistant?->name ?? 'Ukjent', ' ') }}</span>
                                 <span class="hidden sm:inline">{{ $shift->assistant?->name ?? 'Ukjent' }}</span>
                             </td>
-                            <td class="px-4 py-3 text-muted">
-                                <span class="sm:hidden">{{ $shift->starts_at->format('d.m') }}</span>
-                                <span class="hidden sm:inline">{{ $shift->starts_at->format('d.m.Y') }}</span>
+                            <td class="px-4 py-3 text-sm text-muted whitespace-nowrap">
+                                <span class="sm:hidden">{{ $shift->starts_at->translatedFormat('j. M') }}</span>
+                                <span class="hidden sm:inline">{{ $shift->starts_at->translatedFormat('j. M Y') }}</span>
                             </td>
-                            <td class="px-4 py-3 text-muted">{{ $shift->is_all_day ? '-' : $shift->starts_at->format('H:i') }}</td>
-                            <td class="px-4 py-3 text-muted">{{ $shift->is_all_day ? '-' : $shift->ends_at->format('H:i') }}</td>
-                            <td class="px-4 py-3 text-muted text-sm truncate max-w-[200px] hidden sm:table-cell">{{ $shift->note ?: '-' }}</td>
-                            <td class="px-4 py-3 text-right font-medium text-foreground">{{ $shift->formatted_duration }}</td>
+                            <td class="px-4 py-3 text-sm text-muted whitespace-nowrap">{{ $shift->is_all_day ? '-' : $shift->starts_at->format('H:i') }}</td>
+                            <td class="px-4 py-3 text-sm text-muted whitespace-nowrap">{{ $shift->is_all_day ? '-' : $shift->ends_at->format('H:i') }}</td>
+                            <td class="px-4 py-3 text-sm text-muted truncate max-w-[200px] hidden sm:table-cell">{{ $shift->note ?: '-' }}</td>
+                            <td class="px-4 py-3 text-sm text-right font-medium text-foreground whitespace-nowrap">{{ $shift->formatted_duration }}</td>
                             <td class="px-4 py-3 hidden sm:table-cell">
                                 <div class="flex justify-center">
                                     <button wire:click="toggleField({{ $shift->id }}, 'away')" class="inline-flex cursor-pointer" title="Toggle borte">

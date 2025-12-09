@@ -32,7 +32,10 @@
             <tbody class="divide-y divide-border">
                 @foreach($this->employees as $employee)
                     <tr class="hover:bg-card-hover transition-colors">
-                        <td class="px-5 py-3 text-sm text-foreground whitespace-nowrap">{{ $employee['name'] }}</td>
+                        <td class="px-5 py-3 text-sm text-foreground whitespace-nowrap">
+                                <span class="sm:hidden">{{ Str::before($employee['name'], ' ') }}</span>
+                                <span class="hidden sm:inline">{{ $employee['name'] }}</span>
+                            </td>
                         <td class="px-5 py-3 whitespace-nowrap">
                             @if($employee['positionColor'] === 'accent')
                                 <span class="px-2 py-1 text-xs font-medium bg-accent/20 text-accent rounded whitespace-nowrap">
