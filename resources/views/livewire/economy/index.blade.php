@@ -1,4 +1,4 @@
-<div class="p-4 sm:p-6 space-y-6" wire:init="loadYnabData">
+<div class="py-4 sm:p-6 space-y-6" wire:init="loadYnabData">
     {{-- Flash Message --}}
     @if (session('success'))
         <div
@@ -112,10 +112,10 @@
             @if(!$isLoadingYnab)
                 <div class="text-xs text-muted-foreground text-right">
                     @if($this->lastSyncedAt)
-                        <span>Sist synkronisert: {{ $this->lastSyncedAt }}</span>
+                        <span class="block sm:inline">Sist synkronisert: {{ $this->lastSyncedAt }}</span>
                     @endif
                     @if($this->lastModifiedAt)
-                        <span class="block xs:inline xs:ml-3">Endret i YNAB: {{ \Carbon\Carbon::parse($this->lastModifiedAt)->format('d.m.Y \\k\\l. H:i') }}</span>
+                        <span class="block sm:inline sm:ml-3">Endret i YNAB: {{ \Carbon\Carbon::parse($this->lastModifiedAt)->format('d.m.Y \\k\\l. H:i') }}</span>
                     @endif
                 </div>
             @endif
