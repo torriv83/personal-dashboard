@@ -245,36 +245,36 @@
         </div>
 
         {{-- Type-filter og per-side velger --}}
-        <div class="flex items-center gap-3 shrink-0">
+        <div class="flex items-center gap-3">
             {{-- Type-filter --}}
-            <div class="flex items-center bg-card border border-border rounded-md overflow-hidden shrink-0">
+            <div class="flex items-center bg-card border border-border rounded-md overflow-x-auto">
                 <button
                     wire:click="setTypeFilter(null)"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === null ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="px-3 py-1.5 text-sm whitespace-nowrap transition-colors cursor-pointer {{ $typeFilter === null ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
                     Alle typer
                 </button>
                 <button
                     wire:click="setTypeFilter('worked')"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'worked' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="px-3 py-1.5 text-sm whitespace-nowrap transition-colors cursor-pointer {{ $typeFilter === 'worked' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
                     Jobbet
                 </button>
                 <button
                     wire:click="setTypeFilter('away')"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'away' ? 'bg-warning text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="px-3 py-1.5 text-sm whitespace-nowrap transition-colors cursor-pointer {{ $typeFilter === 'away' ? 'bg-warning text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
                     Borte
                 </button>
                 <button
                     wire:click="setTypeFilter('fullday')"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'fullday' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="px-3 py-1.5 text-sm whitespace-nowrap transition-colors cursor-pointer {{ $typeFilter === 'fullday' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
                     Hel dag
                 </button>
                 <button
                     wire:click="setTypeFilter('archived')"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'archived' ? 'bg-muted-foreground text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="px-3 py-1.5 text-sm whitespace-nowrap transition-colors cursor-pointer {{ $typeFilter === 'archived' ? 'bg-muted-foreground text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
                     Arkivert
                 </button>
