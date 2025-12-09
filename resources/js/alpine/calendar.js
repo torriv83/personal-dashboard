@@ -15,7 +15,11 @@ export default (initialView) => ({
     draggedShiftStart: null,
     draggedShiftDuration: null,
     dragPreviewTime: null,
+    dragPreviewX: 0,
+    dragPreviewY: 0,
     dragOverDate: null,
+    dragOverSlot: null, // The hour slot being hovered (e.g., "08:00")
+    dragQuarter: 0, // Which quarter of the hour (0-3)
 
     // Resize state
     resizingShift: null,
@@ -176,7 +180,11 @@ export default (initialView) => ({
         this.draggedShiftStart = null;
         this.draggedShiftDuration = null;
         this.dragPreviewTime = null;
+        this.dragPreviewX = 0;
+        this.dragPreviewY = 0;
         this.dragOverDate = null;
+        this.dragOverSlot = null;
+        this.dragQuarter = 0;
         this.justDragged = true;
         setTimeout(() => this.justDragged = false, 200);
     },
@@ -385,14 +393,29 @@ export default (initialView) => ({
             return;
         }
 
+        // Calculate precise quarter-hour based on drop position within slot
+        let preciseTime = time;
+        if (time) {
+            const slot = e.target.closest('[data-slot-height]');
+            if (slot) {
+                const rect = slot.getBoundingClientRect();
+                const relativeY = e.clientY - rect.top;
+                const percentInSlot = relativeY / rect.height;
+                const quarterInSlot = Math.floor(percentInSlot * 4); // 0, 1, 2, or 3
+                const [hour] = time.split(':').map(Number);
+                const minutes = Math.min(quarterInSlot, 3) * 15; // 0, 15, 30, or 45
+                preciseTime = `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            }
+        }
+
         if (data.type === 'assistant') {
-            this.$wire.createShiftFromDrag(data.id, date, time);
+            this.$wire.createShiftFromDrag(data.id, date, preciseTime);
         } else if (data.type === 'shift') {
             // Ctrl+drag = duplicate, normal drag = move
             if (e.ctrlKey) {
                 this.$wire.duplicateShift(data.id, date);
             } else {
-                this.$wire.moveShift(data.id, date, time);
+                this.$wire.moveShift(data.id, date, preciseTime);
             }
         }
 
@@ -402,25 +425,59 @@ export default (initialView) => ({
 
     allowDrop(e, time = null, date = null) {
         e.preventDefault();
-        e.currentTarget.classList.add('bg-accent/20');
         // Track which date we're hovering over (for month view)
         if (date) {
             this.dragOverDate = date;
         }
-        // Calculate preview time for shift drag
+        // Calculate preview time for shift drag with quarter-hour precision
         if (this.draggedShift && time && this.draggedShiftDuration) {
-            const [h, m] = time.split(':').map(Number);
+            // Calculate precise quarter-hour based on position within slot
+            let preciseTime = time;
+            let quarterInSlot = 0;
+            const slot = e.target.closest('[data-slot-height]');
+            if (slot) {
+                const rect = slot.getBoundingClientRect();
+                const relativeY = e.clientY - rect.top;
+                const percentInSlot = relativeY / rect.height;
+                quarterInSlot = Math.min(Math.floor(percentInSlot * 4), 3); // 0, 1, 2, or 3
+                const [hour] = time.split(':').map(Number);
+                const minutes = quarterInSlot * 15;
+                preciseTime = `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            }
+
+            const [h, m] = preciseTime.split(':').map(Number);
             const startMinutes = h * 60 + m;
             const endMinutes = startMinutes + this.draggedShiftDuration;
             const endH = Math.floor(endMinutes / 60);
             const endM = endMinutes % 60;
-            this.dragPreviewTime = `${time} - ${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+            this.dragPreviewTime = `${preciseTime} - ${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+
+            // Track cursor position for floating tooltip
+            this.dragPreviewX = e.clientX;
+            this.dragPreviewY = e.clientY;
+
+            // Track which slot and quarter for visual indicator
+            this.dragOverSlot = time;
+            this.dragQuarter = quarterInSlot;
+        } else if (time) {
+            // Also track for assistant drag (show slot but no time preview)
+            this.dragOverSlot = time;
+            // Calculate quarter for assistant drag too
+            const slot = e.target.closest('[data-slot-height]');
+            if (slot) {
+                const rect = slot.getBoundingClientRect();
+                const relativeY = e.clientY - rect.top;
+                const percentInSlot = relativeY / rect.height;
+                this.dragQuarter = Math.min(Math.floor(percentInSlot * 4), 3);
+            }
         }
     },
 
     leaveDrop(e) {
         e.currentTarget.classList.remove('bg-accent/20');
         this.dragOverDate = null;
+        this.dragOverSlot = null;
+        this.dragQuarter = 0;
     },
 
     // =========================================================================

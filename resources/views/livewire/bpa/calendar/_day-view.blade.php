@@ -166,16 +166,20 @@
                     <div
                         class="relative flex flex-col transition-colors"
                         data-slot-height="64"
-                        @dragover="allowDrop($event, '{{ $slot['label'] }}')"
+                        @dragover="allowDrop($event, '{{ $slot['label'] }}', '{{ $this->currentDate->format('Y-m-d') }}')"
                         @dragleave="leaveDrop($event)"
                         @drop="handleDrop($event, '{{ $this->currentDate->format('Y-m-d') }}', '{{ $slot['label'] }}')"
                     >
-                        {{-- 15-minutters linjer --}}
+                        {{-- 15-minutters linjer med drag-indikator --}}
                         <div class="absolute inset-0 flex flex-col pointer-events-none">
-                            <div class="flex-1 border-b border-border/30"></div>
-                            <div class="flex-1 border-b border-border/50"></div>
-                            <div class="flex-1 border-b border-border/30"></div>
-                            <div class="flex-1"></div>
+                            <div class="flex-1 border-b border-border/30 transition-colors"
+                                :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragQuarter === 0 && 'bg-accent/40'"></div>
+                            <div class="flex-1 border-b border-border/50 transition-colors"
+                                :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragQuarter === 1 && 'bg-accent/40'"></div>
+                            <div class="flex-1 border-b border-border/30 transition-colors"
+                                :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragQuarter === 2 && 'bg-accent/40'"></div>
+                            <div class="flex-1 transition-colors"
+                                :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragQuarter === 3 && 'bg-accent/40'"></div>
                         </div>
 
                         {{-- Klikkbare 15-min områder --}}
@@ -254,9 +258,10 @@
                                         <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
                                         <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
                                     </div>
-                                    <div class="text-[10px] md:text-xs" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
-                                        <span x-show="resizingShift !== {{ $shift->id }}">Borte {{ $shift->time_range }}</span>
+                                    <div class="text-[10px] md:text-xs" :class="(resizingShift === {{ $shift->id }} || draggedShift === {{ $shift->id }}) ? 'font-bold text-accent' : 'text-muted'">
+                                        <span x-show="resizingShift !== {{ $shift->id }} && draggedShift !== {{ $shift->id }}">Borte {{ $shift->time_range }}</span>
                                         <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>
+                                        <span x-show="draggedShift === {{ $shift->id }} && dragPreviewTime" x-text="'Borte ' + dragPreviewTime"></span>
                                     </div>
                                     {{-- Resize handle --}}
                                     <div
@@ -281,9 +286,10 @@
                                         <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
                                         <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
                                     </div>
-                                    <div class="text-[10px] md:text-xs" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
-                                        <span x-show="resizingShift !== {{ $shift->id }}">{{ $shift->time_range }}</span>
+                                    <div class="text-[10px] md:text-xs" :class="(resizingShift === {{ $shift->id }} || draggedShift === {{ $shift->id }}) ? 'font-bold text-accent' : 'text-muted'">
+                                        <span x-show="resizingShift !== {{ $shift->id }} && draggedShift !== {{ $shift->id }}">{{ $shift->time_range }}</span>
                                         <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>
+                                        <span x-show="draggedShift === {{ $shift->id }} && dragPreviewTime" x-text="dragPreviewTime"></span>
                                     </div>
                                     {{-- Resize handle --}}
                                     <div

@@ -173,16 +173,20 @@
                         <div
                             class="relative border-r border-border last:border-r-0 {{ $weekDay['isToday'] ? 'bg-accent/5' : '' }} transition-colors"
                             data-slot-height="48"
-                            @dragover="allowDrop($event, '{{ $slot['label'] }}')"
+                            @dragover="allowDrop($event, '{{ $slot['label'] }}', '{{ $weekDay['date'] }}')"
                             @dragleave="leaveDrop($event)"
                             @drop="handleDrop($event, '{{ $weekDay['date'] }}', '{{ $slot['label'] }}')"
                         >
-                            {{-- 15-minutters linjer --}}
+                            {{-- 15-minutters linjer med drag-indikator --}}
                             <div class="absolute inset-0 flex flex-col pointer-events-none">
-                                <div class="flex-1 border-b border-border/20"></div>
-                                <div class="flex-1 border-b border-border/40"></div>
-                                <div class="flex-1 border-b border-border/20"></div>
-                                <div class="flex-1"></div>
+                                <div class="flex-1 border-b border-border/20 transition-colors"
+                                    :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragOverDate === '{{ $weekDay['date'] }}' && dragQuarter === 0 && 'bg-accent/40'"></div>
+                                <div class="flex-1 border-b border-border/40 transition-colors"
+                                    :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragOverDate === '{{ $weekDay['date'] }}' && dragQuarter === 1 && 'bg-accent/40'"></div>
+                                <div class="flex-1 border-b border-border/20 transition-colors"
+                                    :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragOverDate === '{{ $weekDay['date'] }}' && dragQuarter === 2 && 'bg-accent/40'"></div>
+                                <div class="flex-1 transition-colors"
+                                    :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragOverDate === '{{ $weekDay['date'] }}' && dragQuarter === 3 && 'bg-accent/40'"></div>
                             </div>
 
                             {{-- Klikkbart område --}}
@@ -261,9 +265,10 @@
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%;"
                                     >
                                         <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
-                                        <div class="text-[10px] truncate" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
-                                            <span x-show="resizingShift !== {{ $shift->id }}">Borte {{ $shift->time_range }}</span>
+                                        <div class="text-[10px] truncate" :class="(resizingShift === {{ $shift->id }} || draggedShift === {{ $shift->id }}) ? 'font-bold text-accent' : 'text-muted'">
+                                            <span x-show="resizingShift !== {{ $shift->id }} && draggedShift !== {{ $shift->id }}">Borte {{ $shift->time_range }}</span>
                                             <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>
+                                            <span x-show="draggedShift === {{ $shift->id }} && dragPreviewTime" x-text="'Borte ' + dragPreviewTime"></span>
                                         </div>
                                         {{-- Resize handle --}}
                                         <div
@@ -294,9 +299,10 @@
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }}"
                                     >
                                         <div class="text-xs font-medium truncate" style="color: {{ $assistantColor }}">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
-                                        <div class="text-[10px] truncate" :class="resizingShift === {{ $shift->id }} ? 'font-bold text-accent' : 'text-muted'">
-                                            <span x-show="resizingShift !== {{ $shift->id }}">{{ $shift->time_range }}</span>
+                                        <div class="text-[10px] truncate" :class="(resizingShift === {{ $shift->id }} || draggedShift === {{ $shift->id }}) ? 'font-bold text-accent' : 'text-muted'">
+                                            <span x-show="resizingShift !== {{ $shift->id }} && draggedShift !== {{ $shift->id }}">{{ $shift->time_range }}</span>
                                             <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>
+                                            <span x-show="draggedShift === {{ $shift->id }} && dragPreviewTime" x-text="dragPreviewTime"></span>
                                         </div>
                                         {{-- Resize handle --}}
                                         <div
