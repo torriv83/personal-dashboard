@@ -102,7 +102,7 @@ class GoogleCalendarService
         try {
             $vcalendar = Reader::read($icalData);
 
-            if (! $vcalendar || ! isset($vcalendar->VEVENT)) {
+            if (! isset($vcalendar->VEVENT)) {
                 return $events;
             }
 
