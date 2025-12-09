@@ -34,7 +34,7 @@
                         @dragover="allowDrop($event, null, '{{ $day['date'] }}')"
                         @dragleave="leaveDrop($event)"
                         @drop.stop="handleDrop($event, '{{ $day['date'] }}')"
-                        class="p-0.5 md:p-1 relative group transition-colors cursor-pointer
+                        class="p-0.5 md:p-1 relative group transition-colors cursor-pointer overflow-hidden
                             {{ $day['isCurrentMonth'] ? 'bg-card hover:bg-card-hover' : 'bg-surface hover:bg-card' }}
                             {{ $day['isToday'] ? 'ring-2 ring-inset ring-accent' : '' }}"
                         :class="dragOverDate === '{{ $day['date'] }}' && 'ring-2 ring-inset ring-accent !bg-accent/20'"
@@ -53,8 +53,11 @@
                         </div>
 
                         {{-- Events: Dots på mobil, full info på desktop --}}
-                        @php $dayShifts = $this->getShiftsForDate($day['date']); @endphp
-                        @if(count($dayShifts) > 0)
+                        @php
+                            $dayShifts = $this->getShiftsForDate($day['date']);
+                            $dayExternalEvents = $this->getExternalEventsForDate($day['date']);
+                        @endphp
+                        @if(count($dayShifts) > 0 || count($dayExternalEvents) > 0)
                             <div class="mt-0.5 md:mt-1">
                                 {{-- MOBIL: Fargede prikker --}}
                                 <div class="flex flex-wrap gap-0.5 md:hidden">
@@ -76,10 +79,68 @@
                                             ></span>
                                         @endif
                                     @endforeach
+                                    {{-- Eksterne events (mobil) --}}
+                                    @foreach($dayExternalEvents as $event)
+                                        <span
+                                            class="w-2 h-2 rounded-full opacity-50"
+                                            style="background-color: {{ $event->color }}"
+                                            title="{{ $event->title }}"
+                                        ></span>
+                                    @endforeach
                                 </div>
 
                                 {{-- DESKTOP: Full event-info --}}
-                                <div class="hidden md:block space-y-0.5">
+                                <div class="hidden md:block space-y-0.5 min-w-0">
+                                    {{-- Eksterne kalender-events (desktop) - øverst for bedre tooltip-visning --}}
+                                    @foreach($dayExternalEvents as $externalEvent)
+                                        <div
+                                            x-data="{ showTooltip: false }"
+                                            @mouseenter="showTooltip = true"
+                                            @mouseleave="showTooltip = false"
+                                            class="px-1.5 py-0.5 rounded border-l-2 group/ext cursor-default relative"
+                                            style="background-color: {{ $externalEvent->color }}15; border-color: {{ $externalEvent->color }}"
+                                        >
+                                            <div class="text-xs font-medium text-muted-foreground truncate opacity-50 group-hover/ext:opacity-80 transition-opacity">
+                                                @if($externalEvent->isManUtd())<span class="mr-0.5">⚽</span>@endif{{ $externalEvent->title }}
+                                            </div>
+                                            @unless($externalEvent->is_all_day)
+                                                <div class="text-[9px] text-muted truncate opacity-50 group-hover/ext:opacity-80 transition-opacity">{{ $externalEvent->getTimeRange() }}</div>
+                                            @endunless
+
+                                            {{-- Tooltip --}}
+                                            <div
+                                                x-show="showTooltip"
+                                                x-cloak
+                                                x-transition:enter="transition ease-out duration-150"
+                                                x-transition:enter-start="opacity-0 scale-95"
+                                                x-transition:enter-end="opacity-100 scale-100"
+                                                x-transition:leave="transition ease-in duration-100"
+                                                x-transition:leave-start="opacity-100 scale-100"
+                                                x-transition:leave-end="opacity-0 scale-95"
+                                                class="absolute z-50 top-full left-0 mt-1 w-48 p-2 bg-card border border-border rounded-lg shadow-lg"
+                                            >
+                                                <div class="text-xs font-semibold text-foreground mb-1">{{ $externalEvent->title }}</div>
+                                                <div class="text-[10px] text-muted-foreground">
+                                                    <span class="inline-block px-1 py-0.5 rounded text-[9px]" style="background-color: {{ $externalEvent->color }}30; color: {{ $externalEvent->color }}">
+                                                        {{ $externalEvent->calendar_label }}
+                                                    </span>
+                                                </div>
+                                                @if($externalEvent->is_all_day)
+                                                    <div class="text-[10px] text-muted mt-1">Hele dagen</div>
+                                                @else
+                                                    <div class="text-[10px] text-muted mt-1">{{ $externalEvent->getTimeRange() }}</div>
+                                                @endif
+                                                @if($externalEvent->location)
+                                                    <div class="text-[10px] text-muted mt-0.5">📍 {{ $externalEvent->location }}</div>
+                                                @endif
+                                                @if($externalEvent->description)
+                                                    <div class="text-[10px] text-muted mt-1 line-clamp-2">{{ $externalEvent->description }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+
+                                    {{-- Assistentvakter --}}
                                     @foreach($dayShifts as $shift)
                                         @php $assistantColor = $shift->assistant?->color ?? '#6b7280'; @endphp
                                         @if($shift->is_unavailable)

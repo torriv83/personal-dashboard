@@ -8,6 +8,8 @@ use App\Livewire\Bpa\Calendar\Concerns\HandlesRecurringShifts;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesShiftCrud;
 use App\Models\Assistant;
 use App\Models\Shift;
+use App\Services\CalendarEvent;
+use App\Services\GoogleCalendarService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -20,6 +22,8 @@ use Livewire\Component;
  * @property-read array $unavailableAssistantIds
  * @property-read Collection $shifts
  * @property-read array $shiftsByDate
+ * @property-read Collection<int, CalendarEvent> $externalEvents
+ * @property-read array $externalEventsByDate
  */
 #[Layout('components.layouts.app')]
 class Calendar extends Component
@@ -262,6 +266,53 @@ class Calendar extends Component
     public function getShiftsForDate(string $date): array
     {
         return $this->shiftsByDate[$date] ?? [];
+    }
+
+    /**
+     * Get external calendar events for the current visible date range.
+     *
+     * @return Collection<int, CalendarEvent>
+     */
+    #[Computed]
+    public function externalEvents(): Collection
+    {
+        $startDate = $this->getVisibleStartDate();
+        $endDate = $this->getVisibleEndDate();
+
+        return app(GoogleCalendarService::class)->getAllEvents($startDate, $endDate);
+    }
+
+    /**
+     * Get external events grouped by date for easy template access.
+     *
+     * @return array<string, array<CalendarEvent>>
+     */
+    #[Computed]
+    public function externalEventsByDate(): array
+    {
+        $grouped = [];
+
+        foreach ($this->externalEvents as $event) {
+            $date = $event->starts_at->format('Y-m-d');
+
+            if (! isset($grouped[$date])) {
+                $grouped[$date] = [];
+            }
+
+            $grouped[$date][] = $event;
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * Get external events for a specific date.
+     *
+     * @return array<CalendarEvent>
+     */
+    public function getExternalEventsForDate(string $date): array
+    {
+        return $this->externalEventsByDate[$date] ?? [];
     }
 
     /**

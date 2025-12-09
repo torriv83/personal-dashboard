@@ -92,8 +92,11 @@
                 <span class="hidden md:inline">Hel dag</span>
             </div>
             @foreach($this->currentWeekDays as $dayIndex => $weekDay)
-                @php $allDayShifts = collect($this->getShiftsForDate($weekDay['date']))->where('is_all_day', true); @endphp
-                <div class="p-0.5 md:p-1 border-r border-border last:border-r-0 min-h-6 md:min-h-8 {{ $weekDay['isToday'] ? 'bg-accent/5' : '' }}">
+                @php
+                    $allDayShifts = collect($this->getShiftsForDate($weekDay['date']))->where('is_all_day', true);
+                    $allDayExternalEvents = collect($this->getExternalEventsForDate($weekDay['date']))->where('is_all_day', true);
+                @endphp
+                <div class="p-0.5 md:p-1 border-r border-border last:border-r-0 min-h-6 md:min-h-8 {{ $weekDay['isToday'] ? 'bg-accent/5' : '' }} space-y-0.5">
                     @foreach($allDayShifts as $shift)
                         @php $assistantColor = $shift->assistant?->color ?? '#6b7280'; @endphp
                         @if($shift->is_unavailable)
@@ -115,6 +118,38 @@
                                 <div class="text-[10px] font-medium truncate" style="color: {{ $assistantColor }}">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
                             </div>
                         @endif
+                    @endforeach
+                    {{-- Eksterne hele-dagen events --}}
+                    @foreach($allDayExternalEvents as $externalEvent)
+                        {{-- Mobil: Farget prikk --}}
+                        <div class="md:hidden flex justify-center">
+                            <span class="w-2 h-2 rounded-full opacity-50" style="background-color: {{ $externalEvent->color }}" title="{{ $externalEvent->title }}"></span>
+                        </div>
+                        {{-- Desktop: Full info --}}
+                        <div
+                            x-data="{ showTooltip: false }"
+                            @mouseenter="showTooltip = true"
+                            @mouseleave="showTooltip = false"
+                            class="hidden md:block rounded px-1.5 py-0.5 opacity-50 hover:opacity-70 transition-opacity relative"
+                            style="background-color: {{ $externalEvent->color }}15; border: 1px solid {{ $externalEvent->color }}30"
+                        >
+                            <div class="text-[10px] font-medium truncate text-muted-foreground">
+                                @if($externalEvent->isManUtd())⚽@endif
+                                {{ $externalEvent->title }}
+                            </div>
+                            {{-- Tooltip --}}
+                            <div
+                                x-show="showTooltip"
+                                x-cloak
+                                class="absolute z-50 top-full left-0 mt-1 w-40 p-2 bg-card border border-border rounded-lg shadow-lg"
+                            >
+                                <div class="text-xs font-semibold text-foreground">{{ $externalEvent->title }}</div>
+                                <div class="text-[9px] mt-1 px-1 py-0.5 rounded inline-block" style="background-color: {{ $externalEvent->color }}30; color: {{ $externalEvent->color }}">{{ $externalEvent->calendar_label }}</div>
+                                @if($externalEvent->location)
+                                    <div class="text-[10px] text-muted mt-1">📍 {{ $externalEvent->location }}</div>
+                                @endif
+                            </div>
+                        </div>
                     @endforeach
                 </div>
             @endforeach
@@ -191,6 +226,9 @@
                                 $dayShifts = collect($this->getShiftsForDate($weekDay['date']))
                                     ->reject(fn($s) => $s->is_all_day)
                                     ->filter(fn($s) => $s->starts_at->hour === $slot['hour']);
+                                $timedExternalEvents = collect($this->getExternalEventsForDate($weekDay['date']))
+                                    ->reject(fn($e) => $e->is_all_day)
+                                    ->filter(fn($e) => $e->starts_at->hour === $slot['hour']);
                             @endphp
                             @foreach($dayShifts as $shift)
                                 @php
@@ -269,6 +307,53 @@
                                         ></div>
                                     </div>
                                 @endif
+                            @endforeach
+
+                            {{-- Eksterne kalender-events i dette time-slottet --}}
+                            @foreach($timedExternalEvents as $externalEvent)
+                                @php
+                                    $startMinute = $externalEvent->starts_at->minute;
+                                    $topPercent = ($startMinute / 60) * 100;
+                                    $durationMinutes = $externalEvent->getDurationMinutes();
+                                    $durationHours = $durationMinutes / 60;
+                                    $heightPercent = $durationHours * 100;
+                                @endphp
+                                {{-- Mobil: Farget blokk uten tekst --}}
+                                <div
+                                    class="md:hidden absolute left-0 right-0 border-l-2 opacity-40 z-5"
+                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $externalEvent->color }}20; border-color: {{ $externalEvent->color }}"
+                                ></div>
+                                {{-- Desktop: Full info med tooltip --}}
+                                <div
+                                    x-data="{ showTooltip: false }"
+                                    @mouseenter="showTooltip = true"
+                                    @mouseleave="showTooltip = false"
+                                    class="hidden md:block absolute left-0.5 right-0.5 rounded px-1 py-0.5 z-5 border-l-2 opacity-50 hover:opacity-70 transition-opacity"
+                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $externalEvent->color }}15; border-color: {{ $externalEvent->color }}"
+                                >
+                                    <div class="text-xs font-medium truncate text-muted-foreground">
+                                        @if($externalEvent->isManUtd())⚽@endif
+                                        {{ $externalEvent->title }}
+                                    </div>
+                                    <div class="text-[10px] text-muted truncate">{{ $externalEvent->getTimeRange() }}</div>
+
+                                    {{-- Tooltip --}}
+                                    <div
+                                        x-show="showTooltip"
+                                        x-cloak
+                                        class="absolute z-50 top-full left-0 mt-1 w-44 p-2 bg-card border border-border rounded-lg shadow-lg"
+                                    >
+                                        <div class="text-xs font-semibold text-foreground">{{ $externalEvent->title }}</div>
+                                        <div class="text-[9px] mt-1 px-1 py-0.5 rounded inline-block" style="background-color: {{ $externalEvent->color }}30; color: {{ $externalEvent->color }}">{{ $externalEvent->calendar_label }}</div>
+                                        <div class="text-[10px] text-muted mt-1">{{ $externalEvent->getTimeRange() }}</div>
+                                        @if($externalEvent->location)
+                                            <div class="text-[10px] text-muted mt-0.5">📍 {{ $externalEvent->location }}</div>
+                                        @endif
+                                        @if($externalEvent->description)
+                                            <div class="text-[10px] text-muted mt-1 line-clamp-2">{{ $externalEvent->description }}</div>
+                                        @endif
+                                    </div>
+                                </div>
                             @endforeach
                         </div>
                     @endforeach
