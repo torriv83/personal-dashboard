@@ -225,8 +225,8 @@
     {{-- År-filter, type-filter og per-side velger --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         {{-- År-filter --}}
-        <div class="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
-            <div class="flex items-center bg-card border border-border rounded-md overflow-hidden shrink-0">
+        <div class="flex items-center gap-2 pb-2 sm:pb-0">
+            <div class="flex items-center bg-card border border-border rounded-md overflow-x-auto">
                 <button
                     wire:click="setYear(null)"
                     class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $selectedYear === null ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
