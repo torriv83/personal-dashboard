@@ -46,7 +46,7 @@ it('shows upcoming shifts', function () {
     $upcomingShifts = $component->get('upcomingShifts');
 
     expect($upcomingShifts)->toHaveCount(1);
-    expect($upcomingShifts[0]['name'])->toBe('Test Assistent');
+    expect($upcomingShifts[0]['name'])->toBe('Test'); // Only first name is shown
 });
 
 it('shows employees list', function () {
