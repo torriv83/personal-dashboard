@@ -308,12 +308,12 @@
                         <th class="px-4 py-3 text-left whitespace-nowrap w-24">Dato</th>
                         <th class="px-4 py-3 text-left whitespace-nowrap w-20">Fra</th>
                         <th class="px-4 py-3 text-left whitespace-nowrap w-20">Til</th>
-                        <th class="px-4 py-3 text-left whitespace-nowrap">Beskrivelse</th>
+                        <th class="px-4 py-3 text-left whitespace-nowrap hidden sm:table-cell">Beskrivelse</th>
                         <th class="px-4 py-3 text-right whitespace-nowrap w-20">Totalt</th>
-                        <th class="px-4 py-3 text-center whitespace-nowrap w-20">Borte</th>
-                        <th class="px-4 py-3 text-center whitespace-nowrap w-20">Hel dag</th>
-                        <th class="px-4 py-3 text-center whitespace-nowrap w-20">Arkivert</th>
-                        <th class="px-4 py-3 w-24"></th>
+                        <th class="px-4 py-3 text-center whitespace-nowrap w-20 hidden sm:table-cell">Borte</th>
+                        <th class="px-4 py-3 text-center whitespace-nowrap w-20 hidden sm:table-cell">Hel dag</th>
+                        <th class="px-4 py-3 text-center whitespace-nowrap w-20 hidden sm:table-cell">Arkivert</th>
+                        <th class="px-4 py-3 sm:w-24"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
@@ -328,14 +328,18 @@
                             "
                         >
                             <td class="px-4 py-3 font-medium text-foreground whitespace-nowrap">
-                                {{ $shift->assistant?->name ?? 'Ukjent' }}
+                                <span class="sm:hidden">{{ Str::before($shift->assistant?->name ?? 'Ukjent', ' ') }}</span>
+                                <span class="hidden sm:inline">{{ $shift->assistant?->name ?? 'Ukjent' }}</span>
                             </td>
-                            <td class="px-4 py-3 text-muted">{{ $shift->starts_at->format('d.m.Y') }}</td>
+                            <td class="px-4 py-3 text-muted">
+                                <span class="sm:hidden">{{ $shift->starts_at->format('d.m') }}</span>
+                                <span class="hidden sm:inline">{{ $shift->starts_at->format('d.m.Y') }}</span>
+                            </td>
                             <td class="px-4 py-3 text-muted">{{ $shift->is_all_day ? '-' : $shift->starts_at->format('H:i') }}</td>
                             <td class="px-4 py-3 text-muted">{{ $shift->is_all_day ? '-' : $shift->ends_at->format('H:i') }}</td>
-                            <td class="px-4 py-3 text-muted text-sm truncate max-w-[200px]">{{ $shift->note ?: '-' }}</td>
+                            <td class="px-4 py-3 text-muted text-sm truncate max-w-[200px] hidden sm:table-cell">{{ $shift->note ?: '-' }}</td>
                             <td class="px-4 py-3 text-right font-medium text-foreground">{{ $shift->formatted_duration }}</td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 hidden sm:table-cell">
                                 <div class="flex justify-center">
                                     <button wire:click="toggleField({{ $shift->id }}, 'away')" class="inline-flex cursor-pointer" title="Toggle borte">
                                         @if($shift->is_unavailable)
@@ -350,7 +354,7 @@
                                     </button>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 hidden sm:table-cell">
                                 <div class="flex justify-center">
                                     <button wire:click="toggleField({{ $shift->id }}, 'fullDay')" class="inline-flex cursor-pointer" title="Toggle hel dag">
                                         @if($shift->is_all_day)
@@ -365,7 +369,7 @@
                                     </button>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 hidden sm:table-cell">
                                 <div class="flex justify-center">
                                     <button wire:click="toggleArchived({{ $shift->id }})" class="inline-flex cursor-pointer" title="Toggle arkivert">
                                         @if($shift->trashed())
@@ -419,33 +423,39 @@
                 @if($this->shifts->isNotEmpty())
                     <tfoot class="bg-card-hover/30 border-t border-border">
                         <tr>
-                            <td colspan="5" class="px-4 py-3 text-sm text-muted">
-                                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                                    <span>Viser {{ $this->shifts->firstItem() }}-{{ $this->shifts->lastItem() }} av {{ $this->totalEntryCount }} oppføringer</span>
-                                    {{-- Per-side velger (kun mobil) --}}
-                                    <div class="flex sm:hidden items-center gap-2">
-                                        <span class="text-sm text-muted">Vis</span>
-                                        <select
-                                            wire:model.live="perPage"
-                                            class="bg-card border border-border rounded-md px-2 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                                        >
-                                            <option value="10">10</option>
-                                            <option value="25">25</option>
-                                            <option value="50">50</option>
-                                            <option value="100">100</option>
-                                            <option value="250">250</option>
-                                        </select>
-                                        <span class="text-sm text-muted">per side</span>
+                            <td colspan="10" class="px-4 py-3">
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                    {{-- Venstre: Viser info --}}
+                                    <div class="flex items-center gap-2 text-sm text-muted">
+                                        <span>Viser {{ $this->shifts->firstItem() }}-{{ $this->shifts->lastItem() }} av {{ $this->totalEntryCount }}</span>
+                                        {{-- Per-side velger (kun mobil) --}}
+                                        <div class="flex sm:hidden items-center gap-2">
+                                            <span>·</span>
+                                            <select
+                                                wire:model.live="perPage"
+                                                class="bg-card border border-border rounded-md px-2 py-1 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                                            >
+                                                <option value="10">10</option>
+                                                <option value="25">25</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                                <option value="250">250</option>
+                                            </select>
+                                            <span>per side</span>
+                                        </div>
+                                    </div>
+                                    {{-- Høyre: Sum og Snitt --}}
+                                    <div class="flex items-center gap-4 sm:gap-6">
+                                        <div class="text-right">
+                                            <div class="text-xs text-muted">Sum</div>
+                                            <div class="font-bold text-accent">{{ $this->totalSum }}</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs text-muted">Snitt</div>
+                                            <div class="font-medium text-foreground">{{ $this->averageTime }}</div>
+                                        </div>
                                     </div>
                                 </div>
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                <div class="text-xs text-muted">Sum (totalt)</div>
-                                <div class="font-bold text-accent">{{ $this->totalSum }}</div>
-                            </td>
-                            <td colspan="4" class="px-4 py-3 text-left">
-                                <div class="text-xs text-muted">Snitt</div>
-                                <div class="font-medium text-foreground">{{ $this->averageTime }}</div>
                             </td>
                         </tr>
                     </tfoot>
