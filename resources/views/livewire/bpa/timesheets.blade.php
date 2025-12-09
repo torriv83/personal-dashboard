@@ -280,8 +280,8 @@
                 </button>
             </div>
 
-            {{-- Per-side velger --}}
-            <div class="flex items-center gap-2">
+            {{-- Per-side velger (skjult på mobil, vises i footer) --}}
+            <div class="hidden sm:flex items-center gap-2">
                 <span class="text-sm text-muted">Vis</span>
                 <select
                     wire:model.live="perPage"
@@ -420,7 +420,24 @@
                     <tfoot class="bg-card-hover/30 border-t border-border">
                         <tr>
                             <td colspan="5" class="px-4 py-3 text-sm text-muted">
-                                Viser {{ $this->shifts->firstItem() }}-{{ $this->shifts->lastItem() }} av {{ $this->totalEntryCount }} oppføringer
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                                    <span>Viser {{ $this->shifts->firstItem() }}-{{ $this->shifts->lastItem() }} av {{ $this->totalEntryCount }} oppføringer</span>
+                                    {{-- Per-side velger (kun mobil) --}}
+                                    <div class="flex sm:hidden items-center gap-2">
+                                        <span class="text-sm text-muted">Vis</span>
+                                        <select
+                                            wire:model.live="perPage"
+                                            class="bg-card border border-border rounded-md px-2 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                                        >
+                                            <option value="10">10</option>
+                                            <option value="25">25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                            <option value="250">250</option>
+                                        </select>
+                                        <span class="text-sm text-muted">per side</span>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="text-xs text-muted">Sum (totalt)</div>
