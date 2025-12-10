@@ -123,6 +123,91 @@
             </div>
         </div>
 
+        {{-- Period Stats --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {{-- Week Stats --}}
+            <div class="bg-card border border-border rounded-xl p-5">
+                <div class="flex items-center gap-2 text-muted-foreground mb-3">
+                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-sm font-medium">Denne uken</span>
+                </div>
+                @if($this->stats['weekAverage'] !== null)
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-2xl font-bold text-foreground">{{ number_format($this->stats['weekAverage'], 1, ',', ' ') }} kg</p>
+                            <p class="text-sm text-muted-foreground">snitt denne uken</p>
+                        </div>
+                        @if($this->stats['weekChange'] !== null)
+                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                                {{ $this->stats['weekChange'] < 0 ? 'bg-green-500/10' : ($this->stats['weekChange'] > 0 ? 'bg-red-500/10' : 'bg-card-hover') }}">
+                                @if($this->stats['weekChange'] < 0)
+                                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                    </svg>
+                                @elseif($this->stats['weekChange'] > 0)
+                                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                    </svg>
+                                @else
+                                    <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14" />
+                                    </svg>
+                                @endif
+                                <span class="text-sm font-medium {{ $this->stats['weekChange'] < 0 ? 'text-green-400' : ($this->stats['weekChange'] > 0 ? 'text-red-400' : 'text-foreground') }}">
+                                    {{ $this->stats['weekChange'] > 0 ? '+' : '' }}{{ number_format($this->stats['weekChange'], 1, ',', ' ') }}
+                                </span>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <p class="text-muted-foreground text-sm">Ingen data denne uken</p>
+                @endif
+            </div>
+
+            {{-- Month Stats --}}
+            <div class="bg-card border border-border rounded-xl p-5">
+                <div class="flex items-center gap-2 text-muted-foreground mb-3">
+                    <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="text-sm font-medium">Denne måneden</span>
+                </div>
+                @if($this->stats['monthAverage'] !== null)
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-2xl font-bold text-foreground">{{ number_format($this->stats['monthAverage'], 1, ',', ' ') }} kg</p>
+                            <p class="text-sm text-muted-foreground">snitt i {{ now()->translatedFormat('F') }}</p>
+                        </div>
+                        @if($this->stats['monthChange'] !== null)
+                            <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                                {{ $this->stats['monthChange'] < 0 ? 'bg-green-500/10' : ($this->stats['monthChange'] > 0 ? 'bg-red-500/10' : 'bg-card-hover') }}">
+                                @if($this->stats['monthChange'] < 0)
+                                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                    </svg>
+                                @elseif($this->stats['monthChange'] > 0)
+                                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                    </svg>
+                                @else
+                                    <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14" />
+                                    </svg>
+                                @endif
+                                <span class="text-sm font-medium {{ $this->stats['monthChange'] < 0 ? 'text-green-400' : ($this->stats['monthChange'] > 0 ? 'text-red-400' : 'text-foreground') }}">
+                                    {{ $this->stats['monthChange'] > 0 ? '+' : '' }}{{ number_format($this->stats['monthChange'], 1, ',', ' ') }}
+                                </span>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <p class="text-muted-foreground text-sm">Ingen data denne måneden</p>
+                @endif
+            </div>
+        </div>
+
         {{-- Chart --}}
         @if(count($this->chartData) > 1)
             <div class="bg-card border border-border rounded-xl p-5" wire:key="chart-{{ count($this->chartData) }}-{{ $this->entries->first()?->id }}">

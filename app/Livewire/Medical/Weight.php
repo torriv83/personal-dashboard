@@ -50,6 +50,10 @@ class Weight extends Component
                 'average' => null,
                 'change' => null,
                 'changePercent' => null,
+                'weekAverage' => null,
+                'weekChange' => null,
+                'monthAverage' => null,
+                'monthChange' => null,
             ];
         }
 
@@ -60,6 +64,40 @@ class Weight extends Component
             ? round(($change / $oldest) * 100, 1)
             : null;
 
+        // This week's average
+        $startOfWeek = now()->startOfWeek();
+        $thisWeekEntries = $entries->filter(fn ($e) => $e->recorded_at >= $startOfWeek);
+        $weekAverage = $thisWeekEntries->isNotEmpty()
+            ? round($thisWeekEntries->avg('weight'), 1)
+            : null;
+
+        // Last week's average for comparison
+        $lastWeekStart = now()->subWeek()->startOfWeek();
+        $lastWeekEnd = now()->subWeek()->endOfWeek();
+        $lastWeekEntries = $entries->filter(fn ($e) => $e->recorded_at >= $lastWeekStart && $e->recorded_at <= $lastWeekEnd);
+        $lastWeekAverage = $lastWeekEntries->isNotEmpty()
+            ? $lastWeekEntries->avg('weight')
+            : null;
+        $weekChange = ($weekAverage !== null && $lastWeekAverage !== null)
+            ? round($weekAverage - $lastWeekAverage, 1)
+            : null;
+
+        // Average this month
+        $thisMonthEntries = $entries->filter(fn ($e) => $e->recorded_at->isCurrentMonth());
+        $monthAverage = $thisMonthEntries->isNotEmpty()
+            ? round($thisMonthEntries->avg('weight'), 1)
+            : null;
+
+        // Change from last month's average
+        $lastMonthEntries = $entries->filter(fn ($e) => $e->recorded_at->month === now()->subMonth()->month
+            && $e->recorded_at->year === now()->subMonth()->year);
+        $lastMonthAverage = $lastMonthEntries->isNotEmpty()
+            ? $lastMonthEntries->avg('weight')
+            : null;
+        $monthChange = ($monthAverage !== null && $lastMonthAverage !== null)
+            ? round($monthAverage - $lastMonthAverage, 1)
+            : null;
+
         return [
             'current' => $current,
             'min' => $entries->min('weight'),
@@ -67,6 +105,10 @@ class Weight extends Component
             'average' => round($entries->avg('weight'), 1),
             'change' => $change,
             'changePercent' => $changePercent,
+            'weekAverage' => $weekAverage,
+            'weekChange' => $weekChange,
+            'monthAverage' => $monthAverage,
+            'monthChange' => $monthChange,
         ];
     }
 
