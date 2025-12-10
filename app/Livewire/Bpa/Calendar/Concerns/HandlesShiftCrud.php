@@ -715,4 +715,31 @@ trait HandlesShiftCrud
         $this->showModal = true;
         // Note: editingShiftId is NOT set, so saving will create a new shift
     }
+
+    /**
+     * Create an all-day absence from multi-day selection in month view.
+     */
+    public function createAbsenceFromSelection(int $assistantId, string $fromDate, string $toDate): void
+    {
+        $startsAt = Carbon::parse($fromDate)->startOfDay();
+        $endsAt = Carbon::parse($toDate)->endOfDay();
+
+        Shift::create([
+            'assistant_id' => $assistantId,
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'is_unavailable' => true,
+            'is_all_day' => true,
+        ]);
+
+        // Clear computed property cache
+        unset($this->shifts, $this->shiftsByDate);
+
+        // Calculate number of days for message
+        $days = (int) Carbon::parse($fromDate)->diffInDays(Carbon::parse($toDate)) + 1;
+        $assistant = Assistant::find($assistantId);
+        $dayText = $days === 1 ? 'dag' : 'dager';
+
+        $this->dispatch('toast', type: 'success', message: "Fravær for {$assistant->name} ({$days} {$dayText}) ble opprettet");
+    }
 }

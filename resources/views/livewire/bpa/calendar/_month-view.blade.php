@@ -30,14 +30,19 @@
                     <div
                         wire:key="day-{{ $day['date'] }}"
                         wire:click="goToDay('{{ $day['date'] }}')"
+                        @mousedown="startSelectDays($event, '{{ $day['date'] }}')"
+                        @mouseenter="updateSelectDays('{{ $day['date'] }}')"
                         @contextmenu="showSlotContextMenu($event, '{{ $day['date'] }}', null)"
                         @dragover="allowDrop($event, null, '{{ $day['date'] }}')"
                         @dragleave="leaveDrop($event)"
                         @drop.stop="handleDrop($event, '{{ $day['date'] }}')"
-                        class="p-0.5 md:p-1 relative group transition-colors cursor-pointer overflow-hidden
+                        class="p-0.5 md:p-1 relative group transition-colors cursor-pointer overflow-hidden select-none
                             {{ $day['isCurrentMonth'] ? 'bg-card hover:bg-card-hover' : 'bg-surface hover:bg-card' }}
                             {{ $day['isToday'] ? 'ring-2 ring-inset ring-accent' : '' }}"
-                        :class="dragOverDate === '{{ $day['date'] }}' && 'ring-2 ring-inset ring-accent !bg-accent/20'"
+                        :class="{
+                            'ring-2 ring-inset ring-accent !bg-accent/20': dragOverDate === '{{ $day['date'] }}',
+                            'ring-2 ring-inset ring-destructive !bg-destructive/20': isDateSelected('{{ $day['date'] }}')
+                        }"
                     >
                         {{-- Dato --}}
                         <div class="flex items-center justify-between">

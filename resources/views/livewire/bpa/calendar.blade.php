@@ -21,4 +21,7 @@
 
     {{-- Context Menu (Høyreklikk-meny) --}}
     @include('livewire.bpa.calendar._context-menu')
+
+    {{-- Absence Popup (for multi-day selection in month view) --}}
+    @include('livewire.bpa.calendar._absence-popup')
 </div>

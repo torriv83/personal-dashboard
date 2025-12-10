@@ -46,6 +46,24 @@ export default (initialView) => ({
     _createMoveHandler: null,
     _createUpHandler: null,
 
+    // Day selection state (month view)
+    isSelectingDays: false,
+    selectPending: false,
+    selectTimeout: null,
+    selectSessionId: 0,
+    selectStartDate: null,
+    selectEndDate: null,
+    _selectMoveHandler: null,
+    _selectUpHandler: null,
+
+    // Absence popup state (month view)
+    showAbsencePopup: false,
+    absencePopupX: 0,
+    absencePopupY: 0,
+    absenceAssistantId: null,
+    absenceFromDate: null,
+    absenceToDate: null,
+
     // Context menu state is now in Alpine.store('contextMenu')
     // This getter provides backward compatibility for existing code
     get contextMenu() {
@@ -366,6 +384,165 @@ export default (initialView) => ({
         const isLast = slotHour === endH || (slotHour < endH && endMinutes <= (slotHour + 1) * 60);
 
         return { top: topPercent, height: heightPercent, isFirst, isLast };
+    },
+
+    // =========================================================================
+    // Day selection (month view) - for creating multi-day absences
+    // =========================================================================
+
+    startSelectDays(e, date) {
+        // Don't start if clicking on a shift or event
+        if (e.target.closest('[data-shift]') || e.target.closest('[data-event]')) return;
+        // Only left mouse button
+        if (e.button !== 0) return;
+
+        // Clean up any existing selection state
+        if (this.selectTimeout) {
+            clearTimeout(this.selectTimeout);
+        }
+        if (this._selectMoveHandler) {
+            document.removeEventListener('mouseenter', this._selectMoveHandler, true);
+        }
+        if (this._selectUpHandler) {
+            document.removeEventListener('mouseup', this._selectUpHandler);
+        }
+
+        // Reset state and increment session ID
+        this.isSelectingDays = false;
+        this.selectPending = true;
+        this.selectTimeout = null;
+        this.selectSessionId++;
+        this.selectStartDate = date;
+        this.selectEndDate = date;
+
+        // Store handlers for cleanup
+        this._selectUpHandler = (upE) => {
+            this.endSelectDays(upE);
+            document.removeEventListener('mouseup', this._selectUpHandler);
+            this._selectUpHandler = null;
+        };
+
+        document.addEventListener('mouseup', this._selectUpHandler);
+
+        // Delay before showing visual feedback (allows click to navigate)
+        const sessionId = this.selectSessionId;
+        const component = this;
+        this.selectTimeout = setTimeout(() => {
+            if (component.selectSessionId === sessionId && component.selectPending) {
+                component.isSelectingDays = true;
+                component.$nextTick(() => {});
+            }
+            component.selectTimeout = null;
+        }, 150);
+    },
+
+    updateSelectDays(date) {
+        if (!this.isSelectingDays) return;
+        this.selectEndDate = date;
+    },
+
+    endSelectDays(e) {
+        // Clear timeout if still pending
+        if (this.selectTimeout) {
+            clearTimeout(this.selectTimeout);
+            this.selectTimeout = null;
+        }
+
+        // If we never started showing the visual (quick click), just clean up
+        if (!this.isSelectingDays) {
+            this.selectPending = false;
+            this.selectStartDate = null;
+            this.selectEndDate = null;
+            return;
+        }
+
+        // Calculate the date range (ensure start <= end)
+        const start = this.selectStartDate;
+        const end = this.selectEndDate;
+        const [fromDate, toDate] = start <= end ? [start, end] : [end, start];
+
+        // Show the absence popup
+        const x = Math.min(e.clientX, window.innerWidth - 320);
+        const y = Math.min(e.clientY, window.innerHeight - 200);
+
+        this.absenceFromDate = fromDate;
+        this.absenceToDate = toDate;
+        this.absencePopupX = x;
+        this.absencePopupY = y;
+        this.absenceAssistantId = null;
+        this.showAbsencePopup = true;
+
+        // Reset selection state
+        this.isSelectingDays = false;
+        this.selectPending = false;
+        this.selectStartDate = null;
+        this.selectEndDate = null;
+    },
+
+    /**
+     * Check if a date is within the current selection range
+     */
+    isDateSelected(date) {
+        if (!this.isSelectingDays || !this.selectStartDate || !this.selectEndDate) {
+            return false;
+        }
+        const start = this.selectStartDate;
+        const end = this.selectEndDate;
+        const [from, to] = start <= end ? [start, end] : [end, start];
+        return date >= from && date <= to;
+    },
+
+    /**
+     * Get the number of days selected
+     */
+    getSelectedDaysCount() {
+        if (!this.absenceFromDate || !this.absenceToDate) return 0;
+        const from = new Date(this.absenceFromDate);
+        const to = new Date(this.absenceToDate);
+        return Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1;
+    },
+
+    /**
+     * Format the date range for display
+     */
+    formatDateRange() {
+        if (!this.absenceFromDate || !this.absenceToDate) return '';
+        const from = new Date(this.absenceFromDate);
+        const to = new Date(this.absenceToDate);
+        const options = { day: 'numeric', month: 'short' };
+        const fromStr = from.toLocaleDateString('nb-NO', options);
+        const toStr = to.toLocaleDateString('nb-NO', options);
+        if (this.absenceFromDate === this.absenceToDate) {
+            return fromStr;
+        }
+        return `${fromStr} - ${toStr}`;
+    },
+
+    /**
+     * Create the absence via Livewire
+     */
+    createAbsence() {
+        if (!this.absenceAssistantId || !this.absenceFromDate || !this.absenceToDate) {
+            return;
+        }
+
+        this.$wire.createAbsenceFromSelection(
+            this.absenceAssistantId,
+            this.absenceFromDate,
+            this.absenceToDate
+        );
+
+        this.closeAbsencePopup();
+    },
+
+    /**
+     * Close the absence popup
+     */
+    closeAbsencePopup() {
+        this.showAbsencePopup = false;
+        this.absenceAssistantId = null;
+        this.absenceFromDate = null;
+        this.absenceToDate = null;
     },
 
     // =========================================================================
