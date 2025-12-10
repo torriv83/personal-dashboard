@@ -224,6 +224,7 @@ class Calendar extends Component
 
     /**
      * Get shifts for the current visible date range.
+     * Includes shifts that overlap with the visible range (for multi-day absences).
      */
     #[Computed]
     public function shifts(): Collection
@@ -233,21 +234,53 @@ class Calendar extends Component
 
         return Shift::query()
             ->with('assistant')
-            ->where('starts_at', '>=', $startDate)
             ->where('starts_at', '<=', $endDate)
+            ->where('ends_at', '>=', $startDate)
             ->orderBy('starts_at')
             ->get();
     }
 
     /**
      * Get shifts grouped by date for easy template access.
+     * Multi-day absences are expanded to appear on each day they span.
      */
     #[Computed]
     public function shiftsByDate(): array
     {
         $grouped = [];
+        $visibleStart = $this->getVisibleStartDate()->startOfDay();
+        $visibleEnd = $this->getVisibleEndDate()->endOfDay();
 
         foreach ($this->shifts() as $shift) {
+            // For multi-day all-day absences, expand to each day
+            if ($shift->is_unavailable && $shift->is_all_day) {
+                $startDate = $shift->starts_at->copy()->startOfDay();
+                $endDate = $shift->ends_at->copy()->startOfDay();
+
+                // If it spans multiple days, add to each day
+                if ($startDate->format('Y-m-d') !== $endDate->format('Y-m-d')) {
+                    $currentDate = $startDate->copy();
+
+                    while ($currentDate->lte($endDate)) {
+                        // Only add to days within the visible range
+                        if ($currentDate->gte($visibleStart) && $currentDate->lte($visibleEnd)) {
+                            $date = $currentDate->format('Y-m-d');
+
+                            if (! isset($grouped[$date])) {
+                                $grouped[$date] = [];
+                            }
+
+                            $grouped[$date][] = $shift;
+                        }
+
+                        $currentDate->addDay();
+                    }
+
+                    continue;
+                }
+            }
+
+            // Regular shifts or single-day absences: use starts_at date
             $date = $shift->starts_at->format('Y-m-d');
 
             if (! isset($grouped[$date])) {
