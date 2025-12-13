@@ -25,6 +25,10 @@ return new class extends Migration
 
     public function up(): void
     {
+        if (app()->environment('production')) {
+            return;
+        }
+        
         // Get all users with assistant roles from legacy database
         $legacyAssistants = DB::connection('legacy')
             ->table('users as u')

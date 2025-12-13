@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (app()->environment('production')) {
+            return;
+        }
+        
         // Get all emails from current assistants
         $assistantEmails = DB::table('assistants')->pluck('email')->toArray();
 

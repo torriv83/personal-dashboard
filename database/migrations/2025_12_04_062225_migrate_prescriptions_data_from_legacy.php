@@ -10,6 +10,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (app()->environment('production')) {
+            return;
+        }
+        
         $legacyPrescriptions = DB::connection('legacy')
             ->table('resepters')
             ->whereNull('deleted_at')

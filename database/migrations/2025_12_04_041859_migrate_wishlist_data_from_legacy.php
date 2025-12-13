@@ -22,6 +22,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (app()->environment('production')) {
+            return;
+        }
+        
         // Get all wishlists from the legacy database (exclude soft-deleted)
         $oldWishlists = DB::connection('legacy')
             ->table('wishlists')
