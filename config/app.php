@@ -123,4 +123,20 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin User (Single-User App)
+    |--------------------------------------------------------------------------
+    |
+    | Credentials for the single admin user. Used by UserSeeder to create
+    | or update the admin account. Never commit these values to version control.
+    |
+    */
+
+    'admin' => [
+        'name' => env('ADMIN_NAME'),
+        'email' => env('ADMIN_EMAIL'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
 ];
