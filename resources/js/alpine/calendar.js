@@ -56,13 +56,11 @@ export default (initialView) => ({
     _selectMoveHandler: null,
     _selectUpHandler: null,
 
-    // Absence popup state (month view)
-    showAbsencePopup: false,
-    absencePopupX: 0,
-    absencePopupY: 0,
-    absenceAssistantId: null,
-    absenceFromDate: null,
-    absenceToDate: null,
+    // Absence popup is now in Alpine.store('absencePopup')
+    // This getter provides backward compatibility for existing code
+    get absencePopup() {
+        return this.$store.absencePopup;
+    },
 
     // Context menu state is now in Alpine.store('contextMenu')
     // This getter provides backward compatibility for existing code
@@ -461,16 +459,11 @@ export default (initialView) => ({
         const end = this.selectEndDate;
         const [fromDate, toDate] = start <= end ? [start, end] : [end, start];
 
-        // Show the absence popup
+        // Show the absence popup using the global store
         const x = Math.min(e.clientX, window.innerWidth - 320);
         const y = Math.min(e.clientY, window.innerHeight - 200);
 
-        this.absenceFromDate = fromDate;
-        this.absenceToDate = toDate;
-        this.absencePopupX = x;
-        this.absencePopupY = y;
-        this.absenceAssistantId = null;
-        this.showAbsencePopup = true;
+        this.$store.absencePopup.open(x, y, fromDate, toDate);
 
         // Reset selection state
         this.isSelectingDays = false;
@@ -492,58 +485,6 @@ export default (initialView) => ({
         return date >= from && date <= to;
     },
 
-    /**
-     * Get the number of days selected
-     */
-    getSelectedDaysCount() {
-        if (!this.absenceFromDate || !this.absenceToDate) return 0;
-        const from = new Date(this.absenceFromDate);
-        const to = new Date(this.absenceToDate);
-        return Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1;
-    },
-
-    /**
-     * Format the date range for display
-     */
-    formatDateRange() {
-        if (!this.absenceFromDate || !this.absenceToDate) return '';
-        const from = new Date(this.absenceFromDate);
-        const to = new Date(this.absenceToDate);
-        const options = { day: 'numeric', month: 'short' };
-        const fromStr = from.toLocaleDateString('nb-NO', options);
-        const toStr = to.toLocaleDateString('nb-NO', options);
-        if (this.absenceFromDate === this.absenceToDate) {
-            return fromStr;
-        }
-        return `${fromStr} - ${toStr}`;
-    },
-
-    /**
-     * Create the absence via Livewire
-     */
-    createAbsence() {
-        if (!this.absenceAssistantId || !this.absenceFromDate || !this.absenceToDate) {
-            return;
-        }
-
-        this.$wire.createAbsenceFromSelection(
-            this.absenceAssistantId,
-            this.absenceFromDate,
-            this.absenceToDate
-        );
-
-        this.closeAbsencePopup();
-    },
-
-    /**
-     * Close the absence popup
-     */
-    closeAbsencePopup() {
-        this.showAbsencePopup = false;
-        this.absenceAssistantId = null;
-        this.absenceFromDate = null;
-        this.absenceToDate = null;
-    },
 
     // =========================================================================
     // Drop handling

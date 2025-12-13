@@ -196,6 +196,72 @@ Alpine.store('timesheetMenu', {
     }
 });
 
+// Register Alpine store for absence popup (persists across Livewire re-renders)
+Alpine.store('absencePopup', {
+    show: false,
+    x: 0,
+    y: 0,
+    assistantId: null,
+    fromDate: null,
+    toDate: null,
+
+    open(x, y, fromDate, toDate) {
+        this.show = true;
+        this.x = x;
+        this.y = y;
+        this.fromDate = fromDate;
+        this.toDate = toDate;
+        this.assistantId = null;
+    },
+
+    hide() {
+        this.show = false;
+        this.assistantId = null;
+        this.fromDate = null;
+        this.toDate = null;
+    },
+
+    getSelectedDaysCount() {
+        if (!this.fromDate || !this.toDate) return 0;
+        const from = new Date(this.fromDate);
+        const to = new Date(this.toDate);
+        return Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1;
+    },
+
+    formatDateRange() {
+        if (!this.fromDate || !this.toDate) return '';
+        const from = new Date(this.fromDate);
+        const to = new Date(this.toDate);
+        const options = { day: 'numeric', month: 'short' };
+        const fromStr = from.toLocaleDateString('nb-NO', options);
+        const toStr = to.toLocaleDateString('nb-NO', options);
+        if (this.fromDate === this.toDate) {
+            return fromStr;
+        }
+        return `${fromStr} - ${toStr}`;
+    },
+
+    create() {
+        if (!this.assistantId || !this.fromDate || !this.toDate) {
+            return;
+        }
+
+        const calendarEl = document.querySelector('[x-data^="calendar"]');
+        const wireEl = calendarEl?.closest('[wire\\:id]');
+        const wireId = wireEl?.getAttribute('wire:id');
+
+        if (!wireId) {
+            console.error('Absence popup: Could not find Livewire component');
+            this.hide();
+            return;
+        }
+
+        const wire = Livewire.find(wireId);
+        wire.call('createAbsenceFromSelection', this.assistantId, this.fromDate, this.toDate);
+        this.hide();
+    }
+});
+
 // Register Alpine store for prescription context menu
 Alpine.store('prescriptionMenu', {
     show: false,

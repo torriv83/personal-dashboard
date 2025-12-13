@@ -1,9 +1,9 @@
 {{-- Absence Popup (for multi-day selection in month view) --}}
-<div x-show="showAbsencePopup" x-cloak>
+<div x-show="$store.absencePopup.show" x-cloak>
     {{-- Usynlig backdrop for å lukke --}}
     <div
-        @click="closeAbsencePopup()"
-        @keydown.escape.window="closeAbsencePopup()"
+        @click="$store.absencePopup.hide()"
+        @keydown.escape.window="$store.absencePopup.hide()"
         class="fixed inset-0 z-40"
     ></div>
 
@@ -16,7 +16,7 @@
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         class="fixed z-50 bg-card border border-border rounded-xl shadow-2xl p-4 min-w-72"
-        :style="`left: ${absencePopupX}px; top: ${absencePopupY}px;`"
+        :style="`left: ${$store.absencePopup.x}px; top: ${$store.absencePopup.y}px;`"
     >
         {{-- Header --}}
         <div class="flex items-center justify-between mb-3 pb-2 border-b border-border">
@@ -28,14 +28,14 @@
                     Opprett fravær
                 </div>
                 <div class="text-xs text-muted mt-0.5">
-                    <span x-text="formatDateRange()"></span>
+                    <span x-text="$store.absencePopup.formatDateRange()"></span>
                     <span class="text-destructive font-medium">
-                        (<span x-text="getSelectedDaysCount()"></span> <span x-text="getSelectedDaysCount() === 1 ? 'dag' : 'dager'"></span>)
+                        (<span x-text="$store.absencePopup.getSelectedDaysCount()"></span> <span x-text="$store.absencePopup.getSelectedDaysCount() === 1 ? 'dag' : 'dager'"></span>)
                     </span>
                 </div>
             </div>
             <button
-                @click="closeAbsencePopup()"
+                @click="$store.absencePopup.hide()"
                 class="p-1 rounded text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,9 +50,9 @@
             <div class="space-y-0.5 max-h-48 overflow-y-auto">
                 @foreach($this->assistants as $assistant)
                     <button
-                        @click="absenceAssistantId = {{ $assistant->id }}"
+                        @click="$store.absencePopup.assistantId = {{ $assistant->id }}"
                         class="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors cursor-pointer text-left"
-                        :class="absenceAssistantId === {{ $assistant->id }}
+                        :class="$store.absencePopup.assistantId === {{ $assistant->id }}
                             ? 'bg-destructive/20 ring-1 ring-destructive'
                             : 'hover:bg-card-hover'"
                     >
@@ -62,7 +62,7 @@
                         ></span>
                         <span class="text-sm text-foreground">{{ $assistant->name }}</span>
                         <svg
-                            x-show="absenceAssistantId === {{ $assistant->id }}"
+                            x-show="$store.absencePopup.assistantId === {{ $assistant->id }}"
                             x-cloak
                             class="w-4 h-4 ml-auto text-destructive"
                             fill="none"
@@ -79,14 +79,14 @@
         {{-- Knapper --}}
         <div class="flex items-center gap-2 pt-2 border-t border-border">
             <button
-                @click="createAbsence()"
-                :disabled="!absenceAssistantId"
+                @click="$store.absencePopup.create()"
+                :disabled="!$store.absencePopup.assistantId"
                 class="flex-1 px-3 py-2 rounded-lg bg-destructive text-white font-medium text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-destructive/90"
             >
                 Opprett fravær
             </button>
             <button
-                @click="closeAbsencePopup()"
+                @click="$store.absencePopup.hide()"
                 class="px-3 py-2 rounded-lg bg-surface hover:bg-card-hover text-muted font-medium text-sm transition-colors cursor-pointer"
             >
                 Avbryt
