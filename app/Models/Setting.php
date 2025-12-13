@@ -47,4 +47,20 @@ class Setting extends Model
     {
         self::set('bpa_hours_per_week', $hours);
     }
+
+    /**
+     * Get BPA hourly rate.
+     */
+    public static function getBpaHourlyRate(): float
+    {
+        return (float) self::get('bpa_hourly_rate', 225.40);
+    }
+
+    /**
+     * Set BPA hourly rate.
+     */
+    public static function setBpaHourlyRate(float $rate): void
+    {
+        self::set('bpa_hourly_rate', $rate);
+    }
 }

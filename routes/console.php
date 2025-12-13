@@ -14,3 +14,6 @@ Schedule::command('backup:run')->weekly();
 
 // Archive past absence entries daily at midnight
 Schedule::command('shifts:archive-past-absences')->daily();
+
+// Send monthly assistant reports on the last day of each month at 18:00
+Schedule::command('assistants:send-monthly-reports')->lastDayOfMonth('18:00');

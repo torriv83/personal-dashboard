@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
+ * @property bool $send_monthly_report
  * @property-read string $type_label
  * @property-read string $initials
  * @property-read string $formatted_number
@@ -37,6 +38,7 @@ class Assistant extends Model
         'type',
         'color',
         'hired_at',
+        'send_monthly_report',
     ];
 
     protected function casts(): array
@@ -44,6 +46,7 @@ class Assistant extends Model
         return [
             'employee_number' => 'integer',
             'hired_at' => 'datetime',
+            'send_monthly_report' => 'boolean',
         ];
     }
 

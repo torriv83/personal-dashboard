@@ -336,6 +336,20 @@
                 </div>
             </div>
 
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-foreground">Månedlig e-postrapport</p>
+                    <p class="text-xs text-muted">Send oversikt over arbeidstimer ved månedsslutt</p>
+                </div>
+                <button
+                    type="button"
+                    wire:click="$toggle('createSendMonthlyReport')"
+                    class="relative w-12 h-7 rounded-full transition-colors cursor-pointer {{ $createSendMonthlyReport ? 'bg-accent' : 'bg-border' }}"
+                >
+                    <span class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $createSendMonthlyReport ? 'translate-x-5' : '' }}"></span>
+                </button>
+            </div>
+
             <div class="flex justify-end gap-2 pt-4">
                 <button
                     x-on:click="$dispatch('close-modal', 'add-assistant')"
@@ -411,6 +425,20 @@
                         >
                     </div>
                 </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-foreground">Månedlig e-postrapport</p>
+                    <p class="text-xs text-muted">Send oversikt over arbeidstimer ved månedsslutt</p>
+                </div>
+                <button
+                    type="button"
+                    wire:click="$toggle('editSendMonthlyReport')"
+                    class="relative w-12 h-7 rounded-full transition-colors cursor-pointer {{ $editSendMonthlyReport ? 'bg-accent' : 'bg-border' }}"
+                >
+                    <span class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $editSendMonthlyReport ? 'translate-x-5' : '' }}"></span>
+                </button>
             </div>
 
             <div class="flex justify-end gap-2 pt-4">

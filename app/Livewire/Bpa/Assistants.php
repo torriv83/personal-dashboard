@@ -29,6 +29,8 @@ class Assistants extends Component
 
     public string $createHiredAt = '';
 
+    public bool $createSendMonthlyReport = false;
+
     // Edit form properties
     public ?int $editingId = null;
 
@@ -43,6 +45,8 @@ class Assistants extends Component
     public string $editHiredAt = '';
 
     public ?int $editEmployeeNumber = null;
+
+    public bool $editSendMonthlyReport = false;
 
     #[Computed]
     public function assistants(): Collection
@@ -90,6 +94,7 @@ class Assistants extends Component
         $this->editType = $assistant->type;
         $this->editHiredAt = $assistant->hired_at->format('Y-m-d');
         $this->editEmployeeNumber = $assistant->employee_number;
+        $this->editSendMonthlyReport = $assistant->send_monthly_report;
 
         $this->dispatch('open-modal', name: 'edit-assistant');
     }
@@ -112,6 +117,7 @@ class Assistants extends Component
             'phone' => $this->createPhone,
             'type' => $this->createType,
             'hired_at' => $this->createHiredAt,
+            'send_monthly_report' => $this->createSendMonthlyReport,
             'color' => match ($this->createType) {
                 'primary' => '#3b82f6',
                 'substitute' => '#a855f7',
@@ -145,6 +151,7 @@ class Assistants extends Component
             'phone' => $this->editPhone,
             'type' => $this->editType,
             'hired_at' => $this->editHiredAt,
+            'send_monthly_report' => $this->editSendMonthlyReport,
         ]);
 
         $this->resetEditForm();
@@ -188,6 +195,7 @@ class Assistants extends Component
         $this->createPhone = null;
         $this->createType = 'primary';
         $this->createHiredAt = '';
+        $this->createSendMonthlyReport = false;
     }
 
     private function resetEditForm(): void
@@ -199,6 +207,7 @@ class Assistants extends Component
         $this->editPhone = null;
         $this->editType = 'primary';
         $this->editHiredAt = '';
+        $this->editSendMonthlyReport = false;
     }
 
     public function render()

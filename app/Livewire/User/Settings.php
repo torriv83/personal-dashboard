@@ -25,6 +25,8 @@ class Settings extends Component
 
     public float $bpaHoursPerWeek = 0;
 
+    public float $bpaHourlyRate = 225.40;
+
     public string $weatherLocationSearch = '';
 
     public string $weatherLocationName = 'Halden';
@@ -39,6 +41,7 @@ class Settings extends Component
     {
         $this->lockTimeoutMinutes = Auth::user()->lock_timeout_minutes ?? 30;
         $this->bpaHoursPerWeek = Setting::getBpaHoursPerWeek();
+        $this->bpaHourlyRate = Setting::getBpaHourlyRate();
 
         $this->weatherEnabled = (bool) Setting::get('weather_enabled', true);
         $this->weatherLocationName = Setting::get('weather_location_name', 'Halden');
@@ -138,6 +141,22 @@ class Settings extends Component
         Setting::setBpaHoursPerWeek($this->bpaHoursPerWeek);
 
         $this->dispatch('bpa-saved');
+    }
+
+    public function saveBpaHourlyRate(): void
+    {
+        $this->validate([
+            'bpaHourlyRate' => ['required', 'numeric', 'min:0', 'max:1000'],
+        ], [
+            'bpaHourlyRate.required' => 'Timesats er påkrevd.',
+            'bpaHourlyRate.numeric' => 'Timesats må være et tall.',
+            'bpaHourlyRate.min' => 'Timesats kan ikke være negativt.',
+            'bpaHourlyRate.max' => 'Timesats kan maks være 1000.',
+        ]);
+
+        Setting::setBpaHourlyRate($this->bpaHourlyRate);
+
+        $this->dispatch('hourly-rate-saved');
     }
 
     public function searchWeatherLocation(): void

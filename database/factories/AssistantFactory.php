@@ -28,6 +28,7 @@ class AssistantFactory extends Factory
                 'oncall' => '#f97316',
             },
             'hired_at' => fake()->dateTimeBetween('-5 years', 'now'),
+            'send_monthly_report' => false,
         ];
     }
 
@@ -52,6 +53,13 @@ class AssistantFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => 'oncall',
             'color' => '#f97316',
+        ]);
+    }
+
+    public function withMonthlyReport(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'send_monthly_report' => true,
         ]);
     }
 }

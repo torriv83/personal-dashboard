@@ -47,6 +47,8 @@ class AssistantShow extends Component
 
     public string $editHiredAt = '';
 
+    public bool $editSendMonthlyReport = false;
+
     // Edit shift form properties
     public bool $showShiftModal = false;
 
@@ -79,6 +81,7 @@ class AssistantShow extends Component
         $this->editPhone = $this->assistant->phone;
         $this->editType = $this->assistant->type;
         $this->editHiredAt = $this->assistant->hired_at->format('Y-m-d');
+        $this->editSendMonthlyReport = $this->assistant->send_monthly_report;
     }
 
     #[Computed]
@@ -229,6 +232,7 @@ class AssistantShow extends Component
             'phone' => $this->editPhone,
             'type' => $this->editType,
             'hired_at' => $this->editHiredAt,
+            'send_monthly_report' => $this->editSendMonthlyReport,
         ]);
 
         $this->assistant->refresh();

@@ -54,7 +54,7 @@
         </aside>
 
         <!-- Main content -->
-        <div class="flex flex-col flex-1 min-w-0">
+        <div class="flex flex-col flex-1 min-w-0 lg:ml-64">
             <!-- Mobile header -->
             <header class="sticky top-0 z-30 flex items-center gap-4 bg-card border-b border-border px-4 py-3 lg:hidden">
                 <button

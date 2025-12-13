@@ -10,7 +10,7 @@ return new class extends Migration
         if (app()->environment('production')) {
             return;
         }
-        
+
         // Build a mapping of legacy user emails to new assistant IDs
         $assistantMap = [];
         $assistants = DB::table('assistants')->get();

@@ -72,6 +72,15 @@
                             {{ $assistant->email }}
                         </a>
                     @endif
+                    @if($assistant->send_monthly_report)
+                        <span class="text-xs text-accent flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                            </svg>
+                            Månedlig rapport
+                        </span>
+                    @endif
                 </div>
             </div>
         </div>
@@ -470,6 +479,20 @@
                         >
                     </div>
                 </div>
+            </div>
+
+            <div class="flex items-center justify-between py-2">
+                <div>
+                    <p class="text-sm font-medium text-foreground">Månedlig e-postrapport</p>
+                    <p class="text-xs text-muted">Send oversikt over arbeidstimer ved månedsslutt</p>
+                </div>
+                <button
+                    type="button"
+                    wire:click="$toggle('editSendMonthlyReport')"
+                    class="relative w-12 h-7 rounded-full transition-colors cursor-pointer {{ $editSendMonthlyReport ? 'bg-accent' : 'bg-border' }}"
+                >
+                    <span class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $editSendMonthlyReport ? 'translate-x-5' : '' }}"></span>
+                </button>
             </div>
 
             <div class="flex justify-end gap-2 pt-4">
