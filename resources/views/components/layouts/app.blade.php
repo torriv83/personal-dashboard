@@ -48,7 +48,7 @@
             x-transition:leave="transition ease-in-out duration-300 transform"
             x-transition:leave-start="translate-x-0"
             x-transition:leave-end="-translate-x-full"
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border lg:relative lg:translate-x-0 lg:z-0 lg:shrink-0"
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border lg:z-0 lg:shrink-0"
         >
             <x-sidebar />
         </aside>

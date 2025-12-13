@@ -425,7 +425,7 @@
                     @if($forecastTab === 'hourly')
                         {{-- Hourly forecast (today) --}}
                         @if(count($this->hourlyForecast) > 0)
-                            <div class="grid grid-cols-1 gap-2 max-h-96 overflow-y-auto">
+                            <div class="grid grid-cols-1 gap-2 max-h-[28rem] overflow-y-auto">
                                 @foreach($this->hourlyForecast as $hour)
                                     @php
                                         $iconType = app(\App\Services\WeatherService::class)->getIconSvg($hour['symbol']);
