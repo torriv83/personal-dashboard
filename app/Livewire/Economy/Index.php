@@ -89,10 +89,17 @@ class Index extends Component
 
     public function syncYnab(): void
     {
+        $ynab = app(YnabService::class);
+
+        if (! $ynab->isConfigured()) {
+            $this->dispatch('toast', type: 'error', message: 'YNAB er ikke konfigurert. Legg til YNAB_TOKEN og YNAB_BUDGET_ID i .env-filen.');
+
+            return;
+        }
+
         $this->isLoadingYnab = true;
         $this->ynabErrors = [];
 
-        $ynab = app(YnabService::class);
         $ynab->clearCache();
 
         // Re-fetch data by clearing computed cache (timestamp is set in YnabService when data is fetched)
