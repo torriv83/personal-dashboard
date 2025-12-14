@@ -29,32 +29,39 @@
                         <p class="mt-1 text-sm text-muted">Oppdater navn og e-postadresse</p>
                     </x-slot>
 
-                    <form class="flex flex-col flex-1">
+                    <form wire:submit="updateProfile" class="flex flex-col flex-1">
                         <div class="space-y-4 flex-1">
                             <div>
                                 <label for="name" class="block text-sm font-medium text-foreground mb-1.5">Navn</label>
                                 <x-input
+                                    wire:model="name"
                                     type="text"
                                     id="name"
                                     placeholder="Ditt navn"
-                                    value="{{ Auth::user()?->name ?? 'Bruker' }}"
                                 />
+                                @error('name')
+                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div>
                                 <label for="email" class="block text-sm font-medium text-foreground mb-1.5">E-post</label>
                                 <x-input
+                                    wire:model="email"
                                     type="email"
                                     id="email"
                                     placeholder="din@epost.no"
-                                    value="{{ Auth::user()?->email ?? 'bruker@example.com' }}"
                                 />
+                                @error('email')
+                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
                             </div>
                         </div>
 
                         <div class="flex justify-end pt-6 mt-auto">
-                            <x-button type="submit">
-                                Lagre endringer
+                            <x-button type="submit" class="cursor-pointer">
+                                <span wire:loading.remove wire:target="updateProfile">Lagre endringer</span>
+                                <span wire:loading wire:target="updateProfile">Lagrer...</span>
                             </x-button>
                         </div>
                     </form>
@@ -67,29 +74,38 @@
                         <p class="mt-1 text-sm text-muted">Bruk et sterkt, unikt passord</p>
                     </x-slot>
 
-                    <form class="flex flex-col flex-1">
+                    <form wire:submit="updatePassword" class="flex flex-col flex-1">
                         <div class="space-y-4 flex-1">
                             <div>
                                 <label for="current_password" class="block text-sm font-medium text-foreground mb-1.5">Nåværende passord</label>
                                 <x-input
+                                    wire:model="current_password"
                                     type="password"
                                     id="current_password"
                                     placeholder="Nåværende passord"
                                 />
+                                @error('current_password')
+                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div>
                                 <label for="password" class="block text-sm font-medium text-foreground mb-1.5">Nytt passord</label>
                                 <x-input
+                                    wire:model="password"
                                     type="password"
                                     id="password"
                                     placeholder="Nytt passord"
                                 />
+                                @error('password')
+                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <div>
                                 <label for="password_confirmation" class="block text-sm font-medium text-foreground mb-1.5">Bekreft passord</label>
                                 <x-input
+                                    wire:model="password_confirmation"
                                     type="password"
                                     id="password_confirmation"
                                     placeholder="Bekreft nytt passord"
@@ -98,8 +114,9 @@
                         </div>
 
                         <div class="flex justify-end pt-6 mt-auto">
-                            <x-button type="submit">
-                                Oppdater passord
+                            <x-button type="submit" class="cursor-pointer">
+                                <span wire:loading.remove wire:target="updatePassword">Oppdater passord</span>
+                                <span wire:loading wire:target="updatePassword">Oppdaterer...</span>
                             </x-button>
                         </div>
                     </form>
