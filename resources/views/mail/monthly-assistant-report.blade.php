@@ -21,5 +21,5 @@ Her er oversikt over registrerte arbeidstimer denne måneden.
 *(Basert på timesats {{ number_format($hourlyRate, 0, ',', ' ') }} kr)*
 
 Mvh,<br>
-{{ config('app.name') }}
+Tor J. Rivera
 </x-mail::message>

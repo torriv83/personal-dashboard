@@ -2,7 +2,7 @@
 {{-- Header --}}
 <x-slot:header>
 <x-mail::header :url="config('app.url')">
-{{ config('app.name') }}
+BPA arbeidstider
 </x-mail::header>
 </x-slot:header>
 
@@ -21,7 +21,7 @@
 {{-- Footer --}}
 <x-slot:footer>
 <x-mail::footer>
-© {{ date('Y') }} {{ config('app.name') }}. Alle rettigheter reservert.
+© {{ date('Y') }} Tor J. Rivera
 </x-mail::footer>
 </x-slot:footer>
 </x-mail::layout>
