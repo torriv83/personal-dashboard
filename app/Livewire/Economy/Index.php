@@ -7,6 +7,7 @@ use App\Services\YnabService;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 
@@ -87,6 +88,7 @@ class Index extends Component
         $this->dispatch('toast', type: 'success', message: 'Inntektsinnstillingene ble lagret');
     }
 
+    #[On('refresh-ynab')]
     public function syncYnab(): void
     {
         $ynab = app(YnabService::class);

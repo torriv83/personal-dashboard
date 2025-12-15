@@ -294,34 +294,34 @@
                                 stroke-linejoin="round"
                             />
 
-                            {{-- Data points --}}
-                            <template x-for="(point, i) in data" :key="i">
+                            {{-- Data points (generated with Blade to avoid x-for in SVG) --}}
+                            @foreach($this->chartData as $i => $point)
                                 <g>
                                     {{-- Hover area --}}
                                     <circle
-                                        x-bind:cx="getX(i)"
-                                        x-bind:cy="getY(point.weight)"
+                                        x-bind:cx="getX({{ $i }})"
+                                        x-bind:cy="getY({{ $point['weight'] }})"
                                         r="10"
                                         fill="transparent"
                                         class="cursor-pointer"
                                         vector-effect="non-scaling-stroke"
-                                        @mouseenter="hoveredIndex = i"
+                                        @mouseenter="hoveredIndex = {{ $i }}"
                                         @mouseleave="hoveredIndex = null"
                                     />
                                     {{-- Visible point --}}
                                     <circle
-                                        x-bind:cx="getX(i)"
-                                        x-bind:cy="getY(point.weight)"
-                                        x-bind:r="hoveredIndex === i ? 5 : 3"
+                                        x-bind:cx="getX({{ $i }})"
+                                        x-bind:cy="getY({{ $point['weight'] }})"
+                                        x-bind:r="hoveredIndex === {{ $i }} ? 5 : 3"
                                         fill="var(--color-accent)"
                                         vector-effect="non-scaling-stroke"
                                         class="transition-all duration-150"
                                     />
                                     {{-- Outer ring on hover --}}
                                     <circle
-                                        x-show="hoveredIndex === i"
-                                        x-bind:cx="getX(i)"
-                                        x-bind:cy="getY(point.weight)"
+                                        x-show="hoveredIndex === {{ $i }}"
+                                        x-bind:cx="getX({{ $i }})"
+                                        x-bind:cy="getY({{ $point['weight'] }})"
                                         r="8"
                                         fill="none"
                                         stroke="var(--color-accent)"
@@ -330,7 +330,7 @@
                                         vector-effect="non-scaling-stroke"
                                     />
                                 </g>
-                            </template>
+                            @endforeach
                         </svg>
 
                         {{-- Tooltip --}}

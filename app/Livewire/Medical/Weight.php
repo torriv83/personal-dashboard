@@ -6,6 +6,7 @@ use App\Models\WeightEntry;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -130,8 +131,15 @@ class Weight extends Component
     {
         $this->date = now()->format('Y-m-d');
         $this->time = now()->format('H:i');
+
+        // Open create modal if ?create=1 is in URL
+        if (request()->query('create')) {
+            $this->openModal();
+            $this->dispatch('clear-url-params');
+        }
     }
 
+    #[On('open-weight-modal')]
     public function openModal(?int $id = null): void
     {
         $this->editingId = $id;

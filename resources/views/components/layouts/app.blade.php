@@ -71,10 +71,15 @@
             </header>
 
             <!-- Page content -->
-            <main class="flex-1 p-6">
+            <main class="flex-1 p-6 pb-24 lg:pb-6">
                 {{ $slot }}
             </main>
         </div>
+
+        {{-- Mobile Bottom Navigation --}}
+        @auth
+            <x-bottom-nav />
+        @endauth
     </div>
 
     {{-- Toast Notifications --}}

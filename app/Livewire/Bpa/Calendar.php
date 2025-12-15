@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -151,6 +152,15 @@ class Calendar extends Component
             $this->openModal($now->format('Y-m-d'));
             $this->dispatch('clear-url-params');
         }
+    }
+
+    /**
+     * Handle bottom nav quick shift creation.
+     */
+    #[On('open-quick-shift-modal')]
+    public function handleOpenQuickShiftModal(): void
+    {
+        $this->openModal(Carbon::now('Europe/Oslo')->format('Y-m-d'));
     }
 
     /**

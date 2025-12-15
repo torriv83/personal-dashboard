@@ -8,6 +8,7 @@ use App\Models\WishlistItem;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -203,6 +204,7 @@ class Index extends Component
         }
     }
 
+    #[On('open-wishlist-modal')]
     public function openItemModal(?int $id = null, ?int $groupId = null): void
     {
         $this->resetItemForm();
