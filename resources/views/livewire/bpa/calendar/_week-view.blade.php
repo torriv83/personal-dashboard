@@ -100,22 +100,18 @@
                     @foreach($allDayShifts as $shift)
                         @php $assistantColor = $shift->assistant?->color ?? '#6b7280'; @endphp
                         @if($shift->is_unavailable)
-                            {{-- Mobil: Farget prikk --}}
-                            <div class="md:hidden flex justify-center">
-                                <span class="w-2 h-2 rounded-full bg-destructive" title="{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte"></span>
-                            </div>
-                            {{-- Desktop: Full info --}}
-                            <div class="hidden md:block bg-destructive/20 border border-destructive/50 rounded px-1.5 py-0.5 cursor-pointer hover:bg-destructive/30 transition-colors">
-                                <div class="text-[10px] font-medium text-destructive truncate">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte</div>
+                            <div class="bg-destructive/20 border border-destructive/50 rounded px-1 md:px-1.5 py-0.5 cursor-pointer hover:bg-destructive/30 transition-colors">
+                                <div class="text-[9px] md:text-[10px] font-medium text-destructive truncate">
+                                    <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
+                                    <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte</span>
+                                </div>
                             </div>
                         @else
-                            {{-- Mobil: Farget prikk --}}
-                            <div class="md:hidden flex justify-center">
-                                <span class="w-2 h-2 rounded-full" style="background-color: {{ $assistantColor }}" title="{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}"></span>
-                            </div>
-                            {{-- Desktop: Full info --}}
-                            <div class="hidden md:block rounded px-1.5 py-0.5 cursor-pointer hover:opacity-80 transition-opacity" style="background-color: {{ $assistantColor }}20; border: 1px solid {{ $assistantColor }}50">
-                                <div class="text-[10px] font-medium truncate" style="color: {{ $assistantColor }}">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
+                            <div class="rounded px-1 md:px-1.5 py-0.5 cursor-pointer hover:opacity-80 transition-opacity" style="background-color: {{ $assistantColor }}20; border: 1px solid {{ $assistantColor }}50">
+                                <div class="text-[9px] md:text-[10px] font-medium truncate" style="color: {{ $assistantColor }}">
+                                    <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
+                                    <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
+                                </div>
                             </div>
                         @endif
                     @endforeach
@@ -244,14 +240,16 @@
                                     $assistantColor = $shift->assistant?->color ?? '#6b7280';
                                 @endphp
                                 @if($shift->is_unavailable)
-                                    {{-- Mobil: Farget blokk uten tekst --}}
+                                    {{-- Mobil: Farget blokk med initialer --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
                                         @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, true)"
-                                        class="md:hidden absolute left-0 right-0 bg-destructive/30 border-l-2 border-destructive pointer-events-auto cursor-pointer z-10"
+                                        class="md:hidden absolute left-0 right-0 bg-destructive/30 border-l-2 border-destructive pointer-events-auto cursor-pointer z-10 px-0.5 overflow-hidden"
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%;"
-                                    ></div>
+                                    >
+                                        <div class="text-[9px] font-medium text-destructive truncate">{{ $shift->assistant?->initials ?? '?' }}</div>
+                                    </div>
                                     {{-- Desktop: Full info --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
@@ -278,14 +276,16 @@
                                         ></div>
                                     </div>
                                 @else
-                                    {{-- Mobil: Farget blokk uten tekst --}}
+                                    {{-- Mobil: Farget blokk med initialer --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"
                                         @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, false)"
-                                        class="md:hidden absolute left-0 right-0 border-l-2 pointer-events-auto cursor-pointer z-10"
+                                        class="md:hidden absolute left-0 right-0 border-l-2 pointer-events-auto cursor-pointer z-10 px-0.5 overflow-hidden"
                                         :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
                                         style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $assistantColor }}30; border-color: {{ $assistantColor }}"
-                                    ></div>
+                                    >
+                                        <div class="text-[9px] font-medium truncate" style="color: {{ $assistantColor }}">{{ $shift->assistant?->initials ?? '?' }}</div>
+                                    </div>
                                     {{-- Desktop: Full info --}}
                                     <div
                                         @click="handleShiftClick({{ $shift->id }})"

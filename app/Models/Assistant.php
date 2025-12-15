@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property bool $send_monthly_report
  * @property-read string $type_label
  * @property-read string $initials
+ * @property-read string $short_name
  * @property-read string $formatted_number
  */
 class Assistant extends Model
@@ -86,6 +87,27 @@ class Assistant extends Model
                 }
 
                 return $initials;
+            }
+        );
+    }
+
+    /**
+     * Get short name (first name + last initial, e.g., "Per H.").
+     */
+    protected function shortName(): Attribute
+    {
+        return Attribute::make(
+            get: function (): string {
+                $words = explode(' ', $this->name);
+
+                if (count($words) === 1) {
+                    return $this->name;
+                }
+
+                $firstName = $words[0];
+                $lastInitial = mb_strtoupper(mb_substr(end($words), 0, 1));
+
+                return "{$firstName} {$lastInitial}.";
             }
         );
     }

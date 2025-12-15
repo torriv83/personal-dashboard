@@ -1,5 +1,5 @@
 {{-- DAGSVISNING med assistent-sidebar --}}
-<div class="flex-1 flex">
+<div class="flex-1 flex overflow-hidden">
     {{-- Assistent-sidebar (kun desktop) --}}
     <div class="hidden md:flex shrink-0">
         {{-- Kollapset: Kun ikon --}}
@@ -88,14 +88,14 @@
                     @if($shift->is_unavailable)
                         <div class="bg-destructive/20 border border-destructive/50 rounded px-1.5 md:px-2 py-0.5 md:py-1 cursor-pointer hover:bg-destructive/30 transition-colors">
                             <div class="text-[10px] md:text-xs font-medium text-destructive">
-                                <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }} - Borte</span>
+                                <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }} - Borte</span>
                                 <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte hele dagen</span>
                             </div>
                         </div>
                     @else
                         <div class="rounded px-1.5 md:px-2 py-0.5 md:py-1 cursor-pointer hover:opacity-80 transition-opacity" style="background-color: {{ $assistantColor }}20; border: 1px solid {{ $assistantColor }}50">
                             <div class="text-[10px] md:text-xs font-medium" style="color: {{ $assistantColor }}">
-                                <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
+                                <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }}</span>
                                 <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
                             </div>
                         </div>
@@ -135,7 +135,7 @@
         </div>
 
         {{-- Tidslinje --}}
-        <div class="flex-1 overflow-y-auto relative flex flex-col">
+        <div class="flex-1 overflow-y-auto relative">
             {{-- Nåværende tid-indikator --}}
             @if($this->isTodaySelected && $this->currentTimePosition !== null)
                 <div
@@ -155,7 +155,7 @@
             @foreach($this->timeSlots as $slot)
                 <div
                     wire:key="slot-{{ $slot['hour'] }}"
-                    class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[3rem_1fr] border-b border-border flex-1 min-h-12 md:min-h-16 group"
+                    class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[3rem_1fr] border-b border-border h-12 md:h-16 group"
                 >
                     {{-- Klokkeslett --}}
                     <div class="text-right text-[10px] md:text-xs text-muted-foreground border-r border-border flex items-start justify-end pr-1 md:pr-2 pt-1">
@@ -255,7 +255,7 @@
                                     style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%;"
                                 >
                                     <div class="text-xs md:text-sm font-medium text-destructive">
-                                        <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
+                                        <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }}</span>
                                         <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
                                     </div>
                                     <div class="text-[10px] md:text-xs" :class="(resizingShift === {{ $shift->id }} || draggedShift === {{ $shift->id }}) ? 'font-bold text-accent' : 'text-muted'">
@@ -283,7 +283,7 @@
                                     style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }}"
                                 >
                                     <div class="text-xs md:text-sm font-medium" style="color: {{ $assistantColor }}">
-                                        <span class="md:hidden">{{ $shift->assistant?->initials ?? '?' }}</span>
+                                        <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }}</span>
                                         <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
                                     </div>
                                     <div class="text-[10px] md:text-xs" :class="(resizingShift === {{ $shift->id }} || draggedShift === {{ $shift->id }}) ? 'font-bold text-accent' : 'text-muted'">
