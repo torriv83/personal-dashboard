@@ -193,17 +193,12 @@
                 </button>
             </div>
         @else
-            <div
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-3xl w-full"
-                x-sort="$wire.updateOrder($item, $position)"
-                wire:ignore.self
-            >
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-3xl w-full">
                 @foreach($this->visibleWidgets as $widget)
                     @if($widget['id'] === 'bpa')
                         <!-- BPA Card -->
                         <a
                             wire:key="widget-bpa"
-                            x-sort:item="'bpa'"
                             href="{{ route('bpa.dashboard') }}"
                             wire:navigate
                             class="block bg-card border border-border rounded-lg p-6 hover:bg-card-hover hover:border-accent transition-all group cursor-pointer"
@@ -228,7 +223,6 @@
                         <!-- Medical Card -->
                         <a
                             wire:key="widget-medical"
-                            x-sort:item="'medical'"
                             href="{{ route('medical.dashboard') }}"
                             wire:navigate
                             class="block bg-card border border-border rounded-lg p-6 hover:bg-card-hover hover:border-accent transition-all group cursor-pointer"
@@ -253,7 +247,6 @@
                         <!-- Economy Card -->
                         <a
                             wire:key="widget-economy"
-                            x-sort:item="'economy'"
                             href="{{ route('economy') }}"
                             wire:navigate
                             class="block bg-card border border-border rounded-lg p-6 hover:bg-card-hover hover:border-accent transition-all group cursor-pointer"
@@ -278,7 +271,6 @@
                         <!-- Wishlist Card -->
                         <a
                             wire:key="widget-wishlist"
-                            x-sort:item="'wishlist'"
                             href="{{ route('wishlist') }}"
                             wire:navigate
                             class="block bg-card border border-border rounded-lg p-6 hover:bg-card-hover hover:border-accent transition-all group cursor-pointer"
