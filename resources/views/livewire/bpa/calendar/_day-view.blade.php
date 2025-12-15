@@ -1,5 +1,5 @@
 {{-- DAGSVISNING med assistent-sidebar --}}
-<div class="flex-1 flex overflow-hidden">
+<div class="flex-1 flex">
     {{-- Assistent-sidebar (kun desktop) --}}
     <div class="hidden md:flex shrink-0">
         {{-- Kollapset: Kun ikon --}}
@@ -135,7 +135,7 @@
         </div>
 
         {{-- Tidslinje --}}
-        <div class="flex-1 overflow-y-auto relative">
+        <div class="flex-1 relative flex flex-col">
             {{-- Nåværende tid-indikator --}}
             @if($this->isTodaySelected && $this->currentTimePosition !== null)
                 <div
@@ -155,7 +155,7 @@
             @foreach($this->timeSlots as $slot)
                 <div
                     wire:key="slot-{{ $slot['hour'] }}"
-                    class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[3rem_1fr] border-b border-border h-12 md:h-16 group"
+                    class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[3rem_1fr] border-b border-border flex-1 min-h-12 md:min-h-16 group"
                 >
                     {{-- Klokkeslett --}}
                     <div class="text-right text-[10px] md:text-xs text-muted-foreground border-r border-border flex items-start justify-end pr-1 md:pr-2 pt-1">
