@@ -21,53 +21,21 @@ class LockScreen extends Component
 
     public string $errorMessage = '';
 
-    public function addDigit(string $digit): void
-    {
-        if (strlen($this->pin) < 6) {
-            $this->pin .= $digit;
-            $this->hasError = false;
-            $this->errorMessage = '';
-
-            // Auto-submit when PIN reaches expected length
-            if (strlen($this->pin) >= 4) {
-                $this->verifyPin();
-            }
-        }
-    }
-
-    public function removeDigit(): void
-    {
-        $this->pin = substr($this->pin, 0, -1);
-        $this->hasError = false;
-        $this->errorMessage = '';
-    }
-
-    public function clearPin(): void
-    {
-        $this->pin = '';
-        $this->hasError = false;
-        $this->errorMessage = '';
-    }
-
-    public function verifyPin(): void
+    public function verifyFullPin(string $pin): void
     {
         $user = Auth::user();
 
-        if ($user && $user->verifyPin($this->pin)) {
+        if ($user && $user->verifyPin($pin)) {
             $this->unlock();
         } else {
             $this->failedAttempts++;
-            $this->hasError = true;
-            $this->pin = '';
 
             if ($this->failedAttempts >= 3) {
-                $this->errorMessage = 'For mange forsøk. Bruk passord.';
                 $this->showPasswordFallback = true;
+                $this->dispatch('pin-error', message: 'For mange forsøk. Bruk passord.');
             } else {
-                $this->errorMessage = 'Feil PIN-kode';
+                $this->dispatch('pin-error', message: 'Feil PIN-kode');
             }
-
-            $this->dispatch('pin-error');
         }
     }
 
