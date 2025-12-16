@@ -1,4 +1,4 @@
-<div class="p-4 md:p-6 space-y-6">
+<x-page-container class="space-y-6">
     {{-- Header with Quick Add --}}
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
@@ -569,4 +569,4 @@
             </div>
         </div>
     @endif
-</div>
+</x-page-container>

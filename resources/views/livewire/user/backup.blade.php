@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto space-y-8" wire:init="loadBackups">
+<x-page-container class="max-w-4xl mx-auto space-y-8" wire:init="loadBackups">
     {{-- Page header --}}
     <div>
         <h1 class="text-2xl font-semibold text-foreground">Backup</h1>
@@ -154,4 +154,4 @@
             </div>
         @endif
     </x-card>
-</div>
+</x-page-container>

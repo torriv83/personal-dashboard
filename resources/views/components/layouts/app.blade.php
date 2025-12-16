@@ -71,7 +71,7 @@
             </header>
 
             <!-- Page content -->
-            <main class="flex-1 p-6 pb-24 lg:pb-6">
+            <main class="flex-1 pb-20 lg:pb-0">
                 {{ $slot }}
             </main>
         </div>

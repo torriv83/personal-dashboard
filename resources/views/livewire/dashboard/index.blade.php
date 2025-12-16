@@ -1,4 +1,4 @@
-<div class="h-full flex flex-col">
+<x-page-container class="h-full flex flex-col">
     <!-- Title with settings button -->
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-3xl font-bold text-foreground">Kontrollpanel</h1>
@@ -553,4 +553,4 @@
             </div>
         </div>
     @endif
-</div>
+</x-page-container>

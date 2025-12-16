@@ -1,4 +1,4 @@
-<div class="w-full h-full flex flex-col">
+<x-page-container class="w-full h-full flex flex-col">
     {{-- Header med tilbake-knapp og rediger --}}
     <div class="flex items-center justify-between mb-6">
         <a href="{{ route('bpa.assistants') }}" class="inline-flex items-center gap-2 text-muted hover:text-foreground transition-colors cursor-pointer">
@@ -596,4 +596,4 @@
             </div>
         </div>
     @endif
-</div>
+</x-page-container>

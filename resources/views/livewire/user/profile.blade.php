@@ -1,4 +1,4 @@
-<div class="h-full flex flex-col">
+<x-page-container class="h-full flex flex-col">
     <!-- Page header -->
     <div class="mb-6">
         <h1 class="text-2xl font-semibold text-foreground">Profil</h1>
@@ -124,4 +124,4 @@
             </div>
         </div>
     </div>
-</div>
+</x-page-container>

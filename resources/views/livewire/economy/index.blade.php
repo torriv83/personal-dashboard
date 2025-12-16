@@ -1,4 +1,4 @@
-<div class="py-4 sm:p-6 space-y-6" wire:init="loadYnabData">
+<x-page-container class="space-y-6" wire:init="loadYnabData">
     {{-- Flash Message --}}
     @if (session('success'))
         <div
@@ -560,4 +560,4 @@
             </div>
         </form>
     </x-modal>
-</div>
+</x-page-container>

@@ -1,4 +1,4 @@
-<div class="py-4 sm:p-6 space-y-6" x-data="{ expanded: [], moveDropdownOpen: null }">
+<x-page-container class="space-y-6" x-data="{ expanded: [], moveDropdownOpen: null }">
     {{-- Header --}}
     <div class="flex items-center justify-between">
         <div>
@@ -914,4 +914,4 @@
             </div>
         </div>
     @endif
-</div>
+</x-page-container>

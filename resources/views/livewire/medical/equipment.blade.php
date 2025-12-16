@@ -1,5 +1,5 @@
-<div
-    class="p-4 md:p-6 space-y-6"
+<x-page-container
+    class="space-y-6"
     x-data="{
         orderList: [],
         showOrderPanel: false,
@@ -724,4 +724,4 @@
             </div>
         </div>
     </div>
-</div>
+</x-page-container>

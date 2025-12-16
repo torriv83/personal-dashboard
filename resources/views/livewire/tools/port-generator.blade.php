@@ -1,4 +1,4 @@
-<div class="h-full flex flex-col p-4 sm:p-6">
+<x-page-container class="h-full flex flex-col">
     {{-- Header --}}
     <div>
         <h1 class="text-2xl font-bold text-foreground">Portvelger</h1>
@@ -68,4 +68,4 @@
             </div>
         </div>
     </div>
-</div>
+</x-page-container>

@@ -1,4 +1,4 @@
-<div class="max-w-4xl mx-auto space-y-8">
+<x-page-container class="max-w-4xl mx-auto space-y-8">
     <!-- Page header -->
     <div>
         <h1 class="text-2xl font-semibold text-foreground">Innstillinger</h1>
@@ -469,4 +469,4 @@
             </div>
         </div>
     @endif
-</div>
+</x-page-container>

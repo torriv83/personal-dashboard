@@ -1,4 +1,4 @@
-<div class="p-4 sm:p-6 space-y-6" data-prescriptions-component>
+<x-page-container class="space-y-6" data-prescriptions-component>
     {{-- Context Menu --}}
     @include('livewire.medical.prescriptions._context-menu')
 
@@ -205,4 +205,4 @@
             </div>
         </div>
     @endif
-</div>
+</x-page-container>

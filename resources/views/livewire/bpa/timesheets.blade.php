@@ -1,4 +1,4 @@
-<div class="w-full flex flex-col" data-timesheets-component>
+<x-page-container class="w-full flex flex-col" data-timesheets-component>
     {{-- Context Menu --}}
     @include('livewire.bpa.timesheets._context-menu')
 
@@ -470,4 +470,4 @@
             </div>
         @endif
     </div>
-</div>
+</x-page-container>

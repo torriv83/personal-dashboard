@@ -1,4 +1,4 @@
-<div class="w-full h-full flex flex-col"
+<x-page-container class="w-full h-full flex flex-col"
     x-data="calendar('{{ $view }}')"
     @keydown.window="handleKeydown($event)">
     {{-- Header: Tittel + Navigasjon --}}
@@ -24,4 +24,4 @@
 
     {{-- Absence Popup (for multi-day selection in month view) --}}
     @include('livewire.bpa.calendar._absence-popup')
-</div>
+</x-page-container>

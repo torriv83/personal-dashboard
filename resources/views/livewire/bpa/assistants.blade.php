@@ -1,4 +1,4 @@
-<div class="w-full h-full flex flex-col" data-assistants-component>
+<x-page-container class="w-full h-full flex flex-col" data-assistants-component>
     {{-- Context Menu --}}
     @include('livewire.bpa.assistants._context-menu')
 
@@ -454,4 +454,4 @@
             </div>
         </div>
     </x-modal>
-</div>
+</x-page-container>
