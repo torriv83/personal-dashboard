@@ -236,6 +236,12 @@ class Settings extends Component
     {
         $this->pushPrescriptionEnabled = ! $this->pushPrescriptionEnabled;
         Setting::set('push_prescription_enabled', $this->pushPrescriptionEnabled);
+
+        // Save default time when enabling
+        if ($this->pushPrescriptionEnabled && ! Setting::get('push_prescription_time')) {
+            Setting::set('push_prescription_time', $this->pushPrescriptionTime);
+        }
+
         $this->dispatch('prescription-alerts-toggled');
     }
 
@@ -253,6 +259,17 @@ class Settings extends Component
     {
         $this->pushShiftEnabled = ! $this->pushShiftEnabled;
         Setting::set('push_shift_enabled', $this->pushShiftEnabled);
+
+        // Save default values when enabling
+        if ($this->pushShiftEnabled) {
+            if (Setting::get('push_shift_day_before') === null) {
+                Setting::set('push_shift_day_before', $this->pushShiftDayBefore);
+            }
+            if (Setting::get('push_shift_hours_before') === null) {
+                Setting::set('push_shift_hours_before', $this->pushShiftHoursBefore);
+            }
+        }
+
         $this->dispatch('shift-reminders-toggled');
     }
 

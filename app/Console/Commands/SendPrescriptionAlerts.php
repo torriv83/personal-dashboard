@@ -43,6 +43,7 @@ class SendPrescriptionAlerts extends Command
         $alertDays = [14, 7, 3];
         $sentCount = 0;
 
+        // Alert for upcoming expirations
         foreach ($alertDays as $days) {
             $targetDate = now()->addDays($days)->toDateString();
 
@@ -53,6 +54,15 @@ class SendPrescriptionAlerts extends Command
                 $sentCount++;
                 $this->info("Sendt varsel for resept: {$prescription->name} ({$days} dager igjen)");
             }
+        }
+
+        // Alert for already expired prescriptions (once daily)
+        $expiredPrescriptions = Prescription::whereDate('valid_to', '<', now()->toDateString())->get();
+
+        foreach ($expiredPrescriptions as $prescription) {
+            $user->notify(new PrescriptionExpiryAlert($prescription, -1));
+            $sentCount++;
+            $this->info("Sendt varsel for utgått resept: {$prescription->name}");
         }
 
         $this->info("Ferdig. Sendte {$sentCount} varsler.");

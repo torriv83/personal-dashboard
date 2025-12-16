@@ -29,9 +29,10 @@ class PrescriptionExpiryAlert extends Notification implements ShouldQueue
     public function toWebPush(object $notifiable, Notification $notification): WebPushMessage
     {
         $title = match (true) {
-            $this->daysLeft === 0 => 'Resept utloper i dag!',
-            $this->daysLeft === 1 => 'Resept utloper i morgen!',
-            default => "Resept utloper om {$this->daysLeft} dager",
+            $this->daysLeft < 0 => 'Resept har utgått!',
+            $this->daysLeft === 0 => 'Resept utløper i dag!',
+            $this->daysLeft === 1 => 'Resept utløper i morgen!',
+            default => "Resept utløper om {$this->daysLeft} dager",
         };
 
         return (new WebPushMessage)
