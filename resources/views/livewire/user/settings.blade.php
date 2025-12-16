@@ -332,6 +332,171 @@
                 </div>
             </div>
         </x-card>
+
+        {{-- Push Notifications --}}
+        <x-card>
+            <x-slot name="header">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <h2 class="text-lg font-medium text-foreground">Push-varsler</h2>
+                </div>
+                <p class="mt-1 text-sm text-muted">Motta varsler på mobil og desktop</p>
+            </x-slot>
+
+            <div class="space-y-6"
+                x-data="pushNotifications('{{ $vapidPublicKey }}')"
+                x-init="init()"
+            >
+                {{-- Status indicator --}}
+                <div class="flex items-center gap-2 text-xs text-muted">
+                    <template x-if="!supported">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                            Ikke støttet i denne nettleseren
+                        </span>
+                    </template>
+                    <template x-if="supported && !subscribed">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                            <span x-text="statusText"></span>
+                        </span>
+                    </template>
+                    <template x-if="supported && subscribed">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span x-text="statusText"></span>
+                        </span>
+                    </template>
+                </div>
+
+                {{-- Prescription Alerts --}}
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-foreground">Resept-varsler</p>
+                            <p class="text-xs text-muted">Varsle når resepter utløper (14, 7, 3 dager før)</p>
+                        </div>
+                        <button
+                            @click="toggleWithSubscription(() => $wire.togglePrescriptionAlerts())"
+                            :disabled="loading || !supported"
+                            class="relative w-12 h-7 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed {{ $pushPrescriptionEnabled ? 'bg-accent' : 'bg-border' }}"
+                        >
+                            <span
+                                class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $pushPrescriptionEnabled ? 'translate-x-5' : '' }}"
+                            ></span>
+                        </button>
+                    </div>
+
+                    @if($pushPrescriptionEnabled)
+                        <div x-data="{ saved: false }"
+                            x-on:prescription-time-saved.window="saved = true; setTimeout(() => saved = false, 2000)"
+                            class="pl-4 border-l-2 border-border"
+                        >
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label for="prescription_time" class="block text-sm text-foreground">Varslingstidspunkt</label>
+                                <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 translate-x-2"
+                                    x-transition:enter-end="opacity-100 translate-x-0"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                    class="flex items-center gap-1 text-xs text-accent">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Lagret
+                                </span>
+                            </div>
+                            <input
+                                type="time"
+                                id="prescription_time"
+                                wire:model="pushPrescriptionTime"
+                                wire:change="savePrescriptionTime"
+                                class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                            />
+                            <p class="mt-1 text-xs text-muted">Klokkeslett for daglige resept-varsler</p>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Shift Reminders --}}
+                <div class="pt-4 border-t border-border space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-foreground">Vakt-påminnelser</p>
+                            <p class="text-xs text-muted">Påminnelse før kommende vakter</p>
+                        </div>
+                        <button
+                            @click="toggleWithSubscription(() => $wire.toggleShiftReminders())"
+                            :disabled="loading || !supported"
+                            class="relative w-12 h-7 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed {{ $pushShiftEnabled ? 'bg-accent' : 'bg-border' }}"
+                        >
+                            <span
+                                class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $pushShiftEnabled ? 'translate-x-5' : '' }}"
+                            ></span>
+                        </button>
+                    </div>
+
+                    @if($pushShiftEnabled)
+                        <div class="space-y-4 pl-4 border-l-2 border-border">
+                            {{-- Day before toggle --}}
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-foreground">Dagen før</p>
+                                    <p class="text-xs text-muted">Varsle ved samme tidspunkt dagen før vaktstart</p>
+                                </div>
+                                <button
+                                    wire:click="toggleShiftDayBefore"
+                                    class="relative w-10 h-6 rounded-full transition-colors cursor-pointer {{ $pushShiftDayBefore ? 'bg-accent' : 'bg-border' }}"
+                                >
+                                    <span
+                                        class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {{ $pushShiftDayBefore ? 'translate-x-4' : '' }}"
+                                    ></span>
+                                </button>
+                            </div>
+
+                            {{-- Hours before select --}}
+                            <div x-data="{ saved: false }"
+                                x-on:shift-hours-saved.window="saved = true; setTimeout(() => saved = false, 2000)"
+                            >
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label for="shift_hours" class="block text-sm text-foreground">Timer før vaktstart</label>
+                                    <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 translate-x-2"
+                                        x-transition:enter-end="opacity-100 translate-x-0"
+                                        x-transition:leave="transition ease-in duration-150"
+                                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                        class="flex items-center gap-1 text-xs text-accent">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Lagret
+                                    </span>
+                                </div>
+                                <select
+                                    id="shift_hours"
+                                    wire:model="pushShiftHoursBefore"
+                                    wire:change="saveShiftHoursBefore"
+                                    class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
+                                >
+                                    <option value="">Deaktivert</option>
+                                    <option value="1">1 time før</option>
+                                    <option value="2">2 timer før</option>
+                                    <option value="3">3 timer før</option>
+                                    <option value="4">4 timer før</option>
+                                    <option value="6">6 timer før</option>
+                                    <option value="8">8 timer før</option>
+                                    <option value="12">12 timer før</option>
+                                </select>
+                                <p class="mt-1 text-xs text-muted">Varsel X timer før vaktstart</p>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </x-card>
     </div>
 
     {{-- PIN Setup/Change Modal --}}

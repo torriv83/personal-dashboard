@@ -37,6 +37,19 @@ class Settings extends Component
 
     public bool $weatherEnabled = true;
 
+    // Push notification settings
+    public bool $pushSubscribed = false;
+
+    public bool $pushPrescriptionEnabled = false;
+
+    public string $pushPrescriptionTime = '09:00';
+
+    public bool $pushShiftEnabled = false;
+
+    public bool $pushShiftDayBefore = true;
+
+    public ?int $pushShiftHoursBefore = 2;
+
     public function mount(): void
     {
         $this->lockTimeoutMinutes = Auth::user()->lock_timeout_minutes ?? 30;
@@ -48,6 +61,14 @@ class Settings extends Component
         $this->weatherLatitude = (string) Setting::get('weather_latitude', '59.1229');
         $this->weatherLongitude = (string) Setting::get('weather_longitude', '11.3875');
         $this->weatherLocationSearch = $this->weatherLocationName;
+
+        // Push notification settings
+        $this->pushSubscribed = Auth::user()->pushSubscriptions()->exists();
+        $this->pushPrescriptionEnabled = (bool) Setting::get('push_prescription_enabled', false);
+        $this->pushPrescriptionTime = Setting::get('push_prescription_time', '09:00');
+        $this->pushShiftEnabled = (bool) Setting::get('push_shift_enabled', false);
+        $this->pushShiftDayBefore = (bool) Setting::get('push_shift_day_before', true);
+        $this->pushShiftHoursBefore = Setting::get('push_shift_hours_before') ? (int) Setting::get('push_shift_hours_before') : 2;
     }
 
     public function openPinModal(): void
@@ -197,10 +218,62 @@ class Settings extends Component
         $this->dispatch('weather-toggled');
     }
 
+    public function savePushSubscription(string $endpoint, ?string $publicKey, ?string $authToken): void
+    {
+        Auth::user()->updatePushSubscription($endpoint, $publicKey, $authToken);
+        $this->pushSubscribed = true;
+        $this->dispatch('push-subscribed');
+    }
+
+    public function removePushSubscription(string $endpoint): void
+    {
+        Auth::user()->deletePushSubscription($endpoint);
+        $this->pushSubscribed = Auth::user()->pushSubscriptions()->exists();
+        $this->dispatch('push-unsubscribed');
+    }
+
+    public function togglePrescriptionAlerts(): void
+    {
+        $this->pushPrescriptionEnabled = ! $this->pushPrescriptionEnabled;
+        Setting::set('push_prescription_enabled', $this->pushPrescriptionEnabled);
+        $this->dispatch('prescription-alerts-toggled');
+    }
+
+    public function savePrescriptionTime(): void
+    {
+        $this->validate([
+            'pushPrescriptionTime' => ['required', 'date_format:H:i'],
+        ]);
+
+        Setting::set('push_prescription_time', $this->pushPrescriptionTime);
+        $this->dispatch('prescription-time-saved');
+    }
+
+    public function toggleShiftReminders(): void
+    {
+        $this->pushShiftEnabled = ! $this->pushShiftEnabled;
+        Setting::set('push_shift_enabled', $this->pushShiftEnabled);
+        $this->dispatch('shift-reminders-toggled');
+    }
+
+    public function toggleShiftDayBefore(): void
+    {
+        $this->pushShiftDayBefore = ! $this->pushShiftDayBefore;
+        Setting::set('push_shift_day_before', $this->pushShiftDayBefore);
+        $this->dispatch('shift-day-before-toggled');
+    }
+
+    public function saveShiftHoursBefore(): void
+    {
+        Setting::set('push_shift_hours_before', $this->pushShiftHoursBefore);
+        $this->dispatch('shift-hours-saved');
+    }
+
     public function render()
     {
         return view('livewire.user.settings', [
             'hasPin' => Auth::user()->hasPin(),
+            'vapidPublicKey' => config('webpush.vapid.public_key'),
         ]);
     }
 }

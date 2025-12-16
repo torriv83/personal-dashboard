@@ -114,6 +114,82 @@
                     .catch(err => console.log('SW registration failed:', err));
             });
         }
+
+        // Push Notifications Alpine Component
+        function pushNotifications(vapidPublicKey) {
+            return {
+                supported: 'serviceWorker' in navigator && 'PushManager' in window,
+                subscribed: false,
+                loading: false,
+                statusText: 'Laster...',
+
+                async init() {
+                    if (!this.supported) {
+                        this.statusText = 'Ikke støttet i denne nettleseren';
+                        return;
+                    }
+
+                    try {
+                        const registration = await navigator.serviceWorker.ready;
+                        const subscription = await registration.pushManager.getSubscription();
+                        this.subscribed = !!subscription;
+                        this.statusText = this.subscribed ? 'Push-varsler er aktivert' : 'Trykk på en toggle for å aktivere';
+                    } catch (error) {
+                        console.error('Push init error:', error);
+                        this.statusText = 'Kunne ikke sjekke status';
+                    }
+                },
+
+                async toggleWithSubscription(callback) {
+                    if (!this.supported) return;
+
+                    // If not subscribed, subscribe first
+                    if (!this.subscribed) {
+                        this.loading = true;
+                        try {
+                            const permission = await Notification.requestPermission();
+                            if (permission !== 'granted') {
+                                this.statusText = 'Tillatelse ble nektet';
+                                this.loading = false;
+                                return;
+                            }
+
+                            const registration = await navigator.serviceWorker.ready;
+                            const subscription = await registration.pushManager.subscribe({
+                                userVisibleOnly: true,
+                                applicationServerKey: this.urlBase64ToUint8Array(vapidPublicKey)
+                            });
+
+                            const sub = subscription.toJSON();
+                            await this.$wire.savePushSubscription(
+                                sub.endpoint,
+                                sub.keys?.p256dh || null,
+                                sub.keys?.auth || null
+                            );
+
+                            this.subscribed = true;
+                            this.statusText = 'Push-varsler er aktivert';
+                        } catch (error) {
+                            console.error('Push subscribe error:', error);
+                            this.statusText = 'Kunne ikke aktivere varsler';
+                            this.loading = false;
+                            return;
+                        }
+                        this.loading = false;
+                    }
+
+                    // Now execute the toggle callback
+                    callback();
+                },
+
+                urlBase64ToUint8Array(base64String) {
+                    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                    const rawData = window.atob(base64);
+                    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+                }
+            };
+        }
     </script>
 </body>
 </html>

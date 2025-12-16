@@ -56,7 +56,7 @@ class LockScreen extends Component
     {
         $this->showPasswordFallback = false;
         $this->failedAttempts = 0;
-        $this->clearPin();
+        $this->pin = '';
     }
 
     private function unlock(): void
