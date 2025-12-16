@@ -25,20 +25,6 @@ class MileageCalculator extends Component
         $this->homeAddress = Setting::get('mileage_home_address', '');
     }
 
-    public function saveHomeAddress(): void
-    {
-        $this->validate([
-            'homeAddress' => ['required', 'string', 'max:255'],
-        ], [
-            'homeAddress.required' => 'Hjemmeadressen er påkrevd.',
-            'homeAddress.max' => 'Hjemmeadressen kan ikke være lengre enn 255 tegn.',
-        ]);
-
-        Setting::set('mileage_home_address', $this->homeAddress);
-
-        $this->dispatch('notify', message: 'Hjemmeadresse lagret', type: 'success');
-    }
-
     public function addDestination(): void
     {
         $this->validate([
@@ -61,10 +47,13 @@ class MileageCalculator extends Component
             $client = new OpenRouteService;
             $distance = $client->calculateDistance($this->homeAddress, $this->newDestinationAddress);
 
+            $maxSortOrder = MileageDestination::max('sort_order') ?? -1;
+
             MileageDestination::create([
                 'name' => $this->newDestinationName,
                 'address' => $this->newDestinationAddress,
                 'distance_km' => $distance,
+                'sort_order' => $maxSortOrder + 1,
             ]);
 
             $this->newDestinationName = '';
@@ -108,10 +97,27 @@ class MileageCalculator extends Component
         return $this->roundTrip ? $km * 2 : $km;
     }
 
+    public function updateOrder(string $item, int $position): void
+    {
+        $destinationId = (int) $item;
+        $destinations = MileageDestination::orderBy('sort_order')->pluck('id')->toArray();
+
+        // Remove the item from its current position
+        $destinations = array_values(array_diff($destinations, [$destinationId]));
+
+        // Insert at the new position
+        array_splice($destinations, $position, 0, $destinationId);
+
+        // Update all sort orders
+        foreach ($destinations as $index => $id) {
+            MileageDestination::where('id', $id)->update(['sort_order' => $index]);
+        }
+    }
+
     #[Computed]
     public function destinations()
     {
-        return MileageDestination::orderBy('name')->get();
+        return MileageDestination::orderBy('sort_order')->get();
     }
 
     public function render()

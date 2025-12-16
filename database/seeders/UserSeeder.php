@@ -9,8 +9,6 @@ class UserSeeder extends Seeder
 {
     /**
      * Opprett enkeltbruker for personal dashboard.
-     *
-     * Henter verdier fra miljøvariabler (ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD).
      */
     public function run(): void
     {
@@ -25,10 +23,10 @@ class UserSeeder extends Seeder
         }
 
         User::updateOrCreate(
-            ['email' => $email],
+            ['email' => 'admin@admin.com'],
             [
-                'name' => $name ?? 'Admin',
-                'password' => bcrypt($password),
+                'name' => 'Admin',
+                'password' => bcrypt('password'),
                 'email_verified_at' => now(),
             ]
         );

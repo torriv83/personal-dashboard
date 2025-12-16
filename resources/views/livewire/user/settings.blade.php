@@ -109,7 +109,51 @@
             </x-card>
         </div>
 
-        <!-- Row 2: Weather Settings (full width) -->
+        <!-- Row 2: Mileage Settings -->
+        <x-card>
+            <x-slot name="header">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    <h2 class="text-lg font-medium text-foreground">Kjøregodtgjørelse</h2>
+                </div>
+                <p class="mt-1 text-sm text-muted">Innstillinger for avstandsberegning</p>
+            </x-slot>
+
+            <div x-data="{ saved: false }"
+                x-on:mileage-home-saved.window="saved = true; setTimeout(() => saved = false, 2000)">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="mileage_home_address" class="block text-sm font-medium text-foreground">Hjemmeadresse</label>
+                    <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-x-2"
+                        x-transition:enter-end="opacity-100 translate-x-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="flex items-center gap-1 text-xs text-accent">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 13l4 4L19 7" />
+                        </svg>
+                        Lagret
+                    </span>
+                </div>
+                <input
+                    type="text"
+                    id="mileage_home_address"
+                    wire:model="mileageHomeAddress"
+                    wire:change="saveMileageHomeAddress"
+                    class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                    placeholder="F.eks. Storgata 1, 0001 Oslo"
+                />
+                @error('mileageHomeAddress')
+                    <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                @enderror
+                <p class="mt-1 text-xs text-muted">Startpunkt for alle avstandsberegninger</p>
+            </div>
+        </x-card>
+
+        <!-- Row 3: Weather Settings (full width) -->
         <x-card>
             <x-slot name="header">
                 <div class="flex items-center gap-2">

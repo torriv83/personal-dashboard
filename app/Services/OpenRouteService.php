@@ -12,6 +12,56 @@ class OpenRouteService
     private const DIRECTIONS_URL = 'https://api.openrouteservice.org/v2/directions/driving-car';
 
     /**
+     * Search for location suggestions.
+     *
+     * @return array<int, array{label: string, address: string}>
+     */
+    public function searchLocations(string $query, int $limit = 5): array
+    {
+        if (strlen($query) < 2) {
+            return [];
+        }
+
+        try {
+            $apiKey = config('services.openrouteservice.key');
+
+            if (! $apiKey) {
+                return [];
+            }
+
+            $response = Http::accept('application/json')
+                ->withHeaders(['Authorization' => $apiKey])
+                ->get(self::GEOCODING_URL, [
+                    'text' => $query,
+                    'size' => $limit,
+                ]);
+
+            if (! $response->successful()) {
+                return [];
+            }
+
+            $data = $response->json();
+            $features = $data['features'] ?? [];
+
+            return collect($features)->map(function ($feature) {
+                $props = $feature['properties'] ?? [];
+
+                return [
+                    'label' => $props['label'] ?? $props['name'] ?? '',
+                    'address' => $props['label'] ?? '',
+                ];
+            })->filter(fn ($item) => ! empty($item['label']))
+                ->unique('label')
+                ->values()
+                ->toArray();
+        } catch (\Exception $e) {
+            Log::warning('OpenRouteService: Search error', ['error' => $e->getMessage()]);
+
+            return [];
+        }
+    }
+
+    /**
      * Calculate distance between two addresses.
      *
      * @return float|null Distance in kilometers (one-way), or null if calculation fails
@@ -62,8 +112,8 @@ class OpenRouteService
             }
 
             $response = Http::accept('application/json')
+                ->withHeaders(['Authorization' => $apiKey])
                 ->get(self::GEOCODING_URL, [
-                    'api_key' => $apiKey,
                     'text' => $address,
                 ]);
 
@@ -123,9 +173,9 @@ class OpenRouteService
                 return null;
             }
 
-            $response = Http::accept('application/json')
+            $response = Http::accept('application/geo+json')
+                ->withHeaders(['Authorization' => $apiKey])
                 ->get(self::DIRECTIONS_URL, [
-                    'api_key' => $apiKey,
                     'start' => "{$from['lon']},{$from['lat']}",
                     'end' => "{$to['lon']},{$to['lat']}",
                 ]);

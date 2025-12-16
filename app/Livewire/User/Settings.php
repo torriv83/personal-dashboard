@@ -50,6 +50,9 @@ class Settings extends Component
 
     public ?int $pushShiftHoursBefore = 2;
 
+    // Mileage calculator settings
+    public string $mileageHomeAddress = '';
+
     public function mount(): void
     {
         $this->lockTimeoutMinutes = Auth::user()->lock_timeout_minutes ?? 30;
@@ -69,6 +72,9 @@ class Settings extends Component
         $this->pushShiftEnabled = (bool) Setting::get('push_shift_enabled', false);
         $this->pushShiftDayBefore = (bool) Setting::get('push_shift_day_before', true);
         $this->pushShiftHoursBefore = Setting::get('push_shift_hours_before') ? (int) Setting::get('push_shift_hours_before') : 2;
+
+        // Mileage calculator
+        $this->mileageHomeAddress = Setting::get('mileage_home_address', '');
     }
 
     public function openPinModal(): void
@@ -284,6 +290,20 @@ class Settings extends Component
     {
         Setting::set('push_shift_hours_before', $this->pushShiftHoursBefore);
         $this->dispatch('shift-hours-saved');
+    }
+
+    public function saveMileageHomeAddress(): void
+    {
+        $this->validate([
+            'mileageHomeAddress' => ['required', 'string', 'max:255'],
+        ], [
+            'mileageHomeAddress.required' => 'Hjemmeadressen er påkrevd.',
+            'mileageHomeAddress.max' => 'Hjemmeadressen kan ikke være lengre enn 255 tegn.',
+        ]);
+
+        Setting::set('mileage_home_address', $this->mileageHomeAddress);
+
+        $this->dispatch('mileage-home-saved');
     }
 
     public function render()
