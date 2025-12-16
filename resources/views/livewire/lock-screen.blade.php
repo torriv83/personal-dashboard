@@ -69,8 +69,8 @@
                 this.hasError = false;
                 this.errorMessage = '';
 
-                // Auto-verify when PIN reaches 6 digits
-                if (this.pin.length === 6) {
+                // Auto-verify when PIN reaches minimum length (4+)
+                if (this.pin.length >= 4) {
                     this.verifyPin();
                 }
             }
