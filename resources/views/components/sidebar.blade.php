@@ -127,6 +127,9 @@
                 </svg>
             </x-slot>
 
+            <x-sidebar-sublink href="{{ route('tools.mileage-calculator') }}" :active="request()->routeIs('tools.mileage-calculator')">
+                Kjøregodtgjørelse
+            </x-sidebar-sublink>
             <x-sidebar-sublink :disabled="true">
                 Pdf til Markdown (kommer snart)
             </x-sidebar-sublink>

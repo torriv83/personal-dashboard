@@ -41,4 +41,8 @@ return [
         'budget_id' => env('YNAB_BUDGET_ID'),
     ],
 
+    'openrouteservice' => [
+        'key' => env('OPENROUTESERVICE_API_KEY'),
+    ],
+
 ];
