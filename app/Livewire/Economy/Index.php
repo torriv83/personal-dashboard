@@ -119,6 +119,7 @@ class Index extends Component
             $this->dispatch('toast', type: 'error', message: 'Noen data kunne ikke hentes fra YNAB');
         }
         $this->dispatch('syncCompleted');
+        $this->js("window.dispatchEvent(new CustomEvent('sync-completed'))");
     }
 
     #[Computed]
