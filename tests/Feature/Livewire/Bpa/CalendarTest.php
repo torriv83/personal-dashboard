@@ -4,6 +4,7 @@ use App\Livewire\Bpa\Calendar;
 use App\Models\Assistant;
 use App\Models\Shift;
 use App\Models\User;
+use App\Services\GoogleCalendarService;
 use Carbon\Carbon;
 use Livewire\Livewire;
 
@@ -14,6 +15,11 @@ beforeEach(function () {
 
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
+
+    // Mock GoogleCalendarService to avoid HTTP calls
+    $this->mock(GoogleCalendarService::class, function ($mock) {
+        $mock->shouldReceive('getAllEvents')->andReturn(collect());
+    });
 
     // Freeze time for predictable tests
     Carbon::setTestNow(Carbon::create(2024, 6, 15, 10, 0, 0, 'Europe/Oslo'));
