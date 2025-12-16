@@ -5,6 +5,7 @@
         request()->routeIs('medical.*') => 'medical',
         request()->routeIs('economy*') => 'economy',
         request()->routeIs('wishlist*') => 'wishlist',
+        request()->routeIs('games.*') => 'games',
         default => 'home'
     };
 @endphp
@@ -174,6 +175,64 @@
             </x-bottom-nav-item>
 
             <x-bottom-nav-item href="{{ route('wishlist') }}" label="Ønsker" :active="true">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+            </x-bottom-nav-item>
+
+        @elseif($context === 'games')
+            {{-- Spill: Dynamisk FAB basert på om et spill er valgt --}}
+            <x-bottom-nav-item href="{{ route('bpa.dashboard') }}" label="BPA" :active="false">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </x-bottom-nav-item>
+
+            <x-bottom-nav-item href="{{ route('medical.dashboard') }}" label="Medisinsk" :active="false">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+            </x-bottom-nav-item>
+
+            <div
+                x-data="{ hasGame: false }"
+                @game-selection-changed.window="hasGame = $event.detail.hasGame"
+                class="flex flex-col items-center"
+            >
+                {{-- Nytt spill (når ingen spill er valgt) --}}
+                <x-bottom-nav-item-primary
+                    x-show="!hasGame"
+                    @click="Livewire.dispatch('openNewGameModal')"
+                    label="Nytt spill"
+                >
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </x-bottom-nav-item-primary>
+
+                {{-- Registrer runde (når et spill er valgt) --}}
+                <x-bottom-nav-item-primary
+                    x-show="hasGame"
+                    x-cloak
+                    @click="Livewire.dispatch('openScoreModal')"
+                    label="Ny runde"
+                >
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="16" height="16" rx="2" stroke-width="2" />
+                        <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+                        <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                        <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+                    </svg>
+                </x-bottom-nav-item-primary>
+            </div>
+
+            <x-bottom-nav-item href="{{ route('economy') }}" label="Økonomi" :active="false">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </x-bottom-nav-item>
+
+            <x-bottom-nav-item href="{{ route('wishlist') }}" label="Ønsker" :active="false">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                 </svg>

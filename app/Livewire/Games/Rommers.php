@@ -8,6 +8,7 @@ use App\Models\RommersRound;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -97,8 +98,17 @@ class Rommers extends Component
     {
         $this->selectedGameId = $gameId;
         unset($this->selectedGame);
+        $this->dispatch('game-selection-changed', hasGame: true);
     }
 
+    public function deselectGame(): void
+    {
+        $this->selectedGameId = null;
+        unset($this->selectedGame);
+        $this->dispatch('game-selection-changed', hasGame: false);
+    }
+
+    #[On('openNewGameModal')]
     public function openNewGameModal(): void
     {
         $this->playerNames = ['', ''];
@@ -156,9 +166,11 @@ class Rommers extends Component
         $this->closeNewGameModal();
         $this->selectedGameId = $game->id;
         unset($this->activeGames, $this->selectedGame, $this->finishedGames);
+        $this->dispatch('game-selection-changed', hasGame: true);
         $this->dispatch('toast', type: 'success', message: 'Nytt spill startet!');
     }
 
+    #[On('openScoreModal')]
     public function openScoreModal(): void
     {
         if (! $this->selectedGame) {
@@ -229,6 +241,7 @@ class Rommers extends Component
                 'winner_id' => $winner->id,
             ]);
             $this->selectedGameId = null;
+            $this->dispatch('game-selection-changed', hasGame: false);
             $this->dispatch('toast', type: 'success', message: "{$winner->name} vant spillet!");
         } else {
             $this->dispatch('toast', type: 'success', message: 'Runde registrert!');
@@ -250,6 +263,7 @@ class Rommers extends Component
         // Hvis det slettede spillet var valgt, fjern valget
         if ($this->selectedGameId === $gameId) {
             $this->selectedGameId = null;
+            $this->dispatch('game-selection-changed', hasGame: false);
         }
 
         unset($this->activeGames, $this->selectedGame, $this->finishedGames);
