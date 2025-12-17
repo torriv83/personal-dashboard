@@ -17,6 +17,7 @@ use Livewire\WithPagination;
  * @property-read array $availableYears
  * @property-read Collection $upcomingUnavailability
  * @property-read string $employmentDuration
+ * @property-read string $taskUrl
  */
 class AssistantShow extends Component
 {
@@ -190,6 +191,23 @@ class AssistantShow extends Component
         }
 
         return implode(' og ', $parts);
+    }
+
+    #[Computed]
+    public function taskUrl(): string
+    {
+        if (! $this->assistant->token) {
+            return '';
+        }
+
+        return url('/oppgaver/'.$this->assistant->token);
+    }
+
+    public function regenerateToken(): void
+    {
+        $this->assistant->regenerateToken();
+        $this->assistant->refresh();
+        $this->dispatch('toast', type: 'success', message: 'Ny tilgangslenke generert');
     }
 
     public function updatedYear(): void

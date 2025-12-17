@@ -12,6 +12,12 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+/**
+ * @property-read Collection $tasks
+ * @property-read Collection $assistants
+ * @property-read array<string, string> $priorityOptions
+ * @property-read bool $listHasAssistant
+ */
 #[Layout('components.layouts.app')]
 class Show extends Component
 {
