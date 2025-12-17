@@ -14,6 +14,8 @@ use Livewire\Component;
 
 /**
  * @property-read Collection $tasks
+ * @property-read Collection $pendingTasks
+ * @property-read Collection $completedTasks
  * @property-read Collection $assistants
  * @property-read array<string, string> $priorityOptions
  * @property-read bool $listHasAssistant
@@ -53,6 +55,24 @@ class Show extends Component
             ->orderBy('sort_order')
             ->orderBy('created_at')
             ->get();
+    }
+
+    /**
+     * @return Collection<int, Task>
+     */
+    #[Computed]
+    public function pendingTasks(): Collection
+    {
+        return $this->tasks->where('status', TaskStatus::Pending);
+    }
+
+    /**
+     * @return Collection<int, Task>
+     */
+    #[Computed]
+    public function completedTasks(): Collection
+    {
+        return $this->tasks->where('status', TaskStatus::Completed);
     }
 
     /**
@@ -217,9 +237,10 @@ class Show extends Component
             return;
         }
 
-        // Get all tasks ordered by sort_order
+        // Get only pending tasks ordered by sort_order (completed tasks are in separate section)
         $tasks = $this->taskList
             ->tasks()
+            ->where('status', TaskStatus::Pending)
             ->orderBy('sort_order')
             ->orderBy('created_at')
             ->get();

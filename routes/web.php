@@ -15,6 +15,7 @@ use App\Livewire\Medical\Dashboard as MedicalDashboard;
 use App\Livewire\Medical\Equipment;
 use App\Livewire\Medical\Prescriptions;
 use App\Livewire\Medical\Weight;
+use App\Livewire\Tasks\AssistantTasks;
 use App\Livewire\Tasks\Index as TasksIndex;
 use App\Livewire\Tasks\Show as TasksShow;
 use App\Livewire\Tools\MileageCalculator;
@@ -25,8 +26,9 @@ use App\Livewire\Wishlist\Index as WishlistIndex;
 use App\Livewire\Wishlist\SharedView as WishlistSharedView;
 use Illuminate\Support\Facades\Route;
 
-// Offentlig delt ønskeliste (ingen innlogging krevd)
+// Offentlige ruter (ingen innlogging krevd)
 Route::get('/delt/{token}', WishlistSharedView::class)->name('wishlist.shared');
+Route::get('/oppgaver/{assistant:token}', AssistantTasks::class)->name('tasks.assistant');
 
 // Auth (gjester - redirect til dashboard hvis allerede innlogget)
 Route::middleware('guest')->group(function () {

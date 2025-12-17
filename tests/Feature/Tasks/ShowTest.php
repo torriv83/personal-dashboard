@@ -213,17 +213,17 @@ it('shows task count in header', function () {
 });
 
 it('can reorder tasks', function () {
-    $task1 = Task::factory()->create([
+    $task1 = Task::factory()->pending()->create([
         'task_list_id' => $this->taskList->id,
         'title' => 'Oppgave 1',
         'sort_order' => 0,
     ]);
-    $task2 = Task::factory()->create([
+    $task2 = Task::factory()->pending()->create([
         'task_list_id' => $this->taskList->id,
         'title' => 'Oppgave 2',
         'sort_order' => 1,
     ]);
-    $task3 = Task::factory()->create([
+    $task3 = Task::factory()->pending()->create([
         'task_list_id' => $this->taskList->id,
         'title' => 'Oppgave 3',
         'sort_order' => 2,
