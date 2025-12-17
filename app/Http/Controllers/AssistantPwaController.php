@@ -17,6 +17,7 @@ class AssistantPwaController extends Controller
         $scope = '/oppgaver/'.$assistant->token;
 
         $manifest = [
+            'id' => 'tor-oppgaver-'.$assistant->token,
             'name' => 'Tor - Oppgaver',
             'short_name' => 'Oppgaver',
             'description' => 'Oppgaveliste for assistenter',
