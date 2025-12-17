@@ -16,10 +16,12 @@ class AssistantPwaController extends Controller
         $startUrl = route('tasks.assistant', $assistant);
         $scope = '/oppgaver/'.$assistant->token;
 
+        $firstName = explode(' ', $assistant->name)[0];
+
         $manifest = [
             'id' => 'tor-oppgaver-'.$assistant->token,
-            'name' => 'Tor - Oppgaver',
-            'short_name' => 'Oppgaver',
+            'name' => $firstName.' - Oppgaver',
+            'short_name' => $firstName.' - Oppgaver',
             'description' => 'Oppgaveliste for assistenter',
             'start_url' => $startUrl,
             'scope' => $scope,
