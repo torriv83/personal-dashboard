@@ -162,3 +162,151 @@ it('can switch between lists', function () {
         ->call('selectList', null)
         ->assertSet('currentListId', null);
 });
+
+it('has assistant lists available in component', function () {
+    $assistantList = TaskList::factory()->create([
+        'name' => 'Min egen liste',
+        'assistant_id' => $this->assistant->id,
+        'is_shared' => false,
+    ]);
+
+    $component = Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant]);
+
+    expect($component->instance()->assistantLists)->toHaveCount(1);
+    expect($component->instance()->assistantLists->first()->name)->toBe('Min egen liste');
+});
+
+it('does not show other assistants lists', function () {
+    $otherAssistant = Assistant::factory()->create();
+    TaskList::factory()->create([
+        'name' => 'Annen assistents liste',
+        'assistant_id' => $otherAssistant->id,
+        'is_shared' => false,
+    ]);
+
+    $component = Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant]);
+
+    expect($component->instance()->assistantLists)->toHaveCount(0);
+});
+
+it('can add task to own list from dine oppgaver view', function () {
+    $assistantList = TaskList::factory()->create([
+        'name' => 'Min liste',
+        'assistant_id' => $this->assistant->id,
+        'is_shared' => false,
+    ]);
+
+    // From "Dine oppgaver" view (no list selected)
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->assertSet('currentListId', null)
+        ->set('newTaskTitle', 'Ny oppgave fra assistent')
+        ->call('addTaskToOwnList');
+
+    expect(Task::where('title', 'Ny oppgave fra assistent')->exists())->toBeTrue();
+    $task = Task::where('title', 'Ny oppgave fra assistent')->first();
+    expect($task->task_list_id)->toBe($assistantList->id);
+    expect($task->assistant_id)->toBe($this->assistant->id);
+    expect($task->priority->value)->toBe('low');
+    expect($task->status)->toBe(TaskStatus::Pending);
+});
+
+it('cannot add task without having own list', function () {
+    // Assistant has no list assigned
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->set('newTaskTitle', 'Forsøk på oppgave')
+        ->call('addTaskToOwnList');
+
+    expect(Task::where('title', 'Forsøk på oppgave')->exists())->toBeFalse();
+});
+
+it('validates task title when adding', function () {
+    TaskList::factory()->create([
+        'assistant_id' => $this->assistant->id,
+        'is_shared' => false,
+    ]);
+
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->set('newTaskTitle', '')
+        ->call('addTaskToOwnList')
+        ->assertHasErrors(['newTaskTitle' => 'required']);
+});
+
+it('resets form after adding task', function () {
+    TaskList::factory()->create([
+        'assistant_id' => $this->assistant->id,
+        'is_shared' => false,
+    ]);
+
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->set('newTaskTitle', 'Test oppgave')
+        ->call('addTaskToOwnList')
+        ->assertSet('newTaskTitle', '');
+});
+
+it('can add task to shared list when allow_assistant_add is true', function () {
+    $sharedList = TaskList::factory()->shared()->allowAssistantAdd()->create(['name' => 'Felles Handletur']);
+
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->call('selectList', $sharedList->id)
+        ->set('newTaskTitle', 'Oppgave på felles liste')
+        ->call('addTaskToSharedList');
+
+    expect(Task::where('title', 'Oppgave på felles liste')->exists())->toBeTrue();
+    $task = Task::where('title', 'Oppgave på felles liste')->first();
+    expect($task->task_list_id)->toBe($sharedList->id);
+    expect($task->assistant_id)->toBeNull();
+    expect($task->priority->value)->toBe('low');
+    expect($task->status)->toBe(TaskStatus::Pending);
+});
+
+it('cannot add task to shared list when allow_assistant_add is false', function () {
+    $sharedList = TaskList::factory()->shared()->create(['name' => 'Felles Handletur', 'allow_assistant_add' => false]);
+
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->call('selectList', $sharedList->id)
+        ->set('newTaskTitle', 'Forsøk på oppgave')
+        ->call('addTaskToSharedList');
+
+    expect(Task::where('title', 'Forsøk på oppgave')->exists())->toBeFalse();
+});
+
+it('cannot add task to shared list without selecting a list first', function () {
+    TaskList::factory()->shared()->allowAssistantAdd()->create();
+
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->assertSet('currentListId', null)
+        ->set('newTaskTitle', 'Forsøk på oppgave')
+        ->call('addTaskToSharedList');
+
+    expect(Task::where('title', 'Forsøk på oppgave')->exists())->toBeFalse();
+});
+
+it('validates task title when adding to shared list', function () {
+    $sharedList = TaskList::factory()->shared()->allowAssistantAdd()->create();
+
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->call('selectList', $sharedList->id)
+        ->set('newTaskTitle', '')
+        ->call('addTaskToSharedList')
+        ->assertHasErrors(['newTaskTitle' => 'required']);
+});
+
+it('resets form after adding task to shared list', function () {
+    $sharedList = TaskList::factory()->shared()->allowAssistantAdd()->create();
+
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->call('selectList', $sharedList->id)
+        ->set('newTaskTitle', 'Test oppgave')
+        ->call('addTaskToSharedList')
+        ->assertSet('newTaskTitle', '');
+});
+
+it('dispatches toast after adding task to shared list', function () {
+    $sharedList = TaskList::factory()->shared()->allowAssistantAdd()->create();
+
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->call('selectList', $sharedList->id)
+        ->set('newTaskTitle', 'Test oppgave')
+        ->call('addTaskToSharedList')
+        ->assertDispatched('toast', type: 'success', message: 'Oppgave lagt til');
+});

@@ -22,6 +22,7 @@ class TaskListFactory extends Factory
             'name' => $name,
             'slug' => \Illuminate\Support\Str::slug($name),
             'is_shared' => false,
+            'allow_assistant_add' => false,
             'assistant_id' => null,
             'sort_order' => fake()->numberBetween(0, 100),
         ];
@@ -46,6 +47,16 @@ class TaskListFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'is_shared' => false,
             'assistant_id' => $assistantId,
+        ]);
+    }
+
+    /**
+     * Indicate that the list allows assistants to add tasks.
+     */
+    public function allowAssistantAdd(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'allow_assistant_add' => true,
         ]);
     }
 }

@@ -26,6 +26,8 @@ class Index extends Component
 
     public bool $listIsShared = false;
 
+    public bool $listAllowAssistantAdd = false;
+
     public ?int $listAssistantId = null;
 
     /**
@@ -46,6 +48,7 @@ class Index extends Component
                 'name' => $list->name,
                 'slug' => $list->slug,
                 'is_shared' => $list->is_shared,
+                'allow_assistant_add' => $list->allow_assistant_add,
                 'assistant_id' => $list->assistant_id,
                 'assistant_name' => $list->assistant?->name,
                 'sort_order' => $list->sort_order,
@@ -80,6 +83,7 @@ class Index extends Component
             if ($list) {
                 $this->listName = $list->name;
                 $this->listIsShared = $list->is_shared;
+                $this->listAllowAssistantAdd = $list->allow_assistant_add;
                 $this->listAssistantId = $list->assistant_id;
             }
         }
@@ -98,6 +102,7 @@ class Index extends Component
         $this->editingListId = null;
         $this->listName = '';
         $this->listIsShared = false;
+        $this->listAllowAssistantAdd = false;
         $this->listAssistantId = null;
         $this->resetValidation();
     }
@@ -107,6 +112,7 @@ class Index extends Component
         $validated = $this->validate([
             'listName' => 'required|string|max:255',
             'listIsShared' => 'boolean',
+            'listAllowAssistantAdd' => 'boolean',
             'listAssistantId' => 'nullable|exists:assistants,id',
         ], [
             'listName.required' => 'Navn er påkrevd.',
@@ -123,9 +129,13 @@ class Index extends Component
             $isShared = false;
         }
 
+        // allow_assistant_add only makes sense for shared lists
+        $allowAssistantAdd = $isShared ? $validated['listAllowAssistantAdd'] : false;
+
         $data = [
             'name' => $validated['listName'],
             'is_shared' => $isShared,
+            'allow_assistant_add' => $allowAssistantAdd,
             'assistant_id' => $assistantId,
         ];
 

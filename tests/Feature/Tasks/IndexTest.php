@@ -148,3 +148,50 @@ it('displays assistant badge on list card', function () {
     Livewire::test(Index::class)
         ->assertSee('Min Assistent');
 });
+
+it('can create shared list with allow_assistant_add enabled', function () {
+    Livewire::test(Index::class)
+        ->set('listName', 'Felles liste med tilgang')
+        ->set('listIsShared', true)
+        ->set('listAllowAssistantAdd', true)
+        ->call('saveList');
+
+    $list = TaskList::where('name', 'Felles liste med tilgang')->first();
+    expect($list->is_shared)->toBeTrue();
+    expect($list->allow_assistant_add)->toBeTrue();
+});
+
+it('can edit list to toggle allow_assistant_add', function () {
+    $list = TaskList::factory()->shared()->create([
+        'name' => 'Felles liste',
+        'allow_assistant_add' => false,
+    ]);
+
+    Livewire::test(Index::class)
+        ->call('openListModal', $list->id)
+        ->assertSet('listAllowAssistantAdd', false)
+        ->set('listAllowAssistantAdd', true)
+        ->call('saveList');
+
+    expect($list->fresh()->allow_assistant_add)->toBeTrue();
+});
+
+it('resets allow_assistant_add when list is not shared', function () {
+    Livewire::test(Index::class)
+        ->set('listName', 'Privat liste')
+        ->set('listIsShared', false)
+        ->set('listAllowAssistantAdd', true)
+        ->call('saveList');
+
+    $list = TaskList::where('name', 'Privat liste')->first();
+    expect($list->is_shared)->toBeFalse();
+    expect($list->allow_assistant_add)->toBeFalse();
+});
+
+it('loads allow_assistant_add when editing list', function () {
+    $list = TaskList::factory()->shared()->allowAssistantAdd()->create();
+
+    Livewire::test(Index::class)
+        ->call('openListModal', $list->id)
+        ->assertSet('listAllowAssistantAdd', true);
+});

@@ -20,8 +20,8 @@ enum TaskPriority: string
     public function color(): string
     {
         return match ($this) {
-            self::Low => 'text-muted-foreground',
-            self::Medium => 'text-yellow-400',
+            self::Low => 'text-green-400',
+            self::Medium => 'text-orange-400',
             self::High => 'text-red-400',
         };
     }
@@ -29,9 +29,33 @@ enum TaskPriority: string
     public function bgColor(): string
     {
         return match ($this) {
-            self::Low => 'bg-muted-foreground/10',
-            self::Medium => 'bg-yellow-400/10',
+            self::Low => 'bg-green-400/10',
+            self::Medium => 'bg-orange-400/10',
             self::High => 'bg-red-400/10',
+        };
+    }
+
+    /**
+     * Solid background color for small indicators like dots.
+     */
+    public function dotColor(): string
+    {
+        return match ($this) {
+            self::Low => 'bg-green-500',
+            self::Medium => 'bg-orange-500',
+            self::High => 'bg-red-500',
+        };
+    }
+
+    /**
+     * Sort order for priority (lower = higher priority).
+     */
+    public function sortOrder(): int
+    {
+        return match ($this) {
+            self::High => 1,
+            self::Medium => 2,
+            self::Low => 3,
         };
     }
 

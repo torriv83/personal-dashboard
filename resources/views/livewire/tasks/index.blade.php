@@ -152,12 +152,12 @@
                         @enderror
                     </div>
 
-                    <div x-data="{ isShared: @entangle('listIsShared'), assistantId: @entangle('listAssistantId') }">
+                    <div x-data="{ isShared: @entangle('listIsShared'), assistantId: @entangle('listAssistantId'), allowAssistantAdd: @entangle('listAllowAssistantAdd') }">
                         <label class="flex items-center gap-3 cursor-pointer">
                             <input
                                 type="checkbox"
                                 x-model="isShared"
-                                @change="if(isShared) assistantId = null"
+                                @change="if(isShared) assistantId = null; else allowAssistantAdd = false"
                                 class="w-4 h-4 rounded border-border bg-input text-accent focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-card cursor-pointer"
                             >
                             <div>
@@ -165,6 +165,21 @@
                                 <p class="text-xs text-muted-foreground">Alle assistenter kan se denne listen</p>
                             </div>
                         </label>
+
+                        {{-- Sub-option: Allow assistants to add tasks (only visible when shared) --}}
+                        <div x-show="isShared" x-transition class="mt-3">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    x-model="allowAssistantAdd"
+                                    class="w-4 h-4 rounded border-border bg-input text-accent focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-card cursor-pointer"
+                                >
+                                <div>
+                                    <span class="text-sm font-medium text-foreground">Tillat assistenter å legge til</span>
+                                    <p class="text-xs text-muted-foreground">Assistenter kan legge til oppgaver i denne listen</p>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
                     <div x-data="{ isShared: @entangle('listIsShared'), assistantId: @entangle('listAssistantId') }" x-show="!isShared" x-transition>

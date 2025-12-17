@@ -28,7 +28,7 @@ class Show extends Component
     // Quick add form
     public string $newTaskTitle = '';
 
-    public string $newTaskPriority = 'medium';
+    public string $newTaskPriority = 'low';
 
     public ?int $newTaskAssistantId = null;
 
@@ -138,7 +138,7 @@ class Show extends Component
 
         // Reset form
         $this->newTaskTitle = '';
-        $this->newTaskPriority = 'medium';
+        $this->newTaskPriority = 'low';
         $this->newTaskAssistantId = null;
 
         unset($this->tasks);

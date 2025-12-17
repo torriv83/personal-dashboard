@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
  * @property string $name
  * @property string $slug
  * @property bool $is_shared
+ * @property bool $allow_assistant_add
  * @property int|null $assistant_id
  * @property int $sort_order
  * @property \Illuminate\Support\Carbon|null $created_at
@@ -28,6 +29,7 @@ class TaskList extends Model
         'name',
         'slug',
         'is_shared',
+        'allow_assistant_add',
         'assistant_id',
         'sort_order',
     ];
@@ -36,6 +38,7 @@ class TaskList extends Model
     {
         return [
             'is_shared' => 'boolean',
+            'allow_assistant_add' => 'boolean',
             'assistant_id' => 'integer',
             'sort_order' => 'integer',
         ];

@@ -72,13 +72,13 @@
 
                             @foreach($this->sharedLists as $list)
                                 <button
-                                    wire:key="menu-list-{{ $list->id }}"
+                                    wire:key="menu-shared-list-{{ $list->id }}"
                                     wire:click="selectList({{ $list->id }})"
                                     @click="open = false"
                                     class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-card-hover transition-colors cursor-pointer {{ $currentListId === $list->id ? 'bg-accent/10' : '' }}"
                                 >
                                     <svg class="w-5 h-5 text-muted-foreground shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                     </svg>
                                     <div class="flex-1 min-w-0">
                                         <div class="text-sm font-medium text-foreground truncate">{{ $list->name }}</div>
@@ -121,7 +121,31 @@
                 @php
                     $pendingTasks = $this->assignedTasks->where('status', App\Enums\TaskStatus::Pending);
                     $completedTasks = $this->assignedTasks->where('status', App\Enums\TaskStatus::Completed);
+                    $assistantList = $this->assistantLists->first();
                 @endphp
+
+                {{-- Quick Add Task Form (only if assistant has their own list) --}}
+                @if($assistantList)
+                    <div class="bg-card border border-border rounded-lg p-4">
+                        <form wire:submit="addTaskToOwnList" class="flex gap-3">
+                            <input
+                                wire:model="newTaskTitle"
+                                type="text"
+                                placeholder="Legg til ny oppgave..."
+                                class="flex-1 px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                            />
+                            <button
+                                type="submit"
+                                class="px-4 py-2 text-black bg-accent rounded-md hover:bg-accent-hover transition-colors cursor-pointer whitespace-nowrap"
+                            >
+                                Legg til
+                            </button>
+                        </form>
+                        @error('newTaskTitle')
+                            <p class="mt-2 text-sm text-destructive">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @endif
 
                 @if($pendingTasks->isNotEmpty())
                     <div class="bg-card border border-border rounded-lg overflow-hidden">
@@ -144,23 +168,18 @@
 
                                     {{-- Task Content --}}
                                     <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            {{-- Priority Indicator --}}
-                                            <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded {{ $task->priority->bgColor() }} {{ $task->priority->color() }}">
-                                                {{ $task->priority->label() }}
-                                            </span>
-
-                                            {{-- Title --}}
-                                            <span class="text-foreground">
-                                                {{ $task->title }}
-                                            </span>
-
-                                            {{-- List name --}}
-                                            <span class="text-xs text-muted-foreground">
-                                                fra {{ $task->taskList->name }}
-                                            </span>
-                                        </div>
+                                        <span class="text-foreground">
+                                            {{ $task->title }}
+                                        </span>
                                     </div>
+
+                                    {{-- Priority dot (mobile only) --}}
+                                    <div class="w-2.5 h-2.5 rounded-full shrink-0 sm:hidden {{ $task->priority->dotColor() }}" title="{{ $task->priority->label() }}"></div>
+
+                                    {{-- Priority badge (desktop only) --}}
+                                    <span class="hidden sm:inline-flex items-center px-2 py-0.5 text-xs font-medium rounded shrink-0 {{ $task->priority->bgColor() }} {{ $task->priority->color() }}">
+                                        {{ $task->priority->label() }}
+                                    </span>
                                 </div>
                             @endforeach
                         </div>
@@ -223,17 +242,9 @@
 
                                         {{-- Task Content --}}
                                         <div class="flex-1 min-w-0">
-                                            <div class="flex items-center gap-2 flex-wrap">
-                                                {{-- Title --}}
-                                                <span class="text-foreground line-through">
-                                                    {{ $task->title }}
-                                                </span>
-
-                                                {{-- List name --}}
-                                                <span class="text-xs text-muted-foreground">
-                                                    fra {{ $task->taskList->name }}
-                                                </span>
-                                            </div>
+                                            <span class="text-foreground line-through">
+                                                {{ $task->title }}
+                                            </span>
                                         </div>
                                     </div>
                                 @endforeach
@@ -248,6 +259,29 @@
                         $pendingTasks = $this->currentList->tasks->where('status', App\Enums\TaskStatus::Pending);
                         $completedTasks = $this->currentList->tasks->where('status', App\Enums\TaskStatus::Completed);
                     @endphp
+
+                    {{-- Quick Add Task Form (only if list allows assistant add) --}}
+                    @if($this->currentList->allow_assistant_add)
+                        <div class="bg-card border border-border rounded-lg p-4">
+                            <form wire:submit="addTaskToSharedList" class="flex gap-3">
+                                <input
+                                    wire:model="newTaskTitle"
+                                    type="text"
+                                    placeholder="Legg til ny oppgave..."
+                                    class="flex-1 px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                />
+                                <button
+                                    type="submit"
+                                    class="px-4 py-2 text-black bg-accent rounded-md hover:bg-accent-hover transition-colors cursor-pointer whitespace-nowrap"
+                                >
+                                    Legg til
+                                </button>
+                            </form>
+                            @error('newTaskTitle')
+                                <p class="mt-2 text-sm text-destructive">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    @endif
 
                     @if($pendingTasks->isNotEmpty())
                         <div class="bg-card border border-border rounded-lg overflow-hidden">
@@ -270,18 +304,18 @@
 
                                         {{-- Task Content --}}
                                         <div class="flex-1 min-w-0">
-                                            <div class="flex items-center gap-2 flex-wrap">
-                                                {{-- Priority Indicator --}}
-                                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded {{ $task->priority->bgColor() }} {{ $task->priority->color() }}">
-                                                    {{ $task->priority->label() }}
-                                                </span>
-
-                                                {{-- Title --}}
-                                                <span class="text-foreground">
-                                                    {{ $task->title }}
-                                                </span>
-                                            </div>
+                                            <span class="text-foreground">
+                                                {{ $task->title }}
+                                            </span>
                                         </div>
+
+                                        {{-- Priority dot (mobile only) --}}
+                                        <div class="w-2.5 h-2.5 rounded-full shrink-0 sm:hidden {{ $task->priority->dotColor() }}" title="{{ $task->priority->label() }}"></div>
+
+                                        {{-- Priority badge (desktop only) --}}
+                                        <span class="hidden sm:inline-flex items-center px-2 py-0.5 text-xs font-medium rounded shrink-0 {{ $task->priority->bgColor() }} {{ $task->priority->color() }}">
+                                            {{ $task->priority->label() }}
+                                        </span>
                                     </div>
                                 @endforeach
                             </div>
