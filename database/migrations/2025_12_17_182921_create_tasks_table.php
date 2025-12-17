@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('task_list_id')->constrained()->cascadeOnDelete();
             $table->string('title');
-            $table->foreignId('todo_assistant_id')->nullable()->constrained('todo_assistants')->nullOnDelete();
+            $table->foreignId('assistant_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('status', ['pending', 'completed'])->default('pending');
             $table->enum('priority', ['low', 'medium', 'high'])->default('medium');
             $table->integer('sort_order')->default(0);
