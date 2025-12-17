@@ -27,7 +27,7 @@
             >
                 {{-- Drag handle + Name --}}
                 <div class="flex items-start gap-3 mb-3">
-                    <svg class="w-4 h-4 text-muted-foreground cursor-grab mt-1 shrink-0" x-sort:handle fill="currentColor" viewBox="0 0 24 24" @click.prevent.stop>
+                    <svg class="w-4 h-4 text-muted-foreground cursor-grab mt-1 shrink-0 touch-none" x-sort:handle fill="currentColor" viewBox="0 0 24 24" @click.prevent.stop>
                         <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
                         <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
                         <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
