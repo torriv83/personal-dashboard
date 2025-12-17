@@ -15,6 +15,8 @@ use App\Livewire\Medical\Dashboard as MedicalDashboard;
 use App\Livewire\Medical\Equipment;
 use App\Livewire\Medical\Prescriptions;
 use App\Livewire\Medical\Weight;
+use App\Livewire\Tasks\Index as TasksIndex;
+use App\Livewire\Tasks\Show as TasksShow;
 use App\Livewire\Tools\MileageCalculator;
 use App\Livewire\Tools\PortGenerator;
 use App\Livewire\User\Profile;
@@ -49,6 +51,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/timelister', Timesheets::class)->name('timesheets');
         Route::get('/assistenter', Assistants::class)->name('assistants');
         Route::get('/assistenter/{assistant}', AssistantShow::class)->name('assistants.show');
+
+        // Oppgavelister
+        Route::get('/oppgaver', TasksIndex::class)->name('tasks.index');
+        Route::get('/oppgaver/{taskList:slug}', TasksShow::class)->name('tasks.show');
     });
 
     // Medisinsk

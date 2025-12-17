@@ -46,6 +46,9 @@
             <x-sidebar-sublink href="{{ route('bpa.assistants') }}" :active="request()->routeIs('bpa.assistants*')">
                 Assistenter
             </x-sidebar-sublink>
+            <x-sidebar-sublink href="{{ route('bpa.tasks.index') }}" :active="request()->routeIs('bpa.tasks.*')">
+                Oppgaver
+            </x-sidebar-sublink>
         </x-sidebar-group>
 
         {{-- Medisinsk - with submenu --}}

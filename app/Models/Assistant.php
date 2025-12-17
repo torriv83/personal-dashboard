@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
@@ -22,10 +23,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Carbon $updated_at
  * @property Carbon|null $deleted_at
  * @property bool $send_monthly_report
+ * @property string|null $token
  * @property-read string $type_label
  * @property-read string $initials
  * @property-read string $short_name
  * @property-read string $formatted_number
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Task> $tasks
  */
 class Assistant extends Model
 {
@@ -40,7 +43,17 @@ class Assistant extends Model
         'color',
         'hired_at',
         'send_monthly_report',
+        'token',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Assistant $assistant): void {
+            if (empty($assistant->token)) {
+                $assistant->token = (string) Str::uuid();
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -128,5 +141,30 @@ class Assistant extends Model
     public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class);
+    }
+
+    /**
+     * @return HasMany<Task, $this>
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Get the route key for the model (for token-based URLs).
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'token';
+    }
+
+    /**
+     * Regenerate the token for this assistant.
+     */
+    public function regenerateToken(): void
+    {
+        $this->token = (string) Str::uuid();
+        $this->save();
     }
 }
