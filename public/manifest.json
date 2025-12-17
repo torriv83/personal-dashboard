@@ -23,6 +23,12 @@
     ],
     "shortcuts": [
         {
+            "name": "Oppgavelister",
+            "short_name": "Oppgaver",
+            "url": "/bpa/oppgaver",
+            "icons": [{ "src": "/icons/tasks-icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
             "name": "BPA Kalender",
             "short_name": "Kalender",
             "url": "/bpa/kalender",

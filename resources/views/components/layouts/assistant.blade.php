@@ -1,15 +1,27 @@
+@php
+    $assistant = request()->route('assistant');
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tor - Oppgaver">
 
     <title>{{ $title ?? 'Oppgaver' }}</title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png">
+    <!-- PWA Manifest -->
+    @if($assistant)
+        <link rel="manifest" href="{{ route('tasks.assistant.manifest', $assistant) }}">
+    @endif
+
+    <!-- Favicon / App Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/tasks-icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/tasks-icon-192x192.png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -27,5 +39,22 @@
     <x-toast />
 
     @livewireScriptConfig
+
+    <!-- Register Service Worker -->
+    @if($assistant)
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                    navigator.serviceWorker.register('{{ route('tasks.assistant.sw', $assistant) }}', {
+                        scope: '/oppgaver/{{ $assistant->token }}/'
+                    }).then(function(registration) {
+                        console.log('SW registered:', registration.scope);
+                    }).catch(function(error) {
+                        console.log('SW registration failed:', error);
+                    });
+                });
+            }
+        </script>
+    @endif
 </body>
 </html>

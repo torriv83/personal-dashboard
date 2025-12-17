@@ -29,6 +29,8 @@ use Illuminate\Support\Facades\Route;
 // Offentlige ruter (ingen innlogging krevd)
 Route::get('/delt/{token}', WishlistSharedView::class)->name('wishlist.shared');
 Route::get('/oppgaver/{assistant:token}', AssistantTasks::class)->name('tasks.assistant');
+Route::get('/oppgaver/{assistant:token}/manifest.json', [\App\Http\Controllers\AssistantPwaController::class, 'manifest'])->name('tasks.assistant.manifest');
+Route::get('/oppgaver/{assistant:token}/sw.js', [\App\Http\Controllers\AssistantPwaController::class, 'serviceWorker'])->name('tasks.assistant.sw');
 
 // Auth (gjester - redirect til dashboard hvis allerede innlogget)
 Route::middleware('guest')->group(function () {

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1a1a1a"/>
+
+  <!-- Checkbox 1 (checked) - filled box with checkmark -->
+  <rect x="100" y="120" width="56" height="56" rx="8" fill="#a3e635"/>
+  <path d="M112 148 l16 16 l28-28" fill="none" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="190" y1="148" x2="380" y2="148" stroke="#a3e635" stroke-width="28" stroke-linecap="round"/>
+
+  <!-- Checkbox 2 (checked) - filled box with checkmark -->
+  <rect x="100" y="228" width="56" height="56" rx="8" fill="#a3e635"/>
+  <path d="M112 256 l16 16 l28-28" fill="none" stroke="#1a1a1a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="190" y1="256" x2="340" y2="256" stroke="#a3e635" stroke-width="28" stroke-linecap="round"/>
+
+  <!-- Checkbox 3 (unchecked) - empty box -->
+  <rect x="100" y="336" width="56" height="56" rx="8" fill="none" stroke="#a3e635" stroke-width="6"/>
+  <line x1="190" y1="364" x2="400" y2="364" stroke="#a3e635" stroke-width="28" stroke-linecap="round"/>
+</svg>
