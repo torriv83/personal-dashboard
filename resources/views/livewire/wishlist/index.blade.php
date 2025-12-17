@@ -177,36 +177,54 @@
                             </select>
                             <div class="flex items-center gap-1">
                                 {{-- Move to group dropdown --}}
-                                @if(count($this->groups) > 0)
-                                    <div class="relative" x-data="{ openUp: true }" x-init="openUp = $el.getBoundingClientRect().top > 200">
-                                        <button
-                                            @click.stop="openUp = $el.getBoundingClientRect().top > 200; moveDropdownOpen = moveDropdownOpen === 'mobile-{{ $wishlist['id'] }}' ? null : 'mobile-{{ $wishlist['id'] }}'"
-                                            class="p-1.5 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10 rounded transition-colors cursor-pointer"
-                                            title="Flytt til gruppe"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-                                        </button>
-                                        <div
-                                            x-show="moveDropdownOpen === 'mobile-{{ $wishlist['id'] }}'"
-                                            @click.away="moveDropdownOpen = null"
-                                            x-transition
-                                            class="absolute right-0 w-48 bg-card border border-border rounded-lg shadow-lg z-10 py-1"
-                                            :class="openUp ? 'bottom-full mb-1' : 'top-full mt-1'"
-                                        >
-                                            <div class="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Flytt til gruppe</div>
-                                            @foreach($this->groups as $group)
-                                                <button
-                                                    wire:click="moveItemToGroup({{ $wishlist['id'] }}, {{ $group['id'] }})"
-                                                    @click="moveDropdownOpen = null"
-                                                    class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                                <div class="relative" x-data="{ openUp: true, newGroupName: '' }" x-init="openUp = $el.getBoundingClientRect().top > 200">
+                                    <button
+                                        @click.stop="openUp = $el.getBoundingClientRect().top > 200; moveDropdownOpen = moveDropdownOpen === 'mobile-{{ $wishlist['id'] }}' ? null : 'mobile-{{ $wishlist['id'] }}'"
+                                        class="p-1.5 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10 rounded transition-colors cursor-pointer"
+                                        title="Flytt til gruppe"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                                    </button>
+                                    <div
+                                        x-show="moveDropdownOpen === 'mobile-{{ $wishlist['id'] }}'"
+                                        @click.away="moveDropdownOpen = null"
+                                        x-transition
+                                        class="absolute right-0 w-56 bg-card border border-border rounded-lg shadow-lg z-10 py-1"
+                                        :class="openUp ? 'bottom-full mb-1' : 'top-full mt-1'"
+                                    >
+                                        <div class="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Flytt til gruppe</div>
+                                        @foreach($this->groups as $group)
+                                            <button
+                                                wire:click="moveItemToGroup({{ $wishlist['id'] }}, {{ $group['id'] }})"
+                                                @click="moveDropdownOpen = null"
+                                                class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                                            >
+                                                <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                                                {{ $group['name'] }}
+                                            </button>
+                                        @endforeach
+                                        {{-- New group input --}}
+                                        <div class="border-t border-border mt-1 pt-2 px-2 pb-1">
+                                            <div class="flex items-center gap-1">
+                                                <input
+                                                    type="text"
+                                                    x-model="newGroupName"
+                                                    @keydown.enter.prevent="if(newGroupName.trim()) { $wire.createGroupAndMoveItem({{ $wishlist['id'] }}, newGroupName); moveDropdownOpen = null; newGroupName = ''; }"
+                                                    @click.stop
+                                                    placeholder="Ny mappe..."
+                                                    class="min-w-0 flex-1 bg-input border border-border rounded px-2 py-1.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                                                 >
-                                                    <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-                                                    {{ $group['name'] }}
+                                                <button
+                                                    @click.stop="if(newGroupName.trim()) { $wire.createGroupAndMoveItem({{ $wishlist['id'] }}, newGroupName); moveDropdownOpen = null; newGroupName = ''; }"
+                                                    class="shrink-0 p-1.5 text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer"
+                                                    title="Opprett mappe"
+                                                >
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                                                 </button>
-                                            @endforeach
+                                            </div>
                                         </div>
                                     </div>
-                                @endif
+                                </div>
                                 <button wire:click="openItemModal({{ $wishlist['id'] }})" class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                 </button>
@@ -534,38 +552,56 @@
                                 <td class="px-4 py-4 text-right">
                                     <div class="flex items-center justify-end gap-1">
                                         {{-- Move to group dropdown --}}
-                                        @if(count($this->groups) > 0)
-                                            <div class="relative" x-data="{ openUp: true }" x-init="openUp = $el.getBoundingClientRect().top > 200">
-                                                <button
-                                                    @click.stop="openUp = $el.getBoundingClientRect().top > 200; moveDropdownOpen = moveDropdownOpen === 'desktop-{{ $wishlist['id'] }}' ? null : 'desktop-{{ $wishlist['id'] }}'"
-                                                    class="p-1.5 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10 rounded transition-colors cursor-pointer"
-                                                    title="Flytt til gruppe"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                                    </svg>
-                                                </button>
-                                                <div
-                                                    x-show="moveDropdownOpen === 'desktop-{{ $wishlist['id'] }}'"
-                                                    @click.away="moveDropdownOpen = null"
-                                                    x-transition
-                                                    class="absolute right-0 w-48 bg-card border border-border rounded-lg shadow-lg z-10 py-1"
-                                                    :class="openUp ? 'bottom-full mb-1' : 'top-full mt-1'"
-                                                >
-                                                    <div class="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Flytt til gruppe</div>
-                                                    @foreach($this->groups as $group)
-                                                        <button
-                                                            wire:click="moveItemToGroup({{ $wishlist['id'] }}, {{ $group['id'] }})"
-                                                            @click="moveDropdownOpen = null"
-                                                            class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                                        <div class="relative" x-data="{ openUp: true, newGroupName: '' }" x-init="openUp = $el.getBoundingClientRect().top > 200">
+                                            <button
+                                                @click.stop="openUp = $el.getBoundingClientRect().top > 200; moveDropdownOpen = moveDropdownOpen === 'desktop-{{ $wishlist['id'] }}' ? null : 'desktop-{{ $wishlist['id'] }}'"
+                                                class="p-1.5 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10 rounded transition-colors cursor-pointer"
+                                                title="Flytt til gruppe"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                                </svg>
+                                            </button>
+                                            <div
+                                                x-show="moveDropdownOpen === 'desktop-{{ $wishlist['id'] }}'"
+                                                @click.away="moveDropdownOpen = null"
+                                                x-transition
+                                                class="absolute right-0 w-56 bg-card border border-border rounded-lg shadow-lg z-10 py-1"
+                                                :class="openUp ? 'bottom-full mb-1' : 'top-full mt-1'"
+                                            >
+                                                <div class="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">Flytt til gruppe</div>
+                                                @foreach($this->groups as $group)
+                                                    <button
+                                                        wire:click="moveItemToGroup({{ $wishlist['id'] }}, {{ $group['id'] }})"
+                                                        @click="moveDropdownOpen = null"
+                                                        class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                                                    >
+                                                        <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                                                        {{ $group['name'] }}
+                                                    </button>
+                                                @endforeach
+                                                {{-- New group input --}}
+                                                <div class="border-t border-border mt-1 pt-2 px-2 pb-1">
+                                                    <div class="flex items-center gap-1">
+                                                        <input
+                                                            type="text"
+                                                            x-model="newGroupName"
+                                                            @keydown.enter.prevent="if(newGroupName.trim()) { $wire.createGroupAndMoveItem({{ $wishlist['id'] }}, newGroupName); moveDropdownOpen = null; newGroupName = ''; }"
+                                                            @click.stop
+                                                            placeholder="Ny mappe..."
+                                                            class="min-w-0 flex-1 bg-input border border-border rounded px-2 py-1.5 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
                                                         >
-                                                            <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-                                                            {{ $group['name'] }}
+                                                        <button
+                                                            @click.stop="if(newGroupName.trim()) { $wire.createGroupAndMoveItem({{ $wishlist['id'] }}, newGroupName); moveDropdownOpen = null; newGroupName = ''; }"
+                                                            class="shrink-0 p-1.5 text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer"
+                                                            title="Opprett mappe"
+                                                        >
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                                                         </button>
-                                                    @endforeach
+                                                    </div>
                                                 </div>
                                             </div>
-                                        @endif
+                                        </div>
                                         <button
                                             wire:click="openItemModal({{ $wishlist['id'] }})"
                                             class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"

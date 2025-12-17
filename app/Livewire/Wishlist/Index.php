@@ -408,6 +408,38 @@ class Index extends Component
         $this->dispatch('$refresh');
     }
 
+    public function createGroupAndMoveItem(int $itemId, string $groupName): void
+    {
+        $groupName = trim($groupName);
+        if ($groupName === '') {
+            return;
+        }
+
+        $item = WishlistItem::find($itemId);
+        if (! $item) {
+            return;
+        }
+
+        // Create the new group
+        $maxSortOrder = WishlistItem::whereNull('group_id')->max('sort_order') ?? 0;
+        $maxGroupSortOrder = WishlistGroup::max('sort_order') ?? 0;
+
+        $group = WishlistGroup::create([
+            'name' => $groupName,
+            'sort_order' => max($maxSortOrder, $maxGroupSortOrder) + 1,
+        ]);
+
+        // Move the item to the new group
+        $item->group_id = $group->id;
+        $item->sort_order = 0;
+        $item->save();
+
+        unset($this->wishlists, $this->totalAll, $this->totalRemaining, $this->groups);
+
+        $this->dispatch('toast', type: 'success', message: 'Mappe opprettet og ønske flyttet');
+        $this->dispatch('$refresh');
+    }
+
     public function updateOrder(string $item, int $position): void
     {
         // Parse item key (e.g., "group-2" or "item-3")
