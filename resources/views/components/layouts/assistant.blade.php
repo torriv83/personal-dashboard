@@ -46,7 +46,7 @@
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                     navigator.serviceWorker.register('{{ route('tasks.assistant.sw', $assistant) }}', {
-                        scope: '/oppgaver/{{ $assistant->token }}/'
+                        scope: '/oppgaver/{{ $assistant->token }}'
                     }).then(function(registration) {
                         console.log('SW registered:', registration.scope);
                     }).catch(function(error) {

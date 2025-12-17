@@ -14,7 +14,7 @@ class AssistantPwaController extends Controller
     public function manifest(Assistant $assistant): JsonResponse
     {
         $startUrl = route('tasks.assistant', $assistant);
-        $scope = '/oppgaver/'.$assistant->token.'/';
+        $scope = '/oppgaver/'.$assistant->token;
 
         $manifest = [
             'name' => 'Tor - Oppgaver',
@@ -51,7 +51,7 @@ class AssistantPwaController extends Controller
      */
     public function serviceWorker(Assistant $assistant): Response
     {
-        $scope = '/oppgaver/'.$assistant->token.'/';
+        $scope = '/oppgaver/'.$assistant->token;
 
         $swContent = <<<'JS'
 const CACHE_NAME = 'tasks-assistant-v1';
