@@ -25,9 +25,7 @@ class Show extends Component
 {
     public TaskList $taskList;
 
-    // Quick add form
-    public string $newTaskTitle = '';
-
+    // Quick add form (priority and assistant managed by Livewire, title by Alpine)
     public string $newTaskPriority = 'low';
 
     public ?int $newTaskAssistantId = null;
@@ -97,36 +95,35 @@ class Show extends Component
         $this->taskList = $taskList->load('assistant');
     }
 
-    public function addTask(): void
+    public function addTaskFromAlpine(string $title, string $priority, ?int $assistantId): void
     {
-        $validated = $this->validate([
-            'newTaskTitle' => 'required|string|max:255',
-            'newTaskPriority' => 'required|in:low,medium,high',
-            'newTaskAssistantId' => 'nullable|exists:assistants,id',
-        ], [
-            'newTaskTitle.required' => 'Tittel er påkrevd.',
-            'newTaskTitle.max' => 'Tittel kan ikke være lengre enn 255 tegn.',
-        ]);
+        $title = trim($title);
+        if (empty($title) || strlen($title) > 255) {
+            return;
+        }
+
+        if (! in_array($priority, ['low', 'medium', 'high'])) {
+            $priority = 'low';
+        }
 
         // Get the next sort_order
         $maxSortOrder = $this->taskList->tasks()->max('sort_order') ?? 0;
 
         // If list has an assistant, use that instead of the form value
-        $assistantId = $this->listHasAssistant
+        $finalAssistantId = $this->listHasAssistant
             ? $this->taskList->assistant_id
-            : $validated['newTaskAssistantId'];
+            : $assistantId;
 
         Task::create([
             'task_list_id' => $this->taskList->id,
-            'title' => $validated['newTaskTitle'],
-            'priority' => $validated['newTaskPriority'],
-            'assistant_id' => $assistantId,
+            'title' => $title,
+            'priority' => $priority,
+            'assistant_id' => $finalAssistantId,
             'status' => TaskStatus::Pending,
             'sort_order' => $maxSortOrder + 1,
         ]);
 
-        // Reset form
-        $this->newTaskTitle = '';
+        // Reset select values
         $this->newTaskPriority = 'low';
         $this->newTaskAssistantId = null;
 

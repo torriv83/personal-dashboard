@@ -32,14 +32,17 @@
     </div>
 
     {{-- Quick Add Task Form --}}
-    <div class="bg-card border border-border rounded-lg p-4">
-        <form wire:submit="addTask" class="flex flex-col sm:flex-row gap-3">
+    <div class="bg-card border border-border rounded-lg p-4" x-data="{ taskTitle: '' }">
+        <form
+            @submit.prevent="$wire.addTaskFromAlpine(taskTitle, $wire.newTaskPriority, $wire.newTaskAssistantId); taskTitle = ''"
+            class="flex flex-col sm:flex-row gap-3"
+        >
             <div class="flex-1">
-                <x-input
-                    wire:model="newTaskTitle"
+                <input
                     type="text"
+                    x-model="taskTitle"
                     placeholder="Legg til ny oppgave..."
-                    class="w-full"
+                    class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-accent transition-colors"
                 />
             </div>
             <div class="flex gap-2">
@@ -66,9 +69,6 @@
                 </button>
             </div>
         </form>
-        @error('newTaskTitle')
-            <p class="mt-2 text-sm text-destructive">{{ $message }}</p>
-        @enderror
     </div>
 
     {{-- Pending Tasks List --}}
