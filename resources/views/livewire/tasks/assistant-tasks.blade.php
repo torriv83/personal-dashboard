@@ -175,23 +175,38 @@
                 @endif
 
                 @if($pendingTasks->isNotEmpty())
-                    <div class="bg-card border border-border rounded-lg overflow-hidden">
+                    <div
+                        class="bg-card border border-border rounded-lg overflow-hidden"
+                        x-data="{
+                            collapsed: JSON.parse(localStorage.getItem('task-dividers-assigned-{{ $assistant->id }}') || '{}'),
+                            toggleDivider(id) {
+                                this.collapsed[id] = !this.collapsed[id];
+                                localStorage.setItem('task-dividers-assigned-{{ $assistant->id }}', JSON.stringify(this.collapsed));
+                            },
+                            isCollapsed(id) {
+                                return id !== null && this.collapsed[id] === true;
+                            }
+                        }"
+                    >
                         <div class="divide-y divide-border">
+                            @php $currentDividerId = null; @endphp
                             @foreach($pendingTasks as $task)
                                 @if($task->is_divider)
+                                    @php $currentDividerId = $task->id; @endphp
                                     {{-- Divider --}}
                                     <div
                                         wire:key="assigned-task-{{ $task->id }}"
-                                        class="flex items-center gap-3 px-4 py-5 bg-muted-foreground/5 -my-px"
+                                        @click="toggleDivider({{ $task->id }})"
+                                        class="flex items-center gap-3 px-4 py-5 bg-muted-foreground/5 -my-px cursor-pointer hover:bg-muted-foreground/10 transition-colors"
                                     >
                                         <div class="flex-1 flex items-center gap-2">
                                             <div class="flex-1 border-t-2 border-muted-foreground/40"></div>
-                                            <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-3 h-3 text-muted-foreground/60 shrink-0 transition-transform duration-200" :class="collapsed[{{ $task->id }}] && '-rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                             </svg>
                                             @if($task->title)
                                                 <span class="text-xs text-muted-foreground uppercase tracking-wider font-medium">{{ $task->title }}</span>
-                                                <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-3 h-3 text-muted-foreground/60 shrink-0 transition-transform duration-200" :class="collapsed[{{ $task->id }}] && '-rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                                 </svg>
                                             @endif
@@ -201,6 +216,14 @@
                                 @else
                                     <div
                                         wire:key="assigned-task-{{ $task->id }}"
+                                        x-show="!collapsed[{{ $currentDividerId ?? 'null' }}]"
+                                        x-transition:enter="transition ease-out duration-150"
+                                        x-transition:enter-start="opacity-0 -translate-y-2"
+                                        x-transition:enter-end="opacity-100 translate-y-0"
+                                        x-transition:leave="transition ease-in duration-100"
+                                        x-transition:leave-start="opacity-100"
+                                        x-transition:leave-end="opacity-0"
+                                        x-cloak
                                         class="flex items-center gap-3 p-4"
                                     >
                                         {{-- Checkbox --}}
@@ -333,23 +356,38 @@
                     @endif
 
                     @if($pendingTasks->isNotEmpty())
-                        <div class="bg-card border border-border rounded-lg overflow-hidden">
+                        <div
+                            class="bg-card border border-border rounded-lg overflow-hidden"
+                            x-data="{
+                                collapsed: JSON.parse(localStorage.getItem('task-dividers-list-{{ $this->currentList->id }}') || '{}'),
+                                toggleDivider(id) {
+                                    this.collapsed[id] = !this.collapsed[id];
+                                    localStorage.setItem('task-dividers-list-{{ $this->currentList->id }}', JSON.stringify(this.collapsed));
+                                },
+                                isCollapsed(id) {
+                                    return id !== null && this.collapsed[id] === true;
+                                }
+                            }"
+                        >
                             <div class="divide-y divide-border">
+                                @php $currentDividerId = null; @endphp
                                 @foreach($pendingTasks as $task)
                                     @if($task->is_divider)
+                                        @php $currentDividerId = $task->id; @endphp
                                         {{-- Divider --}}
                                         <div
                                             wire:key="list-task-{{ $task->id }}"
-                                            class="flex items-center gap-3 px-4 py-5 bg-muted-foreground/5 -my-px"
+                                            @click="toggleDivider({{ $task->id }})"
+                                            class="flex items-center gap-3 px-4 py-5 bg-muted-foreground/5 -my-px cursor-pointer hover:bg-muted-foreground/10 transition-colors"
                                         >
                                             <div class="flex-1 flex items-center gap-2">
                                                 <div class="flex-1 border-t-2 border-muted-foreground/40"></div>
-                                                <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-3 h-3 text-muted-foreground/60 shrink-0 transition-transform duration-200" :class="collapsed[{{ $task->id }}] && '-rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                                 </svg>
                                                 @if($task->title)
                                                     <span class="text-xs text-muted-foreground uppercase tracking-wider font-medium">{{ $task->title }}</span>
-                                                    <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <svg class="w-3 h-3 text-muted-foreground/60 shrink-0 transition-transform duration-200" :class="collapsed[{{ $task->id }}] && '-rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                                     </svg>
                                                 @endif
@@ -359,6 +397,14 @@
                                     @else
                                         <div
                                             wire:key="list-task-{{ $task->id }}"
+                                            x-show="!collapsed[{{ $currentDividerId ?? 'null' }}]"
+                                            x-transition:enter="transition ease-out duration-150"
+                                            x-transition:enter-start="opacity-0 -translate-y-2"
+                                            x-transition:enter-end="opacity-100 translate-y-0"
+                                            x-transition:leave="transition ease-in duration-100"
+                                            x-transition:leave-start="opacity-100"
+                                            x-transition:leave-end="opacity-0"
+                                            x-cloak
                                             class="flex items-center gap-3 p-4"
                                         >
                                             {{-- Checkbox --}}
