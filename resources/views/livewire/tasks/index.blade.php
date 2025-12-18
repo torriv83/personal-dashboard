@@ -46,7 +46,7 @@
                             @endif
                         </div>
                         <p class="text-sm text-muted-foreground mt-1">
-                            {{ $list['task_count'] }} oppgaver
+                            {{ $list['task_count'] }} {{ $list['task_count'] === 1 ? 'oppgave' : 'oppgaver' }}
                             @if($list['task_count'] > 0)
                                 · {{ $list['completed_count'] }} fullført
                             @endif

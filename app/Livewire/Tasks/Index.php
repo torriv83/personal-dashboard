@@ -39,8 +39,8 @@ class Index extends Component
         /** @var Collection<int, array<string, mixed>> */
         return TaskList::query()
             ->with('assistant')
-            ->withCount('tasks')
-            ->withCount(['tasks as completed_count' => fn ($query) => $query->where('status', 'completed')])
+            ->withCount(['tasks' => fn ($query) => $query->where('is_divider', false)])
+            ->withCount(['tasks as completed_count' => fn ($query) => $query->where('status', 'completed')->where('is_divider', false)])
             ->orderBy('sort_order')
             ->get()
             ->map(fn (TaskList $list): array => [
