@@ -97,6 +97,16 @@
     {{-- Global Livewire event listeners --}}
     <script>
         document.addEventListener('livewire:init', () => {
+            // Handle 419 Page Expired (CSRF token mismatch)
+            // This happens when session expires while on lock screen
+            Livewire.hook('request', ({ fail }) => {
+                fail(({ status }) => {
+                    if (status === 419) {
+                        window.location.reload();
+                    }
+                });
+            });
+
             // Clear URL params when modals open via ?create=1
             Livewire.on('clear-url-params', () => {
                 const url = new URL(window.location);
