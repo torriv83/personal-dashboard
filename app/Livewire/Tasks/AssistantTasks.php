@@ -8,7 +8,9 @@ use App\Models\Shift;
 use App\Models\Task;
 use App\Models\TaskList;
 use App\Models\User;
+use App\Notifications\AssistantAbsenceDeleted;
 use App\Notifications\AssistantAbsenceRegistered;
+use App\Notifications\AssistantTaskUpdated;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -148,10 +150,19 @@ class AssistantTasks extends Component
             return;
         }
 
-        $task->status = $task->status === TaskStatus::Pending
-            ? TaskStatus::Completed
-            : TaskStatus::Pending;
+        $wasCompleted = $task->status === TaskStatus::Completed;
+        $task->status = $wasCompleted
+            ? TaskStatus::Pending
+            : TaskStatus::Completed;
         $task->save();
+
+        // Send push notification when task is completed
+        if (! $wasCompleted && $task->status === TaskStatus::Completed) {
+            $owner = User::first();
+            if ($owner) {
+                $owner->notify(new AssistantTaskUpdated($task, $this->assistant, 'completed'));
+            }
+        }
 
         // Clear computed caches
         unset($this->sharedLists, $this->assistantLists, $this->assignedTasks, $this->currentList);
@@ -178,7 +189,7 @@ class AssistantTasks extends Component
         // Get the next sort_order
         $maxSortOrder = $ownList->tasks()->max('sort_order') ?? 0;
 
-        Task::create([
+        $task = Task::create([
             'task_list_id' => $ownList->id,
             'title' => $validated['newTaskTitle'],
             'priority' => 'low',
@@ -186,6 +197,12 @@ class AssistantTasks extends Component
             'status' => TaskStatus::Pending,
             'sort_order' => $maxSortOrder + 1,
         ]);
+
+        // Send push notification to owner
+        $owner = User::first();
+        if ($owner) {
+            $owner->notify(new AssistantTaskUpdated($task, $this->assistant, 'added'));
+        }
 
         // Reset form
         $this->newTaskTitle = '';
@@ -218,7 +235,7 @@ class AssistantTasks extends Component
         // Get the next sort_order
         $maxSortOrder = $list->tasks()->max('sort_order') ?? 0;
 
-        Task::create([
+        $task = Task::create([
             'task_list_id' => $list->id,
             'title' => $validated['newTaskTitle'],
             'priority' => 'low',
@@ -226,6 +243,12 @@ class AssistantTasks extends Component
             'status' => TaskStatus::Pending,
             'sort_order' => $maxSortOrder + 1,
         ]);
+
+        // Send push notification to owner
+        $owner = User::first();
+        if ($owner) {
+            $owner->notify(new AssistantTaskUpdated($task, $this->assistant, 'added'));
+        }
 
         // Reset form
         $this->newTaskTitle = '';
@@ -419,7 +442,18 @@ class AssistantTasks extends Component
             return;
         }
 
+        // Store absence data before deletion for notification
+        $startsAt = $absence->starts_at;
+        $endsAt = $absence->ends_at;
+        $note = $absence->note;
+
         $absence->delete();
+
+        // Send push notification to owner
+        $owner = User::first();
+        if ($owner) {
+            $owner->notify(new AssistantAbsenceDeleted($this->assistant, $startsAt, $endsAt, $note));
+        }
 
         $this->dispatch('toast', type: 'success', message: 'Fravær slettet');
         unset($this->upcomingAbsences, $this->pastAbsences);
