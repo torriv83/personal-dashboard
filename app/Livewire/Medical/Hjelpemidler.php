@@ -29,6 +29,8 @@ class Hjelpemidler extends Component
 
     public ?int $editingItemKategoriId = null;
 
+    public ?int $editingItemParentId = null;
+
     public string $itemName = '';
 
     public string $itemUrl = '';
@@ -57,16 +59,21 @@ class Hjelpemidler extends Component
     public function kategorier(): Collection
     {
         return HjelpemiddelKategori::query()
-            ->with(['hjelpemidler' => fn ($query) => $query->orderBy('sort_order')])
+            ->with(['hjelpemidler' => fn ($query) => $query
+                ->whereNull('parent_id')
+                ->with('children.children') // Support 2 levels of nesting
+                ->orderBy('sort_order'),
+            ])
             ->orderBy('sort_order')
             ->get();
     }
 
-    public function openItemModal(?int $id = null, ?int $kategoriId = null): void
+    public function openItemModal(?int $id = null, ?int $kategoriId = null, ?int $parentId = null): void
     {
         $this->resetItemForm();
         $this->editingItemId = $id;
         $this->editingItemKategoriId = $kategoriId;
+        $this->editingItemParentId = $parentId;
 
         if ($id) {
             $item = Hjelpemiddel::find($id);
@@ -75,6 +82,15 @@ class Hjelpemidler extends Component
                 $this->itemUrl = $item->url ?? '';
                 $this->itemCustomFields = $item->custom_fields ?? [];
                 $this->editingItemKategoriId = $item->hjelpemiddel_kategori_id;
+                $this->editingItemParentId = $item->parent_id;
+            }
+        }
+
+        // If adding child to a parent, inherit the category
+        if ($parentId && ! $kategoriId) {
+            $parent = Hjelpemiddel::find($parentId);
+            if ($parent) {
+                $this->editingItemKategoriId = $parent->hjelpemiddel_kategori_id;
             }
         }
 
@@ -91,6 +107,7 @@ class Hjelpemidler extends Component
     {
         $this->editingItemId = null;
         $this->editingItemKategoriId = null;
+        $this->editingItemParentId = null;
         $this->itemName = '';
         $this->itemUrl = '';
         $this->itemCustomFields = [];
@@ -114,6 +131,7 @@ class Hjelpemidler extends Component
             'itemName' => 'required|string|max:255',
             'itemUrl' => 'nullable|url|max:2048',
             'editingItemKategoriId' => 'required|exists:hjelpemiddel_kategorier,id',
+            'editingItemParentId' => 'nullable|exists:hjelpemidler,id',
             'itemCustomFields' => 'array',
             'itemCustomFields.*.key' => 'required|string|max:255',
             'itemCustomFields.*.value' => 'required|string|max:1000',
@@ -134,6 +152,7 @@ class Hjelpemidler extends Component
 
         $data = [
             'hjelpemiddel_kategori_id' => $validated['editingItemKategoriId'],
+            'parent_id' => $validated['editingItemParentId'],
             'name' => $validated['itemName'],
             'url' => $validated['itemUrl'] ?: null,
             'custom_fields' => $customFields ?: null,
@@ -144,7 +163,9 @@ class Hjelpemidler extends Component
             $item?->update($data);
             $this->dispatch('toast', type: 'success', message: 'Hjelpemiddelet ble oppdatert');
         } else {
+            // Calculate sort_order based on siblings (same parent)
             $maxSortOrder = Hjelpemiddel::where('hjelpemiddel_kategori_id', $validated['editingItemKategoriId'])
+                ->where('parent_id', $validated['editingItemParentId'])
                 ->max('sort_order') ?? 0;
             $data['sort_order'] = $maxSortOrder + 1;
 
@@ -255,7 +276,7 @@ class Hjelpemidler extends Component
         unset($this->kategorier);
     }
 
-    public function updateItemOrder(int $kategoriId, string $item, int $position): void
+    public function updateItemOrder(int $kategoriId, string $item, int $position, ?int $parentId = null): void
     {
         [$type, $id] = explode('-', $item);
 
@@ -264,6 +285,7 @@ class Hjelpemidler extends Component
         }
 
         $items = Hjelpemiddel::where('hjelpemiddel_kategori_id', $kategoriId)
+            ->where('parent_id', $parentId)
             ->orderBy('sort_order')
             ->get();
 

@@ -27,6 +27,21 @@
             <span class="text-sm text-muted-foreground">Brukerpass:</span>
             <span class="text-sm font-medium text-foreground">{{ $this->brukerpass ?: 'Ikke satt' }}</span>
         </div>
+        @if($this->brukerpass)
+            <button
+                x-data="{ copied: false }"
+                @click="navigator.clipboard.writeText('{{ $this->brukerpass }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                class="p-1.5 text-muted-foreground hover:text-accent hover:bg-accent/10 rounded transition-colors cursor-pointer"
+                :title="copied ? 'Kopiert!' : 'Kopier'"
+            >
+                <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <svg x-show="copied" x-cloak class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </button>
+        @endif
         <button
             wire:click="openBrukerpassModal"
             class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
@@ -118,74 +133,7 @@
                             wire:ignore.self
                         >
                             @foreach($kategori->hjelpemidler as $item)
-                                <div
-                                    wire:key="item-{{ $item->id }}"
-                                    x-sort:item="'item-{{ $item->id }}'"
-                                    class="px-4 py-3 hover:bg-card-hover/50 transition-colors"
-                                >
-                                    <div class="flex items-start gap-3">
-                                        {{-- Drag handle --}}
-                                        <svg class="w-4 h-4 text-muted-foreground cursor-grab mt-0.5 shrink-0" x-sort:handle fill="currentColor" viewBox="0 0 24 24">
-                                            <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
-                                            <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
-                                            <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
-                                        </svg>
-
-                                        {{-- Content --}}
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-sm font-medium text-foreground">{{ $item->name }}</span>
-                                                @if($item->url)
-                                                    <a
-                                                        href="{{ $item->url }}"
-                                                        target="_blank"
-                                                        class="text-accent hover:underline cursor-pointer flex items-center gap-0.5"
-                                                        @click.stop
-                                                    >
-                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                        </svg>
-                                                    </a>
-                                                @endif
-                                            </div>
-
-                                            {{-- Custom fields --}}
-                                            @if($item->custom_fields && count($item->custom_fields) > 0)
-                                                <div class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
-                                                    @foreach($item->custom_fields as $field)
-                                                        <span class="text-xs text-muted-foreground">
-                                                            <span class="text-foreground/70">{{ $field['key'] }}:</span>
-                                                            {{ $field['value'] }}
-                                                        </span>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        {{-- Actions --}}
-                                        <div class="flex items-center gap-1 shrink-0">
-                                            <button
-                                                wire:click="openItemModal({{ $item->id }})"
-                                                class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
-                                                title="Rediger"
-                                            >
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </button>
-                                            <button
-                                                wire:click="deleteItem({{ $item->id }})"
-                                                wire:confirm="Er du sikker på at du vil slette dette hjelpemiddelet?"
-                                                class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
-                                                title="Slett"
-                                            >
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                @include('livewire.medical.partials.hjelpemiddel-item', ['item' => $item, 'kategoriId' => $kategori->id, 'depth' => 0])
                             @endforeach
                         </div>
                     @endif
@@ -241,20 +189,6 @@
                             autofocus
                         >
                         @error('itemName') <span class="text-xs text-red-400 mt-1">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-foreground mb-1">Kategori *</label>
-                        <select
-                            wire:model="editingItemKategoriId"
-                            class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
-                        >
-                            <option value="">Velg kategori...</option>
-                            @foreach($this->kategorier as $kat)
-                                <option value="{{ $kat->id }}">{{ $kat->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('editingItemKategoriId') <span class="text-xs text-red-400 mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
