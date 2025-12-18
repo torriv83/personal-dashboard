@@ -440,8 +440,12 @@ class Dashboard extends Component
             ->map(fn (Shift $shift) => [
                 'id' => $shift->id,
                 'name' => $shift->assistant->name ?? 'Ukjent',
-                'from' => $shift->starts_at->format('d.m.Y'),
-                'to' => $shift->ends_at->format('d.m.Y'),
+                'from' => $shift->is_all_day
+                    ? $shift->starts_at->format('d.m.Y')
+                    : $shift->starts_at->translatedFormat('j. M H:i'),
+                'to' => $shift->is_all_day
+                    ? $shift->ends_at->format('d.m.Y')
+                    : $shift->ends_at->translatedFormat('j. M H:i'),
             ])
             ->toArray();
     }
