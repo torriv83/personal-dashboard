@@ -1,7 +1,32 @@
 <div>
-    {{-- Sticky Header with dropdown --}}
+    {{-- Sticky Header with tabs --}}
     <header class="border-b border-white/10 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div class="max-w-4xl mx-auto px-4 py-4">
+            {{-- Tab Navigation --}}
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex gap-1 p-1 bg-card border border-border rounded-lg">
+                    <button
+                        wire:click="switchTab('tasks')"
+                        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer {{ $activeTab === 'tasks' ? 'bg-accent text-black' : 'text-muted-foreground hover:text-foreground hover:bg-card-hover' }}"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        <span>Oppgaver</span>
+                    </button>
+                    <button
+                        wire:click="switchTab('absence')"
+                        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer {{ $activeTab === 'absence' ? 'bg-accent text-black' : 'text-muted-foreground hover:text-foreground hover:bg-card-hover' }}"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>Tid borte</span>
+                    </button>
+                </div>
+            </div>
+
+            @if($activeTab === 'tasks')
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
@@ -97,12 +122,14 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </header>
 
     {{-- Main Content --}}
     <main class="flex-1">
         <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+            @if($activeTab === 'tasks')
             {{-- Greeting --}}
             <div>
                 <h1 class="text-2xl font-bold text-foreground">Hei, {{ $assistant->name }}!</h1>
@@ -392,6 +419,252 @@
                         </div>
                     @endif
                 @endif
+            @endif
+            @else
+            {{-- Absence Tab Content --}}
+            <div>
+                <h1 class="text-2xl font-bold text-foreground">Tid borte</h1>
+                <p class="text-muted-foreground mt-1">Registrer når du ikke kan jobbe</p>
+            </div>
+
+            {{-- Add Absence Button (when form is hidden) --}}
+            @if(!$showAbsenceForm)
+                <button
+                    wire:click="showCreateAbsenceForm"
+                    class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-accent text-black rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span class="font-medium">Legg til fravær</span>
+                </button>
+            @endif
+
+            {{-- Absence Form --}}
+            @if($showAbsenceForm)
+                <div class="bg-card border border-border rounded-lg p-4 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-foreground">
+                            {{ $editingAbsenceId ? 'Rediger fravær' : 'Nytt fravær' }}
+                        </h2>
+                        <button
+                            wire:click="cancelAbsenceForm"
+                            class="p-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <form wire:submit="saveAbsence" class="space-y-4">
+                        {{-- Date inputs --}}
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="absenceStartDate" class="block text-sm font-medium text-foreground mb-1">Fra dato</label>
+                                <input
+                                    wire:model="absenceStartDate"
+                                    type="date"
+                                    id="absenceStartDate"
+                                    class="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                />
+                                @error('absenceStartDate')
+                                    <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div>
+                                <label for="absenceEndDate" class="block text-sm font-medium text-foreground mb-1">Til dato</label>
+                                <input
+                                    wire:model="absenceEndDate"
+                                    type="date"
+                                    id="absenceEndDate"
+                                    class="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                />
+                                @error('absenceEndDate')
+                                    <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- All day checkbox --}}
+                        <div class="flex items-center gap-3">
+                            <button
+                                type="button"
+                                wire:click="$toggle('absenceIsAllDay')"
+                                class="relative w-11 h-6 rounded-full transition-colors cursor-pointer {{ $absenceIsAllDay ? 'bg-accent' : 'bg-input border border-border' }}"
+                            >
+                                <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform {{ $absenceIsAllDay ? 'translate-x-5' : '' }}"></span>
+                            </button>
+                            <label class="text-sm text-foreground cursor-pointer" wire:click="$toggle('absenceIsAllDay')">Hele dagen(e)</label>
+                        </div>
+
+                        {{-- Time inputs (shown when not all day) --}}
+                        @if(!$absenceIsAllDay)
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="absenceStartTime" class="block text-sm font-medium text-foreground mb-1">Fra klokkeslett</label>
+                                    <input
+                                        wire:model="absenceStartTime"
+                                        type="time"
+                                        id="absenceStartTime"
+                                        class="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                    />
+                                    @error('absenceStartTime')
+                                        <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label for="absenceEndTime" class="block text-sm font-medium text-foreground mb-1">Til klokkeslett</label>
+                                    <input
+                                        wire:model="absenceEndTime"
+                                        type="time"
+                                        id="absenceEndTime"
+                                        class="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                    />
+                                    @error('absenceEndTime')
+                                        <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Note --}}
+                        <div>
+                            <label for="absenceNote" class="block text-sm font-medium text-foreground mb-1">Merknad (valgfritt)</label>
+                            <input
+                                wire:model="absenceNote"
+                                type="text"
+                                id="absenceNote"
+                                placeholder="F.eks. Ferie, Syk, Legetime..."
+                                class="w-full px-3 py-2 bg-input border border-border rounded-md text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                            />
+                            @error('absenceNote')
+                                <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Submit button --}}
+                        <button
+                            type="submit"
+                            class="w-full px-4 py-3 bg-accent text-black rounded-lg hover:bg-accent-hover transition-colors cursor-pointer font-medium"
+                        >
+                            {{ $editingAbsenceId ? 'Lagre endringer' : 'Registrer fravær' }}
+                        </button>
+                    </form>
+                </div>
+            @endif
+
+            {{-- Upcoming Absences List --}}
+            @if($this->upcomingAbsences->isNotEmpty())
+                <div class="space-y-3">
+                    <h2 class="text-sm font-medium text-muted-foreground uppercase tracking-wider">Kommende fravær</h2>
+                    <div class="bg-card border border-border rounded-lg overflow-hidden divide-y divide-border">
+                        @foreach($this->upcomingAbsences as $absence)
+                            <div wire:key="absence-{{ $absence->id }}" class="p-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-foreground font-medium">
+                                            @if($absence->starts_at->isSameDay($absence->ends_at) || ($absence->is_all_day && $absence->starts_at->diffInDays($absence->ends_at) < 1))
+                                                {{ $absence->starts_at->translatedFormat('j. M Y') }}
+                                            @else
+                                                {{ $absence->starts_at->translatedFormat('j. M') }} - {{ $absence->ends_at->translatedFormat('j. M Y') }}
+                                            @endif
+                                        </div>
+                                        <div class="text-sm text-muted-foreground">
+                                            @if($absence->is_all_day)
+                                                Hele dagen
+                                            @else
+                                                {{ $absence->starts_at->format('H:i') }} - {{ $absence->ends_at->format('H:i') }}
+                                            @endif
+                                            @if($absence->note)
+                                                <span class="mx-1">•</span>
+                                                {{ $absence->note }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <button
+                                            wire:click="editAbsence({{ $absence->id }})"
+                                            class="p-2 text-muted-foreground hover:text-foreground hover:bg-card-hover rounded-md transition-colors cursor-pointer"
+                                            title="Rediger"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            wire:click="deleteAbsence({{ $absence->id }})"
+                                            wire:confirm="Er du sikker på at du vil slette dette fraværet?"
+                                            class="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors cursor-pointer"
+                                            title="Slett"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @elseif(!$showAbsenceForm)
+                <div class="bg-card border border-border rounded-lg p-8 text-center">
+                    <svg class="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <h3 class="text-lg font-medium text-foreground mb-1">Ingen planlagt fravær</h3>
+                    <p class="text-muted-foreground">Du har ikke registrert noe kommende fravær.</p>
+                </div>
+            @endif
+
+            {{-- Past Absences (expandable) --}}
+            @if($this->pastAbsences->isNotEmpty())
+                <div x-data="{ expanded: false }" class="bg-card border border-border rounded-lg overflow-hidden">
+                    <button
+                        @click="expanded = !expanded"
+                        class="w-full flex items-center justify-between p-4 hover:bg-card-hover transition-colors cursor-pointer"
+                    >
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-sm font-medium text-foreground">Tidligere fravær</span>
+                            <span class="text-xs text-muted-foreground">({{ $this->pastAbsences->count() }})</span>
+                        </div>
+                        <svg class="w-4 h-4 text-muted-foreground transition-transform" :class="{ 'rotate-180': expanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="expanded" x-collapse class="border-t border-border">
+                        <div class="divide-y divide-border">
+                            @foreach($this->pastAbsences as $absence)
+                                <div wire:key="past-absence-{{ $absence->id }}" class="p-4 opacity-60">
+                                    <div class="text-foreground">
+                                        @if($absence->starts_at->isSameDay($absence->ends_at) || ($absence->is_all_day && $absence->starts_at->diffInDays($absence->ends_at) < 1))
+                                            {{ $absence->starts_at->translatedFormat('j. M Y') }}
+                                        @else
+                                            {{ $absence->starts_at->translatedFormat('j. M') }} - {{ $absence->ends_at->translatedFormat('j. M Y') }}
+                                        @endif
+                                    </div>
+                                    <div class="text-sm text-muted-foreground">
+                                        @if($absence->is_all_day)
+                                            Hele dagen
+                                        @else
+                                            {{ $absence->starts_at->format('H:i') }} - {{ $absence->ends_at->format('H:i') }}
+                                        @endif
+                                        @if($absence->note)
+                                            <span class="mx-1">•</span>
+                                            {{ $absence->note }}
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
             @endif
         </div>
     </main>

@@ -9,12 +9,14 @@ beforeEach(function () {
 });
 
 it('returns manifest.json with correct content', function () {
+    $firstName = explode(' ', $this->assistant->name)[0];
+
     get(route('tasks.assistant.manifest', $this->assistant))
         ->assertOk()
         ->assertHeader('Content-Type', 'application/manifest+json')
         ->assertJson([
-            'name' => 'Tor - Oppgaver',
-            'short_name' => 'Oppgaver',
+            'name' => $firstName.' - Oppgaver',
+            'short_name' => $firstName.' - Oppgaver',
             'display' => 'standalone',
             'background_color' => '#1a1a1a',
             'theme_color' => '#1a1a1a',
@@ -30,7 +32,7 @@ it('returns manifest with correct start_url for assistant', function () {
     $manifest = $response->json();
 
     expect($manifest['start_url'])->toContain($this->assistant->token);
-    expect($manifest['scope'])->toBe('/oppgaver/'.$this->assistant->token.'/');
+    expect($manifest['scope'])->toBe('/oppgaver/'.$this->assistant->token);
 });
 
 it('returns service worker with correct content type', function () {
@@ -43,7 +45,7 @@ it('returns service worker with correct scope header', function () {
     $response = get(route('tasks.assistant.sw', $this->assistant))
         ->assertOk();
 
-    $expectedScope = '/oppgaver/'.$this->assistant->token.'/';
+    $expectedScope = '/oppgaver/'.$this->assistant->token;
     expect($response->headers->get('Service-Worker-Allowed'))->toBe($expectedScope);
 });
 
