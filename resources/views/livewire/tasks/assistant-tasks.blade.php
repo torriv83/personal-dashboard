@@ -3,7 +3,7 @@
     <header class="border-b border-white/10 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div class="max-w-4xl mx-auto px-4 py-4">
             {{-- Tab Navigation --}}
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-center sm:justify-start mb-4">
                 <div class="flex gap-1 p-1 bg-card border border-border rounded-lg">
                     <button
                         wire:click="switchTab('tasks')"
@@ -178,36 +178,58 @@
                     <div class="bg-card border border-border rounded-lg overflow-hidden">
                         <div class="divide-y divide-border">
                             @foreach($pendingTasks as $task)
-                                <div
-                                    wire:key="assigned-task-{{ $task->id }}"
-                                    class="flex items-center gap-3 p-4"
-                                >
-                                    {{-- Checkbox --}}
-                                    <button
-                                        wire:click="toggleTask({{ $task->id }})"
-                                        class="shrink-0 cursor-pointer"
-                                        title="Marker som fullført"
+                                @if($task->is_divider)
+                                    {{-- Divider --}}
+                                    <div
+                                        wire:key="assigned-task-{{ $task->id }}"
+                                        class="flex items-center gap-3 px-4 py-5 bg-muted-foreground/5 -my-px"
                                     >
-                                        <svg class="w-6 h-6 text-muted-foreground hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <rect x="4" y="4" width="16" height="16" rx="3" stroke-width="2"/>
-                                        </svg>
-                                    </button>
+                                        <div class="flex-1 flex items-center gap-2">
+                                            <div class="flex-1 border-t-2 border-muted-foreground/40"></div>
+                                            <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                            @if($task->title)
+                                                <span class="text-xs text-muted-foreground uppercase tracking-wider font-medium">{{ $task->title }}</span>
+                                                <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            @endif
+                                            <div class="flex-1 border-t-2 border-muted-foreground/40"></div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div
+                                        wire:key="assigned-task-{{ $task->id }}"
+                                        class="flex items-center gap-3 p-4"
+                                    >
+                                        {{-- Checkbox --}}
+                                        <button
+                                            wire:click="toggleTask({{ $task->id }})"
+                                            class="shrink-0 cursor-pointer"
+                                            title="Marker som fullført"
+                                        >
+                                            <svg class="w-6 h-6 text-muted-foreground hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <rect x="4" y="4" width="16" height="16" rx="3" stroke-width="2"/>
+                                            </svg>
+                                        </button>
 
-                                    {{-- Task Content --}}
-                                    <div class="flex-1 min-w-0">
-                                        <span class="text-foreground">
-                                            {{ $task->title }}
+                                        {{-- Task Content --}}
+                                        <div class="flex-1 min-w-0">
+                                            <span class="text-foreground">
+                                                {{ $task->title }}
+                                            </span>
+                                        </div>
+
+                                        {{-- Priority dot (mobile only) --}}
+                                        <div class="w-2.5 h-2.5 rounded-full shrink-0 sm:hidden {{ $task->priority->dotColor() }}" title="{{ $task->priority->label() }}"></div>
+
+                                        {{-- Priority badge (desktop only) --}}
+                                        <span class="hidden sm:inline-flex items-center px-2 py-0.5 text-xs font-medium rounded shrink-0 {{ $task->priority->bgColor() }} {{ $task->priority->color() }}">
+                                            {{ $task->priority->label() }}
                                         </span>
                                     </div>
-
-                                    {{-- Priority dot (mobile only) --}}
-                                    <div class="w-2.5 h-2.5 rounded-full shrink-0 sm:hidden {{ $task->priority->dotColor() }}" title="{{ $task->priority->label() }}"></div>
-
-                                    {{-- Priority badge (desktop only) --}}
-                                    <span class="hidden sm:inline-flex items-center px-2 py-0.5 text-xs font-medium rounded shrink-0 {{ $task->priority->bgColor() }} {{ $task->priority->color() }}">
-                                        {{ $task->priority->label() }}
-                                    </span>
-                                </div>
+                                @endif
                             @endforeach
                         </div>
                     </div>
@@ -314,36 +336,58 @@
                         <div class="bg-card border border-border rounded-lg overflow-hidden">
                             <div class="divide-y divide-border">
                                 @foreach($pendingTasks as $task)
-                                    <div
-                                        wire:key="list-task-{{ $task->id }}"
-                                        class="flex items-center gap-3 p-4"
-                                    >
-                                        {{-- Checkbox --}}
-                                        <button
-                                            wire:click="toggleTask({{ $task->id }})"
-                                            class="shrink-0 cursor-pointer"
-                                            title="Marker som fullført"
+                                    @if($task->is_divider)
+                                        {{-- Divider --}}
+                                        <div
+                                            wire:key="list-task-{{ $task->id }}"
+                                            class="flex items-center gap-3 px-4 py-5 bg-muted-foreground/5 -my-px"
                                         >
-                                            <svg class="w-6 h-6 text-muted-foreground hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <rect x="4" y="4" width="16" height="16" rx="3" stroke-width="2"/>
-                                            </svg>
-                                        </button>
+                                            <div class="flex-1 flex items-center gap-2">
+                                                <div class="flex-1 border-t-2 border-muted-foreground/40"></div>
+                                                <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                                @if($task->title)
+                                                    <span class="text-xs text-muted-foreground uppercase tracking-wider font-medium">{{ $task->title }}</span>
+                                                    <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                @endif
+                                                <div class="flex-1 border-t-2 border-muted-foreground/40"></div>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div
+                                            wire:key="list-task-{{ $task->id }}"
+                                            class="flex items-center gap-3 p-4"
+                                        >
+                                            {{-- Checkbox --}}
+                                            <button
+                                                wire:click="toggleTask({{ $task->id }})"
+                                                class="shrink-0 cursor-pointer"
+                                                title="Marker som fullført"
+                                            >
+                                                <svg class="w-6 h-6 text-muted-foreground hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <rect x="4" y="4" width="16" height="16" rx="3" stroke-width="2"/>
+                                                </svg>
+                                            </button>
 
-                                        {{-- Task Content --}}
-                                        <div class="flex-1 min-w-0">
-                                            <span class="text-foreground">
-                                                {{ $task->title }}
+                                            {{-- Task Content --}}
+                                            <div class="flex-1 min-w-0">
+                                                <span class="text-foreground">
+                                                    {{ $task->title }}
+                                                </span>
+                                            </div>
+
+                                            {{-- Priority dot (mobile only) --}}
+                                            <div class="w-2.5 h-2.5 rounded-full shrink-0 sm:hidden {{ $task->priority->dotColor() }}" title="{{ $task->priority->label() }}"></div>
+
+                                            {{-- Priority badge (desktop only) --}}
+                                            <span class="hidden sm:inline-flex items-center px-2 py-0.5 text-xs font-medium rounded shrink-0 {{ $task->priority->bgColor() }} {{ $task->priority->color() }}">
+                                                {{ $task->priority->label() }}
                                             </span>
                                         </div>
-
-                                        {{-- Priority dot (mobile only) --}}
-                                        <div class="w-2.5 h-2.5 rounded-full shrink-0 sm:hidden {{ $task->priority->dotColor() }}" title="{{ $task->priority->label() }}"></div>
-
-                                        {{-- Priority badge (desktop only) --}}
-                                        <span class="hidden sm:inline-flex items-center px-2 py-0.5 text-xs font-medium rounded shrink-0 {{ $task->priority->bgColor() }} {{ $task->priority->color() }}">
-                                            {{ $task->priority->label() }}
-                                        </span>
-                                    </div>
+                                    @endif
                                 @endforeach
                             </div>
                         </div>

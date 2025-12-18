@@ -59,7 +59,7 @@ class Show extends Component
     #[Computed]
     public function completedTasks(): Collection
     {
-        return $this->tasks->where('status', TaskStatus::Completed);
+        return $this->tasks->where('status', TaskStatus::Completed)->where('is_divider', false);
     }
 
     /**
@@ -176,6 +176,35 @@ class Show extends Component
         $nextIndex = ($currentIndex + 1) % count($priorities);
 
         $task->update(['priority' => $priorities[$nextIndex]]);
+
+        unset($this->tasks);
+    }
+
+    public function addDivider(?string $title = null): void
+    {
+        $maxSortOrder = $this->taskList->tasks()->max('sort_order') ?? 0;
+
+        Task::create([
+            'task_list_id' => $this->taskList->id,
+            'title' => $title ? trim($title) : '',
+            'is_divider' => true,
+            'status' => TaskStatus::Pending,
+            'priority' => TaskPriority::Low,
+            'sort_order' => $maxSortOrder + 1,
+        ]);
+
+        unset($this->tasks);
+        $this->dispatch('toast', type: 'success', message: 'Skillelinje lagt til');
+    }
+
+    public function updateDividerTitle(int $taskId, string $title): void
+    {
+        $task = Task::find($taskId);
+        if (! $task || $task->task_list_id !== $this->taskList->id || ! $task->is_divider) {
+            return;
+        }
+
+        $task->update(['title' => trim($title)]);
 
         unset($this->tasks);
     }

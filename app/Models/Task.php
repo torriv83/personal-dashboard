@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $assistant_id
  * @property TaskStatus $status
  * @property TaskPriority $priority
+ * @property bool $is_divider
  * @property int $sort_order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -31,6 +32,7 @@ class Task extends Model
         'assistant_id',
         'status',
         'priority',
+        'is_divider',
         'sort_order',
     ];
 
@@ -41,6 +43,7 @@ class Task extends Model
             'assistant_id' => 'integer',
             'status' => TaskStatus::class,
             'priority' => TaskPriority::class,
+            'is_divider' => 'boolean',
             'sort_order' => 'integer',
         ];
     }

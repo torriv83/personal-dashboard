@@ -67,6 +67,17 @@
                 >
                     Legg til
                 </button>
+
+                <button
+                    type="button"
+                    wire:click="addDivider"
+                    class="p-2 text-muted-foreground hover:text-foreground hover:bg-card-hover rounded-md transition-colors cursor-pointer"
+                    title="Legg til skillelinje"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg>
+                </button>
             </div>
         </form>
     </div>
@@ -76,120 +87,213 @@
         <div class="bg-card border border-border rounded-lg overflow-hidden">
             <div class="divide-y divide-border" x-sort="$wire.updateOrder($item, $position)" wire:ignore.self>
                 @foreach($this->pendingTasks as $task)
-                    <div
-                        wire:key="task-{{ $task->id }}"
-                        x-sort:item="'task-{{ $task->id }}'"
-                        class="flex items-center gap-3 p-4 hover:bg-card-hover transition-colors"
-                    >
-                        {{-- Drag Handle --}}
-                        <svg
-                            x-sort:handle
-                            class="w-4 h-4 text-muted-foreground cursor-grab shrink-0"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                            @click.stop
-                        >
-                            <circle cx="9" cy="6" r="1.5" />
-                            <circle cx="15" cy="6" r="1.5" />
-                            <circle cx="9" cy="12" r="1.5" />
-                            <circle cx="15" cy="12" r="1.5" />
-                            <circle cx="9" cy="18" r="1.5" />
-                            <circle cx="15" cy="18" r="1.5" />
-                        </svg>
-
-                        {{-- Checkbox --}}
-                        <button
-                            wire:click="toggleTaskStatus({{ $task->id }})"
-                            class="shrink-0 cursor-pointer"
-                            title="Marker som fullført"
-                        >
-                            <svg class="w-6 h-6 text-muted-foreground hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <rect x="4" y="4" width="16" height="16" rx="3" stroke-width="2"/>
-                            </svg>
-                        </button>
-
-                        {{-- Task Content --}}
+                    @if($task->is_divider)
+                        {{-- Divider --}}
                         <div
-                            class="flex-1 min-w-0"
+                            wire:key="task-{{ $task->id }}"
+                            x-sort:item="'task-{{ $task->id }}'"
+                            class="flex items-center gap-3 px-4 py-5 bg-muted-foreground/5 -my-px border-y-0 hover:bg-muted-foreground/10 transition-colors"
                             x-data="{ editing: false, title: '{{ addslashes($task->title) }}' }"
-                            @click.stop
                         >
-                            {{-- View Mode --}}
-                            <div x-show="!editing" class="flex items-center gap-2 flex-wrap">
-                                {{-- Priority Indicator (click to cycle) --}}
-                                <button
-                                    wire:click="cycleTaskPriority({{ $task->id }})"
-                                    class="shrink-0 cursor-pointer"
-                                    title="Klikk for å endre prioritet"
-                                >
-                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded {{ $task->priority->bgColor() }} {{ $task->priority->color() }} hover:opacity-80 transition-opacity">
-                                        {{ $task->priority->label() }}
-                                    </span>
-                                </button>
+                            {{-- Drag Handle --}}
+                            <svg
+                                x-sort:handle
+                                class="w-4 h-4 text-muted-foreground cursor-grab shrink-0"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                                @click.stop
+                            >
+                                <circle cx="9" cy="6" r="1.5" />
+                                <circle cx="15" cy="6" r="1.5" />
+                                <circle cx="9" cy="12" r="1.5" />
+                                <circle cx="15" cy="12" r="1.5" />
+                                <circle cx="9" cy="18" r="1.5" />
+                                <circle cx="15" cy="18" r="1.5" />
+                            </svg>
 
-                                {{-- Title (click to edit) --}}
-                                <span
-                                    @click="editing = true; $nextTick(() => $refs.input{{ $task->id }}.focus())"
-                                    class="text-foreground cursor-pointer hover:text-accent transition-colors"
-                                    title="Klikk for å redigere"
-                                >
-                                    {{ $task->title }}
-                                </span>
+                            {{-- Divider Content --}}
+                            <div class="flex-1 flex items-center gap-3" @click.stop>
+                                {{-- View Mode --}}
+                                <template x-if="!editing">
+                                    <div class="flex-1 flex items-center gap-2 cursor-pointer" @click="editing = true; $nextTick(() => $refs.dividerInput{{ $task->id }}.focus())">
+                                        <div class="flex-1 border-t-2 border-muted-foreground/40"></div>
+                                        <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                        @if($task->title)
+                                            <span class="text-xs text-muted-foreground uppercase tracking-wider font-medium">{{ $task->title }}</span>
+                                            <svg class="w-3 h-3 text-muted-foreground/60 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        @endif
+                                        <div class="flex-1 border-t-2 border-muted-foreground/40"></div>
+                                    </div>
+                                </template>
 
-                                {{-- Assistant Badge --}}
-                                @if($task->assistant)
-                                    <span class="px-2 py-0.5 text-xs text-muted-foreground bg-muted-foreground/10 rounded">
-                                        {{ $task->assistant->name }}
-                                    </span>
-                                @endif
+                                {{-- Edit Mode --}}
+                                <template x-if="editing">
+                                    <div class="flex-1 flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            x-model="title"
+                                            x-ref="dividerInput{{ $task->id }}"
+                                            placeholder="Valgfri tittel..."
+                                            @keydown.enter="$wire.updateDividerTitle({{ $task->id }}, title); editing = false"
+                                            @keydown.escape="title = '{{ addslashes($task->title) }}'; editing = false"
+                                            @click.away="if (title !== '{{ addslashes($task->title) }}') { $wire.updateDividerTitle({{ $task->id }}, title) }; editing = false"
+                                            class="flex-1 px-2 py-1 text-foreground bg-input border border-border rounded focus:outline-none focus:ring-1 focus:ring-accent text-sm"
+                                        />
+                                        <button
+                                            @click="$wire.updateDividerTitle({{ $task->id }}, title); editing = false"
+                                            class="p-1 text-accent hover:text-accent-hover cursor-pointer"
+                                            title="Lagre"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            @click="title = '{{ addslashes($task->title) }}'; editing = false"
+                                            class="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                                            title="Avbryt"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </template>
                             </div>
 
-                            {{-- Edit Mode --}}
-                            <div x-show="editing" x-cloak class="flex items-center gap-2">
-                                <input
-                                    type="text"
-                                    x-model="title"
-                                    x-ref="input{{ $task->id }}"
-                                    @keydown.enter="$wire.updateTaskTitle({{ $task->id }}, title); editing = false"
-                                    @keydown.escape="title = '{{ addslashes($task->title) }}'; editing = false"
-                                    @click.away="if (title !== '{{ addslashes($task->title) }}') { $wire.updateTaskTitle({{ $task->id }}, title) }; editing = false"
-                                    class="flex-1 px-2 py-1 text-foreground bg-input border border-border rounded focus:outline-none focus:ring-1 focus:ring-accent"
-                                />
-                                <button
-                                    @click="$wire.updateTaskTitle({{ $task->id }}, title); editing = false"
-                                    class="p-1 text-accent hover:text-accent-hover cursor-pointer"
-                                    title="Lagre"
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </button>
-                                <button
-                                    @click="title = '{{ addslashes($task->title) }}'; editing = false"
-                                    class="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-                                    title="Avbryt"
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Actions --}}
-                        <div class="flex items-center gap-1 shrink-0">
+                            {{-- Delete Button --}}
                             <button
                                 wire:click="deleteTask({{ $task->id }})"
-                                wire:confirm="Er du sikker på at du vil slette denne oppgaven?"
-                                class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
-                                title="Slett"
+                                wire:confirm="Er du sikker på at du vil slette denne skillelinjen?"
+                                class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer shrink-0"
+                                title="Slett skillelinje"
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </button>
                         </div>
-                    </div>
+                    @else
+                        {{-- Regular Task --}}
+                        <div
+                            wire:key="task-{{ $task->id }}"
+                            x-sort:item="'task-{{ $task->id }}'"
+                            class="flex items-center gap-3 p-4 hover:bg-card-hover transition-colors"
+                        >
+                            {{-- Drag Handle --}}
+                            <svg
+                                x-sort:handle
+                                class="w-4 h-4 text-muted-foreground cursor-grab shrink-0"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                                @click.stop
+                            >
+                                <circle cx="9" cy="6" r="1.5" />
+                                <circle cx="15" cy="6" r="1.5" />
+                                <circle cx="9" cy="12" r="1.5" />
+                                <circle cx="15" cy="12" r="1.5" />
+                                <circle cx="9" cy="18" r="1.5" />
+                                <circle cx="15" cy="18" r="1.5" />
+                            </svg>
+
+                            {{-- Checkbox --}}
+                            <button
+                                wire:click="toggleTaskStatus({{ $task->id }})"
+                                class="shrink-0 cursor-pointer"
+                                title="Marker som fullført"
+                            >
+                                <svg class="w-6 h-6 text-muted-foreground hover:text-foreground transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="4" y="4" width="16" height="16" rx="3" stroke-width="2"/>
+                                </svg>
+                            </button>
+
+                            {{-- Task Content --}}
+                            <div
+                                class="flex-1 min-w-0"
+                                x-data="{ editing: false, title: '{{ addslashes($task->title) }}' }"
+                                @click.stop
+                            >
+                                {{-- View Mode --}}
+                                <div x-show="!editing" class="flex items-center gap-2 flex-wrap">
+                                    {{-- Priority Indicator (click to cycle) --}}
+                                    <button
+                                        wire:click="cycleTaskPriority({{ $task->id }})"
+                                        class="shrink-0 cursor-pointer"
+                                        title="Klikk for å endre prioritet"
+                                    >
+                                        <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded {{ $task->priority->bgColor() }} {{ $task->priority->color() }} hover:opacity-80 transition-opacity">
+                                            {{ $task->priority->label() }}
+                                        </span>
+                                    </button>
+
+                                    {{-- Title (click to edit) --}}
+                                    <span
+                                        @click="editing = true; $nextTick(() => $refs.input{{ $task->id }}.focus())"
+                                        class="text-foreground cursor-pointer hover:text-accent transition-colors"
+                                        title="Klikk for å redigere"
+                                    >
+                                        {{ $task->title }}
+                                    </span>
+
+                                    {{-- Assistant Badge --}}
+                                    @if($task->assistant)
+                                        <span class="px-2 py-0.5 text-xs text-muted-foreground bg-muted-foreground/10 rounded">
+                                            {{ $task->assistant->name }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                {{-- Edit Mode --}}
+                                <div x-show="editing" x-cloak class="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        x-model="title"
+                                        x-ref="input{{ $task->id }}"
+                                        @keydown.enter="$wire.updateTaskTitle({{ $task->id }}, title); editing = false"
+                                        @keydown.escape="title = '{{ addslashes($task->title) }}'; editing = false"
+                                        @click.away="if (title !== '{{ addslashes($task->title) }}') { $wire.updateTaskTitle({{ $task->id }}, title) }; editing = false"
+                                        class="flex-1 px-2 py-1 text-foreground bg-input border border-border rounded focus:outline-none focus:ring-1 focus:ring-accent"
+                                    />
+                                    <button
+                                        @click="$wire.updateTaskTitle({{ $task->id }}, title); editing = false"
+                                        class="p-1 text-accent hover:text-accent-hover cursor-pointer"
+                                        title="Lagre"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        @click="title = '{{ addslashes($task->title) }}'; editing = false"
+                                        class="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                                        title="Avbryt"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Actions --}}
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button
+                                    wire:click="deleteTask({{ $task->id }})"
+                                    wire:confirm="Er du sikker på at du vil slette denne oppgaven?"
+                                    class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                                    title="Slett"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    @endif
                 @endforeach
             </div>
         </div>
@@ -273,15 +377,6 @@
 
                             {{-- Actions --}}
                             <div class="flex items-center gap-1 shrink-0">
-                                <button
-                                    wire:click="openEditModal({{ $task->id }})"
-                                    class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
-                                    title="Rediger"
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                </button>
                                 <button
                                     wire:click="deleteTask({{ $task->id }})"
                                     wire:confirm="Er du sikker på at du vil slette denne oppgaven?"

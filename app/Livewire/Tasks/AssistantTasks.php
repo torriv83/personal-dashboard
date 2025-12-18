@@ -114,7 +114,7 @@ class AssistantTasks extends Component
     }
 
     /**
-     * Get tasks assigned directly to this assistant on non-shared lists.
+     * Get all tasks from lists assigned to this assistant (including dividers).
      *
      * @return Collection<int, Task>
      */
@@ -122,10 +122,11 @@ class AssistantTasks extends Component
     public function assignedTasks(): Collection
     {
         return Task::query()
-            ->where('assistant_id', $this->assistant->id)
-            ->whereHas('taskList', fn ($q) => $q->where('is_shared', false))
+            ->whereHas('taskList', fn ($q) => $q
+                ->where('assistant_id', $this->assistant->id)
+                ->where('is_shared', false)
+            )
             ->with('taskList')
-            ->orderByRaw("CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END")
             ->orderBy('sort_order')
             ->orderBy('created_at')
             ->get();
