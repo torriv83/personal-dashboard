@@ -79,7 +79,7 @@
                     @contextmenu.prevent="
                         const x = Math.min($event.clientX, window.innerWidth - 200);
                         const y = Math.min($event.clientY, window.innerHeight - 200);
-                        $store.assistantMenu.open(x, y, {{ $assistant->id }}, {{ $isDeleted ? 'true' : 'false' }})
+                        $store.assistantMenu.open(x, y, {{ $assistant->id }}, {{ $isDeleted ? 'true' : 'false' }}, '{{ $assistant->token }}')
                     "
                 >
                     {{-- Rad 1: Avatar + Navn + Handlinger --}}
@@ -181,7 +181,7 @@
                     @contextmenu.prevent="
                         const x = Math.min($event.clientX, window.innerWidth - 200);
                         const y = Math.min($event.clientY, window.innerHeight - 200);
-                        $store.assistantMenu.open(x, y, {{ $assistant->id }}, {{ $isDeleted ? 'true' : 'false' }})
+                        $store.assistantMenu.open(x, y, {{ $assistant->id }}, {{ $isDeleted ? 'true' : 'false' }}, '{{ $assistant->token }}')
                     "
                 >
                     <div class="flex items-center gap-3">

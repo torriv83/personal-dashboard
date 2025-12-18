@@ -97,13 +97,15 @@ Alpine.store('assistantMenu', {
     y: 0,
     assistantId: null,
     isDeleted: false,
+    token: null,
 
-    open(x, y, assistantId, isDeleted = false) {
+    open(x, y, assistantId, isDeleted = false, token = null) {
         this.show = true;
         this.x = x;
         this.y = y;
         this.assistantId = assistantId;
         this.isDeleted = isDeleted;
+        this.token = token;
     },
 
     hide() {
@@ -131,6 +133,13 @@ Alpine.store('assistantMenu', {
         } else {
             if (actionName === 'view') {
                 window.location.href = `/bpa/assistenter/${this.assistantId}`;
+            } else if (actionName === 'copyTasksLink') {
+                const tasksUrl = `${window.location.origin}/oppgaver/${this.token}`;
+                navigator.clipboard.writeText(tasksUrl).then(() => {
+                    window.dispatchEvent(new CustomEvent('toast', {
+                        detail: { message: 'Oppgaveliste-link kopiert!' }
+                    }));
+                });
             } else if (actionName === 'edit') {
                 wire.call('editAssistant', this.assistantId);
             } else if (actionName === 'delete') {
