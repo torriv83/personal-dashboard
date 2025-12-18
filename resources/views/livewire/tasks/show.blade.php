@@ -25,7 +25,7 @@
                     @endif
                 </div>
                 <p class="text-sm text-muted-foreground mt-1 hidden sm:block">
-                    {{ $this->pendingTasks->count() }} av {{ $this->tasks->count() }} oppgaver gjenstår
+                    {{ $this->pendingTasks->where('is_divider', false)->count() }} av {{ $this->tasks->where('is_divider', false)->count() }} oppgaver gjenstår
                 </p>
             </div>
         </div>

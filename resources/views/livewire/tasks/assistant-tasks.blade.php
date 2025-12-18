@@ -78,7 +78,7 @@
                             <div class="flex-1 min-w-0">
                                 <div class="text-sm font-medium text-foreground">Dine oppgaver</div>
                                 <div class="text-xs text-muted-foreground">
-                                    {{ $this->assignedTasks->where('status', App\Enums\TaskStatus::Pending)->count() }} gjenstår
+                                    {{ $this->assignedTasks->where('status', App\Enums\TaskStatus::Pending)->where('is_divider', false)->count() }} av {{ $this->assignedTasks->where('is_divider', false)->count() }} gjenstår
                                 </div>
                             </div>
                             @if($currentListId === null)
@@ -108,7 +108,7 @@
                                     <div class="flex-1 min-w-0">
                                         <div class="text-sm font-medium text-foreground truncate">{{ $list->name }}</div>
                                         <div class="text-xs text-muted-foreground">
-                                            {{ $list->tasks->where('status', App\Enums\TaskStatus::Pending)->count() }} av {{ $list->tasks->count() }} gjenstår
+                                            {{ $list->tasks->where('status', App\Enums\TaskStatus::Pending)->where('is_divider', false)->count() }} av {{ $list->tasks->where('is_divider', false)->count() }} gjenstår
                                         </div>
                                     </div>
                                     @if($currentListId === $list->id)
