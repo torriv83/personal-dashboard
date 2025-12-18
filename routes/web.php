@@ -13,6 +13,7 @@ use App\Livewire\Economy\Index as EconomyIndex;
 use App\Livewire\Games\Rommers;
 use App\Livewire\Medical\Dashboard as MedicalDashboard;
 use App\Livewire\Medical\Equipment;
+use App\Livewire\Medical\Hjelpemidler;
 use App\Livewire\Medical\Prescriptions;
 use App\Livewire\Medical\Weight;
 use App\Livewire\Tasks\AssistantTasks;
@@ -67,6 +68,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/utstyr', Equipment::class)->name('equipment');
         Route::get('/resepter', Prescriptions::class)->name('prescriptions');
         Route::get('/vekt', Weight::class)->name('weight');
+        Route::get('/hjelpemidler', Hjelpemidler::class)->name('hjelpemidler');
     });
 
     // Økonomi
