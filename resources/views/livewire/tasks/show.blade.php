@@ -132,7 +132,15 @@
                                 <template x-if="!editing">
                                     <div class="flex-1 flex items-center gap-2">
                                         <div class="flex-1 border-t-2 border-muted-foreground/40"></div>
-                                        <svg class="w-3 h-3 text-muted-foreground/60 shrink-0 transition-transform duration-200" :class="collapsed[{{ $task->id }}] && '-rotate-90'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg
+                                            class="w-3 h-3 text-muted-foreground/60 shrink-0 transition-transform duration-200 hover:text-foreground cursor-pointer"
+                                            :class="collapsed[{{ $task->id }}] && '-rotate-90'"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                            @click.stop="editing = true; $nextTick(() => $refs.dividerInput{{ $task->id }}.focus())"
+                                            title="Klikk for å redigere tittel"
+                                        >
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                         </svg>
                                         @if($task->title)
