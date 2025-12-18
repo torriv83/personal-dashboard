@@ -32,17 +32,6 @@ class Show extends Component
 
     public ?int $newTaskAssistantId = null;
 
-    // Edit task modal
-    public bool $showEditModal = false;
-
-    public ?int $editingTaskId = null;
-
-    public string $editTaskTitle = '';
-
-    public string $editTaskPriority = 'medium';
-
-    public ?int $editTaskAssistantId = null;
-
     /**
      * @return Collection<int, Task>
      */
@@ -160,56 +149,38 @@ class Show extends Component
         unset($this->tasks);
     }
 
-    public function openEditModal(int $taskId): void
+    public function updateTaskTitle(int $taskId, string $title): void
     {
         $task = Task::find($taskId);
         if (! $task || $task->task_list_id !== $this->taskList->id) {
             return;
         }
 
-        $this->editingTaskId = $taskId;
-        $this->editTaskTitle = $task->title;
-        $this->editTaskPriority = $task->priority->value;
-        $this->editTaskAssistantId = $task->assistant_id;
-        $this->showEditModal = true;
+        $title = trim($title);
+        if (empty($title)) {
+            return;
+        }
+
+        $task->update(['title' => $title]);
+
+        unset($this->tasks);
+        $this->dispatch('toast', type: 'success', message: 'Oppgave oppdatert');
     }
 
-    public function closeEditModal(): void
+    public function cycleTaskPriority(int $taskId): void
     {
-        $this->showEditModal = false;
-        $this->resetEditForm();
-    }
-
-    public function saveTask(): void
-    {
-        $validated = $this->validate([
-            'editTaskTitle' => 'required|string|max:255',
-            'editTaskPriority' => 'required|in:low,medium,high',
-            'editTaskAssistantId' => 'nullable|exists:assistants,id',
-        ], [
-            'editTaskTitle.required' => 'Tittel er påkrevd.',
-            'editTaskTitle.max' => 'Tittel kan ikke være lengre enn 255 tegn.',
-        ]);
-
-        $task = Task::find($this->editingTaskId);
+        $task = Task::find($taskId);
         if (! $task || $task->task_list_id !== $this->taskList->id) {
             return;
         }
 
-        // If list has an assistant, use that instead of the form value
-        $assistantId = $this->listHasAssistant
-            ? $this->taskList->assistant_id
-            : $validated['editTaskAssistantId'];
+        $priorities = [TaskPriority::Low, TaskPriority::Medium, TaskPriority::High];
+        $currentIndex = array_search($task->priority, $priorities);
+        $nextIndex = ($currentIndex + 1) % count($priorities);
 
-        $task->update([
-            'title' => $validated['editTaskTitle'],
-            'priority' => $validated['editTaskPriority'],
-            'assistant_id' => $assistantId,
-        ]);
+        $task->update(['priority' => $priorities[$nextIndex]]);
 
-        $this->closeEditModal();
         unset($this->tasks);
-        $this->dispatch('toast', type: 'success', message: 'Oppgave oppdatert');
     }
 
     public function deleteTask(int $taskId): void
@@ -264,15 +235,6 @@ class Show extends Component
         }
 
         unset($this->tasks);
-    }
-
-    private function resetEditForm(): void
-    {
-        $this->editingTaskId = null;
-        $this->editTaskTitle = '';
-        $this->editTaskPriority = 'medium';
-        $this->editTaskAssistantId = null;
-        $this->resetValidation();
     }
 
     public function render()

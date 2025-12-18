@@ -109,17 +109,30 @@
                         </button>
 
                         {{-- Task Content --}}
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                {{-- Priority Indicator --}}
-                                <div class="shrink-0">
-                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded {{ $task->priority->bgColor() }} {{ $task->priority->color() }}">
+                        <div
+                            class="flex-1 min-w-0"
+                            x-data="{ editing: false, title: '{{ addslashes($task->title) }}' }"
+                            @click.stop
+                        >
+                            {{-- View Mode --}}
+                            <div x-show="!editing" class="flex items-center gap-2 flex-wrap">
+                                {{-- Priority Indicator (click to cycle) --}}
+                                <button
+                                    wire:click="cycleTaskPriority({{ $task->id }})"
+                                    class="shrink-0 cursor-pointer"
+                                    title="Klikk for å endre prioritet"
+                                >
+                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded {{ $task->priority->bgColor() }} {{ $task->priority->color() }} hover:opacity-80 transition-opacity">
                                         {{ $task->priority->label() }}
                                     </span>
-                                </div>
+                                </button>
 
-                                {{-- Title --}}
-                                <span class="text-foreground">
+                                {{-- Title (click to edit) --}}
+                                <span
+                                    @click="editing = true; $nextTick(() => $refs.input{{ $task->id }}.focus())"
+                                    class="text-foreground cursor-pointer hover:text-accent transition-colors"
+                                    title="Klikk for å redigere"
+                                >
                                     {{ $task->title }}
                                 </span>
 
@@ -130,19 +143,41 @@
                                     </span>
                                 @endif
                             </div>
+
+                            {{-- Edit Mode --}}
+                            <div x-show="editing" x-cloak class="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    x-model="title"
+                                    x-ref="input{{ $task->id }}"
+                                    @keydown.enter="$wire.updateTaskTitle({{ $task->id }}, title); editing = false"
+                                    @keydown.escape="title = '{{ addslashes($task->title) }}'; editing = false"
+                                    @click.away="if (title !== '{{ addslashes($task->title) }}') { $wire.updateTaskTitle({{ $task->id }}, title) }; editing = false"
+                                    class="flex-1 px-2 py-1 text-foreground bg-input border border-border rounded focus:outline-none focus:ring-1 focus:ring-accent"
+                                />
+                                <button
+                                    @click="$wire.updateTaskTitle({{ $task->id }}, title); editing = false"
+                                    class="p-1 text-accent hover:text-accent-hover cursor-pointer"
+                                    title="Lagre"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </button>
+                                <button
+                                    @click="title = '{{ addslashes($task->title) }}'; editing = false"
+                                    class="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                                    title="Avbryt"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         {{-- Actions --}}
                         <div class="flex items-center gap-1 shrink-0">
-                            <button
-                                wire:click="openEditModal({{ $task->id }})"
-                                class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
-                                title="Rediger"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
                             <button
                                 wire:click="deleteTask({{ $task->id }})"
                                 wire:confirm="Er du sikker på at du vil slette denne oppgaven?"
@@ -264,49 +299,4 @@
             </div>
         </div>
     @endif
-
-    {{-- Edit Task Modal --}}
-    <div x-data="{ show: @entangle('showEditModal') }">
-        <x-modal name="edit-task" title="Rediger oppgave">
-            <form wire:submit="saveTask" class="space-y-4">
-                <x-input
-                    wire:model="editTaskTitle"
-                    label="Tittel"
-                    type="text"
-                    placeholder="Oppgavetittel"
-                />
-
-                <x-select wire:model="editTaskPriority" label="Prioritet">
-                    @foreach($this->priorityOptions as $value => $label)
-                        <option value="{{ $value }}">{{ $label }}</option>
-                    @endforeach
-                </x-select>
-
-                @unless($this->listHasAssistant)
-                    <x-select wire:model="editTaskAssistantId" label="Assistent">
-                        <option value="">Ingen assistent</option>
-                        @foreach($this->assistants as $assistant)
-                            <option value="{{ $assistant->id }}">{{ $assistant->name }}</option>
-                        @endforeach
-                    </x-select>
-                @endunless
-
-                <div class="flex justify-end gap-2 pt-4">
-                    <button
-                        type="button"
-                        wire:click="closeEditModal"
-                        class="px-4 py-2 text-foreground bg-card-hover border border-border rounded-md hover:bg-input transition-colors cursor-pointer"
-                    >
-                        Avbryt
-                    </button>
-                    <button
-                        type="submit"
-                        class="px-4 py-2 text-black bg-accent rounded-md hover:bg-accent-hover transition-colors cursor-pointer"
-                    >
-                        Lagre
-                    </button>
-                </div>
-            </form>
-        </x-modal>
-    </div>
 </x-page-container>
