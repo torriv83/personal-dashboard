@@ -28,6 +28,11 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // Skip livewire requests - they should not be cached
+    if (url.pathname.startsWith('/livewire/')) {
+        return;
+    }
+
     // For static assets (css, js, images), use cache-first
     if (url.pathname.startsWith('/build/') || url.pathname.startsWith('/icons/')) {
         event.respondWith(
@@ -44,11 +49,24 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // For everything else (HTML, API), use network-first
+    // For HTML pages, use network-first with cache fallback
+    // Cache successful responses for offline use
     event.respondWith(
-        fetch(event.request).catch(() => {
-            return caches.match(event.request);
-        })
+        fetch(event.request)
+            .then((response) => {
+                // Only cache successful HTML responses
+                if (response.ok && response.headers.get('content-type')?.includes('text/html')) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, clone);
+                    });
+                }
+                return response;
+            })
+            .catch(() => {
+                // Network failed - try to return cached version
+                return caches.match(event.request);
+            })
     );
 });
 
