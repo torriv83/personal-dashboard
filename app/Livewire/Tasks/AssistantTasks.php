@@ -361,6 +361,20 @@ class AssistantTasks extends Component
             }
         }
 
+        // Sjekk for overlappende fravær
+        $overlapping = Shift::findOverlappingUnavailability(
+            $this->assistant->id,
+            $startsAt,
+            $endsAt,
+            $this->editingAbsenceId
+        );
+
+        if ($overlapping) {
+            $this->addError('absenceStartDate', 'Det finnes allerede et fravær som overlapper med denne perioden.');
+
+            return;
+        }
+
         $data = [
             'assistant_id' => $this->assistant->id,
             'starts_at' => $startsAt,
