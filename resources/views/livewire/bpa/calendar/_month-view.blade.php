@@ -150,6 +150,7 @@
                                         @php $assistantColor = $shift->assistant?->color ?? '#6b7280'; @endphp
                                         @if($shift->is_unavailable)
                                             <div
+                                                @mousedown.stop
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
                                                 @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, true)"
                                                 draggable="true"
@@ -165,6 +166,7 @@
                                             </div>
                                         @else
                                             <div
+                                                @mousedown.stop
                                                 @click.stop="handleShiftClick({{ $shift->id }})"
                                                 @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, false)"
                                                 draggable="true"
