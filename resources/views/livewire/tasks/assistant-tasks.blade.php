@@ -1,4 +1,90 @@
-<div>
+<div
+    x-data="{
+        showCheckmark: false,
+        touchStartX: 0,
+        touchEndX: 0,
+        listIds: [null, ...@js($this->sharedLists->pluck('id')->toArray())],
+        get currentIndex() {
+            return this.listIds.indexOf($wire.currentListId);
+        },
+        completeTask(taskId) {
+            // Show checkmark animation
+            this.showCheckmark = true;
+
+            // Play sound
+            const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYNbgH8AAAAAAAAAAAAAAAAAAAAAP/7UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/7UEAAAAWQCYBQAgAAUoEQCgBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//tQQAABkcAR//AAAB5AAAANIMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
+            audio.volume = 0.3;
+            audio.play().catch(() => {});
+
+            // Vibrate on mobile
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            // Hide after animation
+            setTimeout(() => {
+                this.showCheckmark = false;
+            }, 600);
+
+            // Call Livewire toggle
+            $wire.toggleTask(taskId);
+        },
+        handleTouchStart(e) {
+            this.touchStartX = e.changedTouches[0].screenX;
+        },
+        handleTouchEnd(e) {
+            this.touchEndX = e.changedTouches[0].screenX;
+            this.handleSwipe();
+        },
+        handleSwipe() {
+            const diff = this.touchStartX - this.touchEndX;
+            const threshold = 50;
+
+            if (Math.abs(diff) < threshold) return;
+
+            if (diff > 0) {
+                // Swipe left -> next list
+                this.nextList();
+            } else {
+                // Swipe right -> previous list
+                this.prevList();
+            }
+        },
+        nextList() {
+            const nextIndex = this.currentIndex + 1;
+            if (nextIndex < this.listIds.length) {
+                $wire.selectList(this.listIds[nextIndex]);
+            }
+        },
+        prevList() {
+            const prevIndex = this.currentIndex - 1;
+            if (prevIndex >= 0) {
+                $wire.selectList(this.listIds[prevIndex]);
+            }
+        }
+    }"
+    @touchstart="handleTouchStart($event)"
+    @touchend="handleTouchEnd($event)"
+>
+    {{-- Task Complete Overlay --}}
+    <div
+        x-show="showCheckmark"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0 scale-50"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-50"
+        class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
+        x-cloak
+    >
+        <div class="w-32 h-32 rounded-full bg-accent/20 backdrop-blur-sm flex items-center justify-center">
+            <svg class="w-20 h-20 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+    </div>
+
     {{-- Sticky Header with tabs --}}
     <header class="border-b border-white/10 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div class="max-w-4xl mx-auto px-4 py-4">
@@ -228,7 +314,7 @@
                                     >
                                         {{-- Checkbox --}}
                                         <button
-                                            wire:click="toggleTask({{ $task->id }})"
+                                            @click="completeTask({{ $task->id }})"
                                             class="shrink-0 cursor-pointer"
                                             title="Marker som fullført"
                                         >
@@ -409,7 +495,7 @@
                                         >
                                             {{-- Checkbox --}}
                                             <button
-                                                wire:click="toggleTask({{ $task->id }})"
+                                                @click="completeTask({{ $task->id }})"
                                                 class="shrink-0 cursor-pointer"
                                                 title="Marker som fullført"
                                             >
