@@ -453,13 +453,16 @@
                                     Lagret
                                 </span>
                             </div>
-                            <input
-                                type="time"
+                            <select
                                 id="prescription_time"
                                 wire:model="pushPrescriptionTime"
                                 wire:change="savePrescriptionTime"
-                                class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                            />
+                                class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
+                            >
+                                @for($h = 6; $h <= 22; $h++)
+                                    <option value="{{ sprintf('%02d:00', $h) }}">{{ sprintf('%02d:00', $h) }}</option>
+                                @endfor
+                            </select>
                             <p class="mt-1 text-xs text-muted">Klokkeslett for daglige resept-varsler</p>
                         </div>
                     @endif
