@@ -348,25 +348,28 @@
                 @endif
             </div>
 
-            {{-- Visningsvalg: M U D --}}
+            {{-- Visningsvalg: M U D (Alpine for instant switching) --}}
             <div class="flex items-center bg-card rounded-md border border-border md:ml-4">
                 <button
-                    wire:click="setView('month')"
-                    class="w-8 md:w-auto md:px-3 py-1.5 text-sm font-medium rounded-l-md transition-colors cursor-pointer {{ $view === 'month' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    @click="setView('month')"
+                    :class="view === 'month' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover'"
+                    class="w-8 md:w-auto md:px-3 py-1.5 text-sm font-medium rounded-l-md transition-colors cursor-pointer"
                     title="Måned"
                 >
                     M
                 </button>
                 <button
-                    wire:click="setView('week')"
-                    class="w-8 md:w-auto md:px-3 py-1.5 text-sm font-medium border-x border-border transition-colors cursor-pointer {{ $view === 'week' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    @click="setView('week')"
+                    :class="view === 'week' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover'"
+                    class="w-8 md:w-auto md:px-3 py-1.5 text-sm font-medium border-x border-border transition-colors cursor-pointer"
                     title="Uke"
                 >
                     U
                 </button>
                 <button
-                    wire:click="setView('day')"
-                    class="w-8 md:w-auto md:px-3 py-1.5 text-sm font-medium rounded-r-md transition-colors cursor-pointer {{ $view === 'day' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    @click="setView('day')"
+                    :class="view === 'day' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover'"
+                    class="w-8 md:w-auto md:px-3 py-1.5 text-sm font-medium rounded-r-md transition-colors cursor-pointer"
                     title="Dag"
                 >
                     D

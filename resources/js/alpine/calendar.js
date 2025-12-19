@@ -3,7 +3,10 @@
  *
  * Handles drag & drop, resize, and drag-to-create functionality
  */
-export default (initialView) => ({
+export default (entangledView) => ({
+    // View state (entangled with Livewire via $wire.entangle)
+    view: entangledView,
+
     // Sidebar state
     showAssistants: false,
 
@@ -74,8 +77,8 @@ export default (initialView) => ({
     init() {
         if (window.innerWidth < 768 && !sessionStorage.getItem('calendar-initialized')) {
             sessionStorage.setItem('calendar-initialized', 'true');
-            if (initialView === 'month') {
-                this.$wire.setView('day');
+            if (this.view === 'month') {
+                this.setView('day');
             }
         }
     },
@@ -90,9 +93,16 @@ export default (initialView) => ({
             this.$store.contextMenu.hide();
             return;
         }
-        if (e.key === 'm' || e.key === 'M') this.$wire.setView('month');
-        if (e.key === 'u' || e.key === 'U') this.$wire.setView('week');
-        if (e.key === 'd' || e.key === 'D') this.$wire.setView('day');
+        if (e.key === 'm' || e.key === 'M') this.setView('month');
+        if (e.key === 'u' || e.key === 'U') this.setView('week');
+        if (e.key === 'd' || e.key === 'D') this.setView('day');
+    },
+
+    /**
+     * Set view (entangled - automatically syncs to Livewire)
+     */
+    setView(newView) {
+        this.view = newView;
     },
 
     // =========================================================================

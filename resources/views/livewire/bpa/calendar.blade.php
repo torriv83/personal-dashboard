@@ -1,17 +1,19 @@
 <x-page-container class="w-full h-full flex flex-col"
-    x-data="calendar('{{ $view }}')"
+    x-data="calendar($wire.entangle('view'))"
     @keydown.window="handleKeydown($event)">
     {{-- Header: Tittel + Navigasjon --}}
     @include('livewire.bpa.calendar._header')
 
-    {{-- Kalendervisninger --}}
-    @if($view === 'week')
-        @include('livewire.bpa.calendar._week-view')
-    @elseif($view === 'day')
-        @include('livewire.bpa.calendar._day-view')
-    @else
+    {{-- Kalendervisninger (alle rendres, Alpine toggler synlighet) --}}
+    <div x-show="view === 'month'" x-cloak class="flex-1 flex flex-col">
         @include('livewire.bpa.calendar._month-view')
-    @endif
+    </div>
+    <div x-show="view === 'week'" x-cloak class="flex-1 flex flex-col">
+        @include('livewire.bpa.calendar._week-view')
+    </div>
+    <div x-show="view === 'day'" x-cloak class="flex-1 flex flex-col">
+        @include('livewire.bpa.calendar._day-view')
+    </div>
 
     {{-- Modal: Opprett/Rediger vakt --}}
     @include('livewire.bpa.calendar._shift-modal')
