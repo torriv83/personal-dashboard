@@ -177,7 +177,7 @@
 
                 {{-- Desktop: Tabell-rad --}}
                 <div
-                    class="hidden md:grid grid-cols-[1fr_8rem_12rem_10rem_8rem_5rem] gap-4 px-4 py-3 items-center hover:bg-card-hover transition-colors {{ $isDeleted ? 'opacity-60' : '' }}"
+                    class="group hidden md:grid grid-cols-[1fr_8rem_12rem_10rem_8rem_5rem] gap-4 px-4 py-3 items-center hover:bg-card-hover transition-colors {{ $isDeleted ? 'opacity-60' : '' }}"
                     @contextmenu.prevent="
                         const x = Math.min($event.clientX, window.innerWidth - 200);
                         const y = Math.min($event.clientY, window.innerHeight - 200);
@@ -194,7 +194,20 @@
                             @else
                                 <a href="{{ route('bpa.assistants.show', $assistant) }}" class="font-medium text-foreground hover:text-accent transition-colors cursor-pointer block">{{ $assistant->name }}</a>
                             @endif
-                            <div class="text-xs text-muted-foreground">{{ $assistant->formatted_number }}</div>
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs text-muted-foreground">{{ $assistant->formatted_number }}</span>
+                                <button
+                                    type="button"
+                                    x-data
+                                    x-on:click.stop="navigator.clipboard.writeText('{{ $assistant->employee_number }}'); $dispatch('notify', { message: 'Assistentnummer kopiert' })"
+                                    class="p-0.5 text-muted-foreground hover:text-accent transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                                    title="Kopier assistentnummer"
+                                >
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div>
@@ -208,8 +221,36 @@
                             </span>
                         @endif
                     </div>
-                    <div class="text-muted text-sm truncate">{{ $assistant->email }}</div>
-                    <div class="text-muted">{{ $assistant->phone ?? '-' }}</div>
+                    <div class="flex items-center gap-1 group/email">
+                        <span class="text-muted text-sm truncate">{{ $assistant->email }}</span>
+                        <button
+                            type="button"
+                            x-data
+                            x-on:click.stop="navigator.clipboard.writeText('{{ $assistant->email }}'); $dispatch('notify', { message: 'E-post kopiert' })"
+                            class="p-0.5 text-muted-foreground hover:text-accent transition-colors cursor-pointer opacity-0 group-hover/email:opacity-100 shrink-0"
+                            title="Kopier e-post"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-1 group/phone">
+                        <span class="text-muted">{{ $assistant->phone ?? '-' }}</span>
+                        @if($assistant->phone)
+                            <button
+                                type="button"
+                                x-data
+                                x-on:click.stop="navigator.clipboard.writeText('{{ $assistant->phone }}'); $dispatch('notify', { message: 'Telefon kopiert' })"
+                                class="p-0.5 text-muted-foreground hover:text-accent transition-colors cursor-pointer opacity-0 group-hover/phone:opacity-100 shrink-0"
+                                title="Kopier telefon"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
                     <div class="text-muted text-sm">
                         @if($isDeleted)
                             <span class="text-destructive">{{ $assistant->deleted_at->format('d.m.Y') }}</span>
