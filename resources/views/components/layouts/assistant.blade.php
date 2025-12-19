@@ -40,6 +40,20 @@
 
     @livewireScriptConfig
 
+    {{-- Handle 419 Page Expired without showing confirm dialog --}}
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.interceptRequest(({ onError }) => {
+                onError(({ response, preventDefault }) => {
+                    if (response.status === 419) {
+                        preventDefault();
+                        window.location.reload();
+                    }
+                });
+            });
+        });
+    </script>
+
     <!-- Register Service Worker -->
     @if($assistant)
         <script>
