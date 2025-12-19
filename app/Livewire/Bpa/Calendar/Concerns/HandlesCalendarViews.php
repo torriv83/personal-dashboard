@@ -140,9 +140,67 @@ trait HandlesCalendarViews
         return $startOfWeek->day.'. '.$this->norwegianMonths[$startOfWeek->month].' - '.$endOfWeek->day.'. '.$this->norwegianMonths[$endOfWeek->month].' '.$endOfWeek->year;
     }
 
+    public function getWeekRangeShortProperty(): string
+    {
+        $currentDate = Carbon::create($this->year, $this->month, $this->day);
+        $startOfWeek = $currentDate->copy()->startOfWeek(Carbon::MONDAY);
+        $endOfWeek = $currentDate->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $shortMonths = [
+            1 => 'jan', 2 => 'feb', 3 => 'mar', 4 => 'apr',
+            5 => 'mai', 6 => 'jun', 7 => 'jul', 8 => 'aug',
+            9 => 'sep', 10 => 'okt', 11 => 'nov', 12 => 'des',
+        ];
+
+        if ($startOfWeek->month === $endOfWeek->month) {
+            return $startOfWeek->day.'-'.$endOfWeek->day.'. '.$shortMonths[$startOfWeek->month];
+        }
+
+        return $startOfWeek->day.'. '.$shortMonths[$startOfWeek->month].' - '.$endOfWeek->day.'. '.$shortMonths[$endOfWeek->month];
+    }
+
     public function getCurrentWeekNumberProperty(): int
     {
         return Carbon::create($this->year, $this->month, $this->day)->isoWeek();
+    }
+
+    public function getWeeksInMonthProperty(): array
+    {
+        $firstOfMonth = Carbon::create($this->year, $this->month, 1);
+        $lastOfMonth = $firstOfMonth->copy()->endOfMonth();
+
+        $shortMonths = [
+            1 => 'jan', 2 => 'feb', 3 => 'mar', 4 => 'apr',
+            5 => 'mai', 6 => 'jun', 7 => 'jul', 8 => 'aug',
+            9 => 'sep', 10 => 'okt', 11 => 'nov', 12 => 'des',
+        ];
+
+        $weeks = [];
+        $currentWeek = $firstOfMonth->copy()->startOfWeek(Carbon::MONDAY);
+        $selectedWeekNumber = $this->currentWeekNumber;
+
+        while ($currentWeek->lte($lastOfMonth)) {
+            $endOfWeek = $currentWeek->copy()->endOfWeek(Carbon::SUNDAY);
+            $weekNumber = $currentWeek->isoWeek();
+
+            if ($currentWeek->month === $endOfWeek->month) {
+                $label = $currentWeek->day.'-'.$endOfWeek->day.'. '.$shortMonths[$currentWeek->month];
+            } else {
+                $label = $currentWeek->day.'. '.$shortMonths[$currentWeek->month].' - '.$endOfWeek->day.'. '.$shortMonths[$endOfWeek->month];
+            }
+
+            $weeks[] = [
+                'weekNumber' => $weekNumber,
+                'label' => 'Uke '.$weekNumber.': '.$label,
+                'labelShort' => $label,
+                'date' => $currentWeek->format('Y-m-d'),
+                'isSelected' => $weekNumber === $selectedWeekNumber,
+            ];
+
+            $currentWeek->addWeek();
+        }
+
+        return $weeks;
     }
 
     /**

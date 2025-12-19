@@ -72,6 +72,17 @@
 
     {{-- Kalender --}}
     <div class="flex-1 bg-card border border-border rounded-lg md:rounded-l-none md:rounded-r-lg overflow-hidden flex flex-col">
+        {{-- Dag-header (som ukevisning) --}}
+        <div class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[3rem_1fr] border-b border-border bg-card">
+            <div class="p-1 md:p-2 border-r border-border"></div>
+            <div class="p-2 md:p-3 text-center">
+                <div class="text-sm md:text-base font-medium text-foreground">
+                    <span class="md:hidden">{{ ucfirst($this->currentDate->locale('nb')->shortDayName) }} {{ $this->currentDate->format('j.') }} {{ $this->currentDate->locale('nb')->shortMonthName }}</span>
+                    <span class="hidden md:inline">{{ ucfirst($this->currentDate->locale('nb')->dayName) }} {{ $this->currentDate->format('j.') }} {{ $this->currentDate->locale('nb')->monthName }}</span>
+                </div>
+            </div>
+        </div>
+
         {{-- Hele-dagen events --}}
         @php
             $allDayShifts = collect($this->getShiftsForDate($this->currentDate->format('Y-m-d')))->where('is_all_day', true);
