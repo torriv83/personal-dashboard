@@ -59,12 +59,12 @@ it('displays shared list tasks when selected', function () {
         ->assertSee('Kjøp melk');
 });
 
-it('displays tasks assigned to this assistant on non-shared lists', function () {
-    $privateList = TaskList::factory()->create(['name' => 'Privat liste', 'is_shared' => false]);
+it('displays tasks from lists assigned to this assistant', function () {
+    // Create a list that is assigned to this assistant (not a task assigned to the assistant)
+    $assistantList = TaskList::factory()->forAssistant($this->assistant->id)->create(['name' => 'Assistentens liste']);
     Task::factory()->create([
-        'task_list_id' => $privateList->id,
+        'task_list_id' => $assistantList->id,
         'title' => 'Min tildelte oppgave',
-        'assistant_id' => $this->assistant->id,
     ]);
 
     Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])

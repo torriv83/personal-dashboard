@@ -3,6 +3,7 @@
 namespace App\Livewire\Bpa\Calendar\Concerns;
 
 use App\Models\Assistant;
+use App\Models\Setting;
 use App\Models\Shift;
 use Carbon\Carbon;
 
@@ -149,6 +150,38 @@ trait HandlesShiftCrud
 
                 return;
             }
+
+            // Check if there are enough remaining hours (only for work shifts)
+            $shiftDurationMinutes = $this->isAllDay ? 0 : (int) $startsAt->diffInMinutes($endsAt);
+
+            if ($shiftDurationMinutes > 0) {
+                $currentYear = Carbon::now()->year;
+                $hoursPerWeek = Setting::getBpaHoursPerWeek();
+                $yearlyQuotaMinutes = $hoursPerWeek * 52 * 60;
+
+                // Calculate current usage (excluding this shift if editing)
+                $usedMinutes = Shift::query()
+                    ->worked()
+                    ->forYear($currentYear)
+                    ->when($this->editingShiftId, fn ($q) => $q->where('id', '!=', $this->editingShiftId))
+                    ->sum('duration_minutes');
+
+                $remainingMinutes = $yearlyQuotaMinutes - $usedMinutes;
+
+                if ($shiftDurationMinutes > $remainingMinutes) {
+                    $remainingHours = intdiv((int) $remainingMinutes, 60);
+                    $remainingMins = (int) $remainingMinutes % 60;
+                    $shiftHours = intdiv($shiftDurationMinutes, 60);
+                    $shiftMins = $shiftDurationMinutes % 60;
+
+                    $remainingFormatted = sprintf('%d:%02d', $remainingHours, $remainingMins);
+                    $shiftFormatted = sprintf('%d:%02d', $shiftHours, $shiftMins);
+
+                    $this->dispatch('toast', type: 'error', message: "Kan ikke registrere {$shiftFormatted} - kun {$remainingFormatted} timer igjen av vedtaket");
+
+                    return;
+                }
+            }
         }
 
         $data = [
@@ -182,7 +215,7 @@ trait HandlesShiftCrud
         }
 
         // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate);
+        unset($this->shifts, $this->shiftsByDate, $this->remainingHoursData);
 
         if ($createAnother) {
             $this->resetForm();
@@ -657,6 +690,38 @@ trait HandlesShiftCrud
             $endsAt = $startsAt->copy()->addHours(3);
         }
 
+        // Check if there are enough remaining hours
+        $shiftDurationMinutes = (int) $startsAt->diffInMinutes($endsAt);
+
+        if ($shiftDurationMinutes > 0) {
+            $currentYear = Carbon::now()->year;
+            $hoursPerWeek = Setting::getBpaHoursPerWeek();
+            $yearlyQuotaMinutes = $hoursPerWeek * 52 * 60;
+
+            $usedMinutes = Shift::query()
+                ->worked()
+                ->forYear($currentYear)
+                ->sum('duration_minutes');
+
+            $remainingMinutes = $yearlyQuotaMinutes - $usedMinutes;
+
+            if ($shiftDurationMinutes > $remainingMinutes) {
+                $remainingHours = intdiv((int) $remainingMinutes, 60);
+                $remainingMins = (int) $remainingMinutes % 60;
+                $shiftHours = intdiv($shiftDurationMinutes, 60);
+                $shiftMins = $shiftDurationMinutes % 60;
+
+                $remainingFormatted = sprintf('%d:%02d', $remainingHours, $remainingMins);
+                $shiftFormatted = sprintf('%d:%02d', $shiftHours, $shiftMins);
+
+                $this->showQuickCreate = false;
+                $this->quickCreateEndTime = null;
+                $this->dispatch('toast', type: 'error', message: "Kan ikke registrere {$shiftFormatted} - kun {$remainingFormatted} timer igjen av vedtaket");
+
+                return;
+            }
+        }
+
         Shift::create([
             'assistant_id' => $assistantId,
             'starts_at' => $startsAt,
@@ -669,7 +734,7 @@ trait HandlesShiftCrud
         $this->quickCreateEndTime = null;
 
         // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate);
+        unset($this->shifts, $this->shiftsByDate, $this->remainingHoursData);
         $this->dispatch('toast', type: 'success', message: 'Vakten ble opprettet');
     }
 

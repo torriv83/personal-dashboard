@@ -3,7 +3,9 @@
 namespace App\Livewire\Bpa;
 
 use App\Models\Assistant;
+use App\Models\Setting;
 use App\Models\Shift;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
@@ -147,8 +149,42 @@ class Timesheets extends Component
     {
         $this->validate();
 
-        $startsAt = $this->date.' '.($this->is_all_day ? '00:00' : $this->start_time);
-        $endsAt = $this->date.' '.($this->is_all_day ? '23:59' : $this->end_time);
+        $startsAt = Carbon::parse($this->date.' '.($this->is_all_day ? '00:00' : $this->start_time));
+        $endsAt = Carbon::parse($this->date.' '.($this->is_all_day ? '23:59' : $this->end_time));
+
+        // Check if there are enough remaining hours (only for work shifts, not unavailable entries)
+        if (! $this->is_unavailable && ! $this->is_all_day) {
+            $shiftDurationMinutes = (int) $startsAt->diffInMinutes($endsAt);
+
+            if ($shiftDurationMinutes > 0) {
+                $currentYear = Carbon::now()->year;
+                $hoursPerWeek = Setting::getBpaHoursPerWeek();
+                $yearlyQuotaMinutes = $hoursPerWeek * 52 * 60;
+
+                // Calculate current usage (excluding this shift if editing)
+                $usedMinutes = Shift::query()
+                    ->worked()
+                    ->forYear($currentYear)
+                    ->when($this->editingShiftId, fn ($q) => $q->where('id', '!=', $this->editingShiftId))
+                    ->sum('duration_minutes');
+
+                $remainingMinutes = $yearlyQuotaMinutes - $usedMinutes;
+
+                if ($shiftDurationMinutes > $remainingMinutes) {
+                    $remainingHours = intdiv((int) $remainingMinutes, 60);
+                    $remainingMins = (int) $remainingMinutes % 60;
+                    $shiftHours = intdiv($shiftDurationMinutes, 60);
+                    $shiftMins = $shiftDurationMinutes % 60;
+
+                    $remainingFormatted = sprintf('%d:%02d', $remainingHours, $remainingMins);
+                    $shiftFormatted = sprintf('%d:%02d', $shiftHours, $shiftMins);
+
+                    $this->dispatch('toast', type: 'error', message: "Kan ikke registrere {$shiftFormatted} - kun {$remainingFormatted} timer igjen av vedtaket");
+
+                    return;
+                }
+            }
+        }
 
         $data = [
             'assistant_id' => $this->assistant_id,

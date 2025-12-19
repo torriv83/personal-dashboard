@@ -1,51 +1,54 @@
 {{-- Header: Tittel + Navigasjon --}}
 <div class="flex flex-col gap-2 mb-4">
-    {{-- Linje 1: Tittel med kontekst --}}
-    <div class="flex items-baseline gap-2">
-        <h1 class="text-2xl font-bold text-foreground">Kalender</h1>
-        @if($view === 'day')
-            <span class="text-muted text-sm md:text-base">({{ $this->currentDate->locale('nb')->dayName }})</span>
-        @elseif($view === 'month')
-            {{-- Årvelger ved siden av tittel --}}
-            <div x-data="{ open: false }" class="relative">
-                <button
-                    @click="open = !open"
-                    @click.away="open = false"
-                    class="text-muted text-sm md:text-base hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
-                >
-                    {{ $year }}
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-                <div
-                    x-show="open"
-                    x-transition:enter="transition ease-out duration-100"
-                    x-transition:enter-start="opacity-0 scale-95"
-                    x-transition:enter-end="opacity-100 scale-100"
-                    x-transition:leave="transition ease-in duration-75"
-                    x-transition:leave-start="opacity-100 scale-100"
-                    x-transition:leave-end="opacity-0 scale-95"
-                    class="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-20"
-                >
-                    @foreach($this->availableYears as $y)
-                        <button
-                            wire:click="goToYear({{ $y }})"
-                            @click="open = false"
-                            class="w-full px-3 py-1.5 text-left text-sm cursor-pointer transition-colors {{ $year === $y ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
-                        >
-                            {{ $y }}
-                        </button>
-                    @endforeach
+    {{-- Linje 1: Tittel med kontekst + Timer igjen (desktop) --}}
+    <div class="flex items-baseline justify-between gap-2">
+        <div class="flex items-baseline gap-2">
+            <h1 class="text-2xl font-bold text-foreground">Kalender</h1>
+            @if($view === 'day')
+                <span class="text-muted text-sm md:text-base">({{ $this->currentDate->locale('nb')->dayName }})</span>
+            @elseif($view === 'month')
+                {{-- Årvelger ved siden av tittel --}}
+                <div x-data="{ open: false }" class="relative">
+                    <button
+                        @click="open = !open"
+                        @click.away="open = false"
+                        class="text-muted text-sm md:text-base hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                        {{ $year }}
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div
+                        x-show="open"
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 scale-100"
+                        x-transition:leave-end="opacity-0 scale-95"
+                        class="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-20"
+                    >
+                        @foreach($this->availableYears as $y)
+                            <button
+                                wire:click="goToYear({{ $y }})"
+                                @click="open = false"
+                                class="w-full px-3 py-1.5 text-left text-sm cursor-pointer transition-colors {{ $year === $y ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                            >
+                                {{ $y }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-        @endif
+            @endif
+        </div>
+
     </div>
 
-    {{-- Linje 2: Dato, navigasjon og M U D --}}
+    {{-- Linje 2: Dato, timer igjen, navigasjon og M U D --}}
     <div class="flex items-center justify-between gap-2">
         {{-- Venstre: Dato-info --}}
-        <div class="flex items-center gap-2 min-w-0">
+        <div class="flex items-center gap-2 min-w-0 flex-1">
             @if($view === 'day')
                 <span class="text-base md:text-xl text-muted truncate">
                     <span class="md:hidden">{{ $this->currentDate->format('j.') }} {{ $this->currentDate->locale('nb')->shortMonthName }}</span>
@@ -90,8 +93,17 @@
             @endif
         </div>
 
+        {{-- Midt: Timer igjen (kun desktop) --}}
+        @php $remainingData = $this->remainingHoursData; @endphp
+        <div class="hidden md:flex items-center gap-2 text-sm">
+            <span class="text-muted">Timer igjen:</span>
+            <span class="{{ $remainingData['remaining_minutes'] < 0 ? 'text-red-400 font-semibold' : 'text-accent font-medium' }}">
+                {{ $remainingData['remaining_formatted'] }}
+            </span>
+        </div>
+
         {{-- Høyre: Navigasjon og M U D --}}
-        <div class="flex items-center gap-1 md:gap-2 shrink-0">
+        <div class="flex items-center justify-end gap-1 md:gap-2 flex-1">
             {{-- Navigasjonsknapper --}}
             @if($view === 'day')
                 <button

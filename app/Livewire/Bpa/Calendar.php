@@ -7,6 +7,7 @@ use App\Livewire\Bpa\Calendar\Concerns\HandlesCalendarViews;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesRecurringShifts;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesShiftCrud;
 use App\Models\Assistant;
+use App\Models\Setting;
 use App\Models\Shift;
 use App\Services\CalendarEvent;
 use App\Services\GoogleCalendarService;
@@ -25,6 +26,7 @@ use Livewire\Component;
  * @property-read array $shiftsByDate
  * @property-read Collection<int, CalendarEvent> $externalEvents
  * @property-read array $externalEventsByDate
+ * @property-read array $remainingHoursData
  */
 #[Layout('components.layouts.app')]
 class Calendar extends Component
@@ -383,6 +385,48 @@ class Calendar extends Component
         }
 
         return $years;
+    }
+
+    /**
+     * Get remaining hours data for the current year.
+     * Includes both used hours and planned (upcoming) hours.
+     *
+     * @return array{remaining_minutes: int, remaining_formatted: string, quota_minutes: int}
+     */
+    #[Computed]
+    public function remainingHoursData(): array
+    {
+        $currentYear = Carbon::now()->year;
+
+        // Get BPA settings
+        $hoursPerWeek = Setting::getBpaHoursPerWeek();
+        $yearlyQuotaMinutes = $hoursPerWeek * 52 * 60;
+
+        // Calculate all hours used/planned this year (both past and future shifts)
+        $usedMinutes = Shift::query()
+            ->worked()
+            ->forYear($currentYear)
+            ->sum('duration_minutes');
+
+        $remainingMinutes = $yearlyQuotaMinutes - $usedMinutes;
+
+        return [
+            'remaining_minutes' => (int) $remainingMinutes,
+            'remaining_formatted' => $this->formatMinutesForDisplay((int) $remainingMinutes),
+            'quota_minutes' => (int) $yearlyQuotaMinutes,
+        ];
+    }
+
+    /**
+     * Format minutes as HH:MM string for display.
+     */
+    private function formatMinutesForDisplay(int $minutes): string
+    {
+        $hours = intdiv(abs($minutes), 60);
+        $mins = abs($minutes) % 60;
+        $sign = $minutes < 0 ? '-' : '';
+
+        return sprintf('%s%d:%02d', $sign, $hours, $mins);
     }
 
     public function render()

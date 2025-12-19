@@ -53,19 +53,17 @@ it('shows empty state when no tasks', function () {
 
 it('can add a new task', function () {
     Livewire::test(Show::class, ['taskList' => $this->taskList])
-        ->set('newTaskTitle', 'Ny oppgave')
-        ->set('newTaskPriority', 'high')
-        ->call('addTask');
+        ->call('addTaskFromAlpine', 'Ny oppgave', 'high', null);
 
     expect(Task::where('title', 'Ny oppgave')->where('task_list_id', $this->taskList->id)->exists())->toBeTrue();
     expect(Task::where('title', 'Ny oppgave')->first()->priority)->toBe(TaskPriority::High);
 });
 
-it('validates required title when adding task', function () {
+it('ignores empty title when adding task', function () {
     Livewire::test(Show::class, ['taskList' => $this->taskList])
-        ->set('newTaskTitle', '')
-        ->call('addTask')
-        ->assertHasErrors(['newTaskTitle' => 'required']);
+        ->call('addTaskFromAlpine', '', 'low', null);
+
+    expect(Task::where('task_list_id', $this->taskList->id)->count())->toBe(0);
 });
 
 it('can toggle task status from pending to completed', function () {
@@ -106,37 +104,33 @@ it('cannot toggle status for task from another list', function () {
     expect($task->fresh()->status)->toBe(TaskStatus::Pending);
 });
 
-it('can open edit modal for a task', function () {
-    $task = Task::factory()->create([
-        'task_list_id' => $this->taskList->id,
-        'title' => 'Oppgave å redigere',
-        'priority' => TaskPriority::Medium,
-    ]);
-
-    Livewire::test(Show::class, ['taskList' => $this->taskList])
-        ->call('openEditModal', $task->id)
-        ->assertSet('showEditModal', true)
-        ->assertSet('editingTaskId', $task->id)
-        ->assertSet('editTaskTitle', 'Oppgave å redigere')
-        ->assertSet('editTaskPriority', 'medium');
-});
-
-it('can save edited task', function () {
+it('can update task title inline', function () {
     $task = Task::factory()->create([
         'task_list_id' => $this->taskList->id,
         'title' => 'Gammel tittel',
+    ]);
+
+    Livewire::test(Show::class, ['taskList' => $this->taskList])
+        ->call('updateTaskTitle', $task->id, 'Ny tittel');
+
+    expect($task->fresh()->title)->toBe('Ny tittel');
+});
+
+it('can cycle task priority', function () {
+    $task = Task::factory()->create([
+        'task_list_id' => $this->taskList->id,
         'priority' => TaskPriority::Low,
     ]);
 
     Livewire::test(Show::class, ['taskList' => $this->taskList])
-        ->call('openEditModal', $task->id)
-        ->set('editTaskTitle', 'Ny tittel')
-        ->set('editTaskPriority', 'high')
-        ->call('saveTask');
+        ->call('cycleTaskPriority', $task->id);
 
-    $task->refresh();
-    expect($task->title)->toBe('Ny tittel');
-    expect($task->priority)->toBe(TaskPriority::High);
+    expect($task->fresh()->priority)->toBe(TaskPriority::Medium);
+
+    Livewire::test(Show::class, ['taskList' => $this->taskList])
+        ->call('cycleTaskPriority', $task->id);
+
+    expect($task->fresh()->priority)->toBe(TaskPriority::High);
 });
 
 it('can delete a task', function () {
@@ -167,9 +161,7 @@ it('can assign task to assistant', function () {
     $assistant = Assistant::factory()->create(['name' => 'Test Assistent']);
 
     Livewire::test(Show::class, ['taskList' => $this->taskList])
-        ->set('newTaskTitle', 'Oppgave med assistent')
-        ->set('newTaskAssistantId', $assistant->id)
-        ->call('addTask');
+        ->call('addTaskFromAlpine', 'Oppgave med assistent', 'low', $assistant->id);
 
     $task = Task::where('title', 'Oppgave med assistent')->first();
     expect($task->assistant_id)->toBe($assistant->id);
@@ -238,18 +230,16 @@ it('can reorder tasks', function () {
     expect($task2->fresh()->sort_order)->toBe(2);
 });
 
-it('closes edit modal and resets form', function () {
+it('ignores empty title when updating task', function () {
     $task = Task::factory()->create([
         'task_list_id' => $this->taskList->id,
+        'title' => 'Original tittel',
     ]);
 
     Livewire::test(Show::class, ['taskList' => $this->taskList])
-        ->call('openEditModal', $task->id)
-        ->assertSet('showEditModal', true)
-        ->call('closeEditModal')
-        ->assertSet('showEditModal', false)
-        ->assertSet('editingTaskId', null)
-        ->assertSet('editTaskTitle', '');
+        ->call('updateTaskTitle', $task->id, '');
+
+    expect($task->fresh()->title)->toBe('Original tittel');
 });
 
 it('auto-assigns list assistant to new tasks', function () {
@@ -257,10 +247,7 @@ it('auto-assigns list assistant to new tasks', function () {
     $listWithAssistant = TaskList::factory()->forAssistant($assistant->id)->create();
 
     Livewire::test(Show::class, ['taskList' => $listWithAssistant])
-        ->set('newTaskTitle', 'Ny oppgave')
-        ->set('newTaskPriority', 'medium')
-        ->set('newTaskAssistantId', null) // Try to set null
-        ->call('addTask');
+        ->call('addTaskFromAlpine', 'Ny oppgave', 'medium', null);
 
     $task = Task::where('title', 'Ny oppgave')->first();
     expect($task->assistant_id)->toBe($assistant->id);
