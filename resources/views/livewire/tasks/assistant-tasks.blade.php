@@ -2,69 +2,88 @@
     x-data="{
         showCheckmark: false,
         touchStartX: 0,
-        touchEndX: 0,
+        swipeOffset: 0,
+        isSwiping: false,
+        isAnimating: false,
         listIds: [null, ...@js($this->sharedLists->pluck('id')->toArray())],
         get currentIndex() {
             return this.listIds.indexOf($wire.currentListId);
         },
+        get canSwipeLeft() {
+            return this.currentIndex < this.listIds.length - 1;
+        },
+        get canSwipeRight() {
+            return this.currentIndex > 0;
+        },
         completeTask(taskId) {
-            // Show checkmark animation
             this.showCheckmark = true;
-
-            // Play sound
-            const audio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYNbgH8AAAAAAAAAAAAAAAAAAAAAP/7UAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/7UEAAAAWQCYBQAgAAUoEQCgBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//tQQAABkcAR//AAAB5AAAANIMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA');
-            audio.volume = 0.3;
-            audio.play().catch(() => {});
-
-            // Vibrate on mobile
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
-
-            // Hide after animation
             setTimeout(() => {
                 this.showCheckmark = false;
             }, 600);
-
-            // Call Livewire toggle
             $wire.toggleTask(taskId);
         },
         handleTouchStart(e) {
-            this.touchStartX = e.changedTouches[0].screenX;
+            if (this.isAnimating) return;
+            this.touchStartX = e.touches[0].clientX;
+            this.isSwiping = true;
         },
-        handleTouchEnd(e) {
-            this.touchEndX = e.changedTouches[0].screenX;
-            this.handleSwipe();
+        handleTouchMove(e) {
+            if (!this.isSwiping || this.isAnimating) return;
+            const currentX = e.touches[0].clientX;
+            let diff = currentX - this.touchStartX;
+
+            // Add resistance at edges
+            if ((diff > 0 && !this.canSwipeRight) || (diff < 0 && !this.canSwipeLeft)) {
+                diff = diff * 0.3;
+            }
+
+            this.swipeOffset = diff;
         },
-        handleSwipe() {
-            const diff = this.touchStartX - this.touchEndX;
-            const threshold = 50;
+        handleTouchEnd() {
+            if (!this.isSwiping || this.isAnimating) return;
+            this.isSwiping = false;
 
-            if (Math.abs(diff) < threshold) return;
+            const threshold = 80;
+            const offset = this.swipeOffset;
 
-            if (diff > 0) {
+            if (offset < -threshold && this.canSwipeLeft) {
                 // Swipe left -> next list
-                this.nextList();
-            } else {
+                this.animateOut('left');
+            } else if (offset > threshold && this.canSwipeRight) {
                 // Swipe right -> previous list
-                this.prevList();
+                this.animateOut('right');
+            } else {
+                // Snap back
+                this.animateBack();
             }
         },
-        nextList() {
-            const nextIndex = this.currentIndex + 1;
-            if (nextIndex < this.listIds.length) {
-                $wire.selectList(this.listIds[nextIndex]);
-            }
+        animateOut(direction) {
+            this.isAnimating = true;
+            const screenWidth = window.innerWidth;
+            this.swipeOffset = direction === 'left' ? -screenWidth : screenWidth;
+
+            setTimeout(() => {
+                if (direction === 'left') {
+                    $wire.selectList(this.listIds[this.currentIndex + 1]);
+                } else {
+                    $wire.selectList(this.listIds[this.currentIndex - 1]);
+                }
+                // Reset immediately after Livewire call
+                this.swipeOffset = 0;
+                this.isAnimating = false;
+            }, 200);
         },
-        prevList() {
-            const prevIndex = this.currentIndex - 1;
-            if (prevIndex >= 0) {
-                $wire.selectList(this.listIds[prevIndex]);
-            }
+        animateBack() {
+            this.isAnimating = true;
+            this.swipeOffset = 0;
+            setTimeout(() => {
+                this.isAnimating = false;
+            }, 200);
         }
     }"
     @touchstart="handleTouchStart($event)"
-    @touchend="handleTouchEnd($event)"
+    @touchmove="handleTouchMove($event)"
+    @touchend="handleTouchEnd()"
 >
     {{-- Task Complete Overlay --}}
     <div
@@ -213,8 +232,44 @@
     </header>
 
     {{-- Main Content --}}
-    <main class="flex-1">
-        <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <main class="flex-1 overflow-hidden relative">
+        {{-- Next/Previous list peek (shown behind current content while swiping) --}}
+        @if($activeTab === 'tasks')
+        <template x-if="(isSwiping || isAnimating) && Math.abs(swipeOffset) > 10">
+            <div
+                class="absolute inset-0 flex items-start justify-center pt-6 px-4"
+                :class="swipeOffset > 0 ? 'bg-card/95' : 'bg-card/95'"
+            >
+                <div class="max-w-4xl w-full space-y-4">
+                    {{-- Peek header showing which list is coming --}}
+                    <div class="text-center py-8">
+                        <div class="inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-lg">
+                            <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <span class="text-foreground font-medium" x-text="
+                                swipeOffset > 0
+                                    ? (listIds[currentIndex - 1] === null ? 'Dine oppgaver' : @js($this->sharedLists->pluck('name', 'id')->toArray())[listIds[currentIndex - 1]])
+                                    : (listIds[currentIndex + 1] === null ? 'Dine oppgaver' : @js($this->sharedLists->pluck('name', 'id')->toArray())[listIds[currentIndex + 1]])
+                            "></span>
+                        </div>
+                    </div>
+                    {{-- Placeholder cards --}}
+                    <div class="space-y-3 opacity-50">
+                        <div class="h-14 bg-card border border-border rounded-lg"></div>
+                        <div class="h-14 bg-card border border-border rounded-lg"></div>
+                        <div class="h-14 bg-card border border-border rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        @endif
+
+        <div
+            class="max-w-4xl mx-auto px-4 py-6 space-y-6 relative z-10 bg-background"
+            :class="{ 'transition-transform duration-200 ease-out': isAnimating && !isSwiping }"
+            :style="$wire.activeTab === 'tasks' ? 'transform: translateX(' + swipeOffset + 'px)' : ''"
+        >
             @if($activeTab === 'tasks')
             {{-- Greeting --}}
             <div>
