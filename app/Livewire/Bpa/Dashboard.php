@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Bpa;
 
+use App\Livewire\Concerns\FormatsMinutes;
 use App\Models\Assistant;
 use App\Models\Setting;
 use App\Models\Shift;
@@ -29,6 +30,8 @@ use Livewire\Component;
  */
 class Dashboard extends Component
 {
+    use FormatsMinutes;
+
     /**
      * Pagination section configuration.
      * Maps section name to [pageProperty, computedProperty].
@@ -298,23 +301,23 @@ class Dashboard extends Component
             'stat_hours_used' => [
                 'id' => 'stat_hours_used',
                 'label' => 'Timer brukt i år',
-                'value' => $this->formatMinutes($usedThisYearMinutes),
-                'valueSuffix' => '('.$this->formatMinutes($usedThisYearMinutes + $plannedMinutes).' med planlagt)',
-                'description' => $this->formatMinutes($usedThisMonthMinutes).' brukt av '.$this->formatMinutes((int) $monthlyQuotaMinutes).' denne måneden | '.$this->formatMinutes($plannedMinutes).' planlagt ut året',
+                'value' => $this->formatMinutesForDisplay($usedThisYearMinutes),
+                'valueSuffix' => '('.$this->formatMinutesForDisplay($usedThisYearMinutes + $plannedMinutes).' med planlagt)',
+                'description' => $this->formatMinutesForDisplay($usedThisMonthMinutes).' brukt av '.$this->formatMinutesForDisplay((int) $monthlyQuotaMinutes).' denne måneden | '.$this->formatMinutesForDisplay($plannedMinutes).' planlagt ut året',
             ],
             'stat_hours_remaining' => [
                 'id' => 'stat_hours_remaining',
                 'label' => 'Timer igjen',
-                'value' => $this->formatMinutes($remainingMinutes),
-                'valueSuffix' => '('.$this->formatMinutes($remainingWithPlannedMinutes).' med planlagt)',
-                'description' => $this->formatMinutes($averageRemainingPerWeekMinutes).' snitt/uke ut året | '.$this->formatMinutes($averageRemainingWithPlannedPerWeekMinutes).' snitt/uke med planlagt',
+                'value' => $this->formatMinutesForDisplay($remainingMinutes),
+                'valueSuffix' => '('.$this->formatMinutesForDisplay($remainingWithPlannedMinutes).' med planlagt)',
+                'description' => $this->formatMinutesForDisplay($averageRemainingPerWeekMinutes).' snitt/uke ut året | '.$this->formatMinutesForDisplay($averageRemainingWithPlannedPerWeekMinutes).' snitt/uke med planlagt',
             ],
             'stat_hours_week' => [
                 'id' => 'stat_hours_week',
                 'label' => 'Timer brukt denne uka',
-                'value' => $this->formatMinutes($usedThisWeekMinutes),
-                'valueSuffix' => '('.$this->formatMinutes($usedThisWeekMinutes + $plannedThisWeekMinutes).' med planlagt)',
-                'description' => $this->formatMinutes($plannedThisWeekMinutes).' planlagt denne uka',
+                'value' => $this->formatMinutesForDisplay($usedThisWeekMinutes),
+                'valueSuffix' => '('.$this->formatMinutesForDisplay($usedThisWeekMinutes + $plannedThisWeekMinutes).' med planlagt)',
+                'description' => $this->formatMinutesForDisplay($plannedThisWeekMinutes).' planlagt denne uka',
             ],
         ];
     }
@@ -353,7 +356,8 @@ class Dashboard extends Component
 
         // Use SQL GROUP BY instead of PHP groupBy - 10-50x faster
         // Use toBase() to get stdClass objects instead of Shift models
-        $results = Shift::query()
+        // Use offset/limit at query level for proper pagination
+        return Shift::query()
             ->selectRaw("{$weekExpression} as week_number")
             ->selectRaw('SUM(duration_minutes) as total_minutes')
             ->selectRaw('COUNT(*) as shift_count')
@@ -362,12 +366,10 @@ class Dashboard extends Component
             ->where('starts_at', '<=', $now)
             ->groupByRaw($weekExpression)
             ->orderByDesc('week_number')
+            ->offset(($this->weeklyPage - 1) * $this->weeklyPerPage)
+            ->limit($this->weeklyPerPage)
             ->toBase()
-            ->get();
-
-        return $results
-            ->skip(($this->weeklyPage - 1) * $this->weeklyPerPage)
-            ->take($this->weeklyPerPage)
+            ->get()
             ->map(function (object $row) {
                 $avgMinutes = $row->shift_count > 0
                     ? (int) ($row->total_minutes / $row->shift_count)
@@ -375,8 +377,8 @@ class Dashboard extends Component
 
                 return [
                     'week' => (int) $row->week_number,
-                    'total' => $this->formatMinutes((int) $row->total_minutes),
-                    'average' => $this->formatMinutes($avgMinutes),
+                    'total' => $this->formatMinutesForDisplay((int) $row->total_minutes),
+                    'average' => $this->formatMinutesForDisplay($avgMinutes),
                     'count' => (int) $row->shift_count,
                 ];
             })
@@ -410,7 +412,7 @@ class Dashboard extends Component
                 'name' => explode(' ', $shift->assistant->name ?? 'Ukjent')[0],
                 'from' => $shift->starts_at->translatedFormat('j. M H:i'),
                 'to' => $shift->ends_at->translatedFormat('j. M H:i'),
-                'duration' => $this->formatMinutes($shift->duration_minutes),
+                'duration' => $this->formatMinutesForDisplay($shift->duration_minutes),
                 'duration_minutes' => $shift->duration_minutes,
             ])
             ->toArray();
@@ -422,7 +424,7 @@ class Dashboard extends Component
         $shifts = $this->upcomingShifts();
         $totalMinutes = array_sum(array_column($shifts, 'duration_minutes'));
 
-        return $this->formatMinutes($totalMinutes);
+        return $this->formatMinutesForDisplay($totalMinutes);
     }
 
     #[Computed]
@@ -489,7 +491,7 @@ class Dashboard extends Component
                 'positionColor' => $this->getPositionColor($assistant->type),
                 'email' => $this->truncateEmail($assistant->email),
                 'phone' => $assistant->phone ?? '-',
-                'hoursThisYear' => $this->formatMinutes((int) ($assistant->hours_this_year ?? 0)),
+                'hoursThisYear' => $this->formatMinutesForDisplay((int) ($assistant->hours_this_year ?? 0)),
             ])
             ->toArray();
     }
@@ -585,19 +587,6 @@ class Dashboard extends Component
             ->get()
             ->pluck('total_minutes', 'month')
             ->toArray();
-    }
-
-    /**
-     * Format minutes as HH:MM string.
-     */
-    private function formatMinutes(int|float|null $minutes): string
-    {
-        $minutes = (int) ($minutes ?? 0);
-        $hours = intdiv(abs($minutes), 60);
-        $mins = abs($minutes) % 60;
-        $sign = $minutes < 0 ? '-' : '';
-
-        return sprintf('%s%d:%02d', $sign, $hours, $mins);
     }
 
     /**

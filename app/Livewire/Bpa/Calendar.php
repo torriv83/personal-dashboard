@@ -6,6 +6,7 @@ use App\Livewire\Bpa\Calendar\Concerns\HandlesCalendarNavigation;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesCalendarViews;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesRecurringShifts;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesShiftCrud;
+use App\Livewire\Concerns\FormatsMinutes;
 use App\Models\Assistant;
 use App\Models\Setting;
 use App\Models\Shift;
@@ -31,6 +32,7 @@ use Livewire\Component;
 #[Layout('components.layouts.app')]
 class Calendar extends Component
 {
+    use FormatsMinutes;
     use HandlesCalendarNavigation;
     use HandlesCalendarViews;
     use HandlesRecurringShifts;
@@ -415,18 +417,6 @@ class Calendar extends Component
             'remaining_formatted' => $this->formatMinutesForDisplay((int) $remainingMinutes),
             'quota_minutes' => (int) $yearlyQuotaMinutes,
         ];
-    }
-
-    /**
-     * Format minutes as HH:MM string for display.
-     */
-    private function formatMinutesForDisplay(int $minutes): string
-    {
-        $hours = intdiv(abs($minutes), 60);
-        $mins = abs($minutes) % 60;
-        $sign = $minutes < 0 ? '-' : '';
-
-        return sprintf('%s%d:%02d', $sign, $hours, $mins);
     }
 
     public function render()
