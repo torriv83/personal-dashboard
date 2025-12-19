@@ -1,4 +1,5 @@
 <div
+    class="min-h-screen flex flex-col"
     x-data="{
         showCheckmark: false,
         touchStartX: 0,
