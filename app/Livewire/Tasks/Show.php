@@ -106,8 +106,11 @@ class Show extends Component
             $priority = 'low';
         }
 
-        // Get the next sort_order
-        $maxSortOrder = $this->taskList->tasks()->max('sort_order') ?? 0;
+        // Find first divider's sort_order, or use max + 1 if no dividers
+        $firstDivider = $this->taskList->tasks()->where('is_divider', true)->orderBy('sort_order')->first();
+        $sortOrder = $firstDivider
+            ? $firstDivider->sort_order - 1
+            : ($this->taskList->tasks()->max('sort_order') ?? 0) + 1;
 
         // If list has an assistant, use that instead of the form value
         $finalAssistantId = $this->listHasAssistant
@@ -120,7 +123,7 @@ class Show extends Component
             'priority' => $priority,
             'assistant_id' => $finalAssistantId,
             'status' => TaskStatus::Pending,
-            'sort_order' => $maxSortOrder + 1,
+            'sort_order' => $sortOrder,
         ]);
 
         // Reset select values

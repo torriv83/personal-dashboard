@@ -186,8 +186,11 @@ class AssistantTasks extends Component
             'newTaskTitle.max' => 'Tittel kan ikke være lengre enn 255 tegn.',
         ]);
 
-        // Get the next sort_order
-        $maxSortOrder = $ownList->tasks()->max('sort_order') ?? 0;
+        // Find first divider's sort_order, or use max + 1 if no dividers
+        $firstDivider = $ownList->tasks()->where('is_divider', true)->orderBy('sort_order')->first();
+        $sortOrder = $firstDivider
+            ? $firstDivider->sort_order - 1
+            : ($ownList->tasks()->max('sort_order') ?? 0) + 1;
 
         $task = Task::create([
             'task_list_id' => $ownList->id,
@@ -195,7 +198,7 @@ class AssistantTasks extends Component
             'priority' => 'low',
             'assistant_id' => $this->assistant->id,
             'status' => TaskStatus::Pending,
-            'sort_order' => $maxSortOrder + 1,
+            'sort_order' => $sortOrder,
         ]);
 
         // Send push notification to owner
@@ -232,8 +235,11 @@ class AssistantTasks extends Component
             'newTaskTitle.max' => 'Tittel kan ikke være lengre enn 255 tegn.',
         ]);
 
-        // Get the next sort_order
-        $maxSortOrder = $list->tasks()->max('sort_order') ?? 0;
+        // Find first divider's sort_order, or use max + 1 if no dividers
+        $firstDivider = $list->tasks()->where('is_divider', true)->orderBy('sort_order')->first();
+        $sortOrder = $firstDivider
+            ? $firstDivider->sort_order - 1
+            : ($list->tasks()->max('sort_order') ?? 0) + 1;
 
         $task = Task::create([
             'task_list_id' => $list->id,
@@ -241,7 +247,7 @@ class AssistantTasks extends Component
             'priority' => 'low',
             'assistant_id' => null, // Shared list tasks don't have a specific assistant
             'status' => TaskStatus::Pending,
-            'sort_order' => $maxSortOrder + 1,
+            'sort_order' => $sortOrder,
         ]);
 
         // Send push notification to owner
