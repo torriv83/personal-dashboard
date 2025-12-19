@@ -35,9 +35,6 @@ class AssistantTasks extends Component
     // Quick add form
     public string $newTaskTitle = '';
 
-    // Tab navigation
-    public string $activeTab = 'tasks';
-
     // Absence form
     public ?int $editingAbsenceId = null;
 
@@ -281,15 +278,6 @@ class AssistantTasks extends Component
         }
 
         return false;
-    }
-
-    /**
-     * Switch to a different tab.
-     */
-    public function switchTab(string $tab): void
-    {
-        $this->activeTab = $tab;
-        $this->resetAbsenceForm();
     }
 
     /**

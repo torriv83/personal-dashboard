@@ -1,6 +1,7 @@
 <div
     class="min-h-screen flex flex-col"
     x-data="{
+        activeTab: 'tasks',
         showCheckmark: false,
         touchStartX: 0,
         swipeOffset: 0,
@@ -106,14 +107,15 @@
     </div>
 
     {{-- Sticky Header with tabs --}}
-    <header class="border-b border-white/10 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+    <header class="border-b border-white/10 bg-card/50 backdrop-blur-sm sticky top-0 z-20">
         <div class="max-w-4xl mx-auto px-4 py-4">
             {{-- Tab Navigation --}}
             <div class="flex items-center justify-center sm:justify-start mb-4">
                 <div class="flex gap-1 p-1 bg-card border border-border rounded-lg">
                     <button
-                        wire:click="switchTab('tasks')"
-                        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer {{ $activeTab === 'tasks' ? 'bg-accent text-black' : 'text-muted-foreground hover:text-foreground hover:bg-card-hover' }}"
+                        @click="activeTab = 'tasks'"
+                        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer"
+                        :class="activeTab === 'tasks' ? 'bg-accent text-black' : 'text-muted-foreground hover:text-foreground hover:bg-card-hover'"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
@@ -121,8 +123,9 @@
                         <span>Oppgaver</span>
                     </button>
                     <button
-                        wire:click="switchTab('absence')"
-                        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer {{ $activeTab === 'absence' ? 'bg-accent text-black' : 'text-muted-foreground hover:text-foreground hover:bg-card-hover' }}"
+                        @click="activeTab = 'absence'"
+                        class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer"
+                        :class="activeTab === 'absence' ? 'bg-accent text-black' : 'text-muted-foreground hover:text-foreground hover:bg-card-hover'"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -132,8 +135,7 @@
                 </div>
             </div>
 
-            @if($activeTab === 'tasks')
-            <div class="flex items-center justify-between">
+            <div x-show="activeTab === 'tasks'" class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -228,15 +230,13 @@
                     </div>
                 </div>
             </div>
-            @endif
         </div>
     </header>
 
     {{-- Main Content --}}
     <main class="flex-1 overflow-hidden relative">
         {{-- Next/Previous list peek (shown behind current content while swiping) --}}
-        @if($activeTab === 'tasks')
-        <template x-if="(isSwiping || isAnimating) && Math.abs(swipeOffset) > 10">
+        <template x-if="activeTab === 'tasks' && (isSwiping || isAnimating) && Math.abs(swipeOffset) > 10">
             <div
                 class="absolute inset-0 flex items-start justify-center pt-6 px-4"
                 :class="swipeOffset > 0 ? 'bg-card/95' : 'bg-card/95'"
@@ -264,14 +264,13 @@
                 </div>
             </div>
         </template>
-        @endif
 
         <div
             class="max-w-4xl mx-auto px-4 py-6 space-y-6 relative z-10 bg-background"
             :class="{ 'transition-transform duration-200 ease-out': isAnimating && !isSwiping }"
-            :style="$wire.activeTab === 'tasks' ? 'transform: translateX(' + swipeOffset + 'px)' : ''"
+            :style="activeTab === 'tasks' ? 'transform: translateX(' + swipeOffset + 'px)' : ''"
         >
-            @if($activeTab === 'tasks')
+            <div x-show="activeTab === 'tasks'" class="space-y-6">
             {{-- Greeting --}}
             <div>
                 <h1 class="text-2xl font-bold text-foreground">Hei, {{ $assistant->name }}!</h1>
@@ -652,7 +651,8 @@
                     @endif
                 @endif
             @endif
-            @else
+            </div>
+            <div x-show="activeTab === 'absence'" class="space-y-6">
             {{-- Absence Tab Content --}}
             <div>
                 <h1 class="text-2xl font-bold text-foreground">Tid borte</h1>
@@ -897,7 +897,7 @@
                     </div>
                 </div>
             @endif
-            @endif
+            </div>
         </div>
     </main>
 </div>
