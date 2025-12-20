@@ -47,8 +47,6 @@ Route::middleware('auth')->group(function () {
     // Bruker
     Route::get('/profil', Profile::class)->name('profile');
     Route::get('/innstillinger', Settings::class)->name('settings');
-    Route::get('/innstillinger/backup', \App\Livewire\User\Backup::class)->name('settings.backup');
-
     // BPA (Brukerstyrt personlig assistanse)
     Route::prefix('bpa')->name('bpa.')->group(function () {
         Route::get('/', BpaDashboard::class)->name('dashboard');

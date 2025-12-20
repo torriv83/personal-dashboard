@@ -15,8 +15,7 @@
         "laravel/tinker": "^2.10.1",
         "league/flysystem-sftp-v3": "^3.30",
         "livewire/livewire": "^3.7",
-        "sabre/vobject": "^4.5",
-        "spatie/laravel-backup": "^9.3"
+        "sabre/vobject": "^4.5"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
