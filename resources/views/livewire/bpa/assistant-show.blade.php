@@ -20,8 +20,8 @@
 
     {{-- Assistent-info header --}}
     <div class="bg-card border border-border rounded-lg p-4 sm:p-6 mb-6">
-        {{-- Første rad: Avatar + Navn + Nummer + Type-badge --}}
-        <div class="flex items-center gap-3 mb-3">
+        {{-- Første rad: Avatar + Navn + Nummer + Type-badge + Oppgave-ikon --}}
+        <div class="flex items-start gap-3 mb-3">
             {{-- Avatar (mindre) --}}
             <div
                 class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center text-sm sm:text-base font-bold shrink-0"
@@ -31,7 +31,7 @@
             </div>
 
             {{-- Navn, nummer og type --}}
-            <div class="flex flex-wrap items-center gap-2 min-w-0">
+            <div class="flex flex-wrap items-center gap-2 min-w-0 flex-1">
                 <h1 class="text-lg sm:text-xl font-bold text-foreground">{{ $assistant->name }}</h1>
                 <span class="text-muted-foreground text-sm">{{ $assistant->formatted_number }}</span>
 
@@ -48,6 +48,71 @@
                     {{ $assistant->type_label }}
                 </span>
             </div>
+
+            {{-- Oppgave-tilgang ikon med popup --}}
+            @if($this->taskUrl)
+                <div
+                    x-data="{ showTaskPopup: false, copied: false }"
+                    class="relative shrink-0"
+                >
+                    <button
+                        x-on:click="showTaskPopup = !showTaskPopup"
+                        class="p-2 text-muted hover:text-accent bg-card border border-border rounded-md transition-colors cursor-pointer"
+                        :class="showTaskPopup && 'bg-card-hover text-accent'"
+                        title="Oppgave-tilgang"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                    </button>
+
+                    {{-- Popup --}}
+                    <div
+                        x-show="showTaskPopup"
+                        x-cloak
+                        x-transition
+                        x-on:click.outside="showTaskPopup = false"
+                        class="absolute right-0 top-full mt-2 w-72 sm:w-80 p-4 bg-card border border-border rounded-lg shadow-lg z-20"
+                    >
+                        <h3 class="text-sm font-medium text-foreground mb-2">Oppgave-tilgang</h3>
+                        <p class="text-xs text-muted mb-3">Assistenten kan bruke denne lenken for å se og fullføre oppgaver.</p>
+
+                        <div class="flex items-center gap-2 mb-3">
+                            <code class="flex-1 text-xs bg-input border border-border rounded-md px-2 py-1.5 text-foreground truncate">
+                                {{ $this->taskUrl }}
+                            </code>
+                            <button
+                                x-on:click="
+                                    navigator.clipboard.writeText('{{ $this->taskUrl }}');
+                                    copied = true;
+                                    setTimeout(() => copied = false, 2000);
+                                    $dispatch('toast', { type: 'success', message: 'Lenke kopiert til utklippstavle' });
+                                "
+                                class="shrink-0 p-1.5 text-muted hover:text-accent bg-input border border-border rounded-md transition-colors cursor-pointer"
+                                title="Kopier lenke"
+                            >
+                                <svg x-show="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                <svg x-show="copied" x-cloak class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <button
+                            wire:click="regenerateToken"
+                            wire:confirm="Er du sikker på at du vil generere en ny lenke? Den gamle lenken vil slutte å fungere."
+                            class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-muted hover:text-foreground bg-card-hover border border-border rounded-md transition-colors cursor-pointer"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>Generer ny lenke</span>
+                        </button>
+                    </div>
+                </div>
+            @endif
         </div>
 
         {{-- Andre rad: Ansatt-varighet --}}
@@ -84,57 +149,6 @@
             @endif
         </div>
     </div>
-
-    {{-- Oppgave-tilgang --}}
-    @if($this->taskUrl)
-        <div class="bg-card border border-border rounded-lg p-4 sm:p-6 mb-6">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div class="flex-1 min-w-0">
-                    <h2 class="text-sm font-medium text-muted mb-2">Oppgave-tilgang</h2>
-                    <div
-                        x-data="{ copied: false }"
-                        class="flex items-center gap-2"
-                    >
-                        <code class="flex-1 text-sm bg-input border border-border rounded-md px-3 py-2 text-foreground truncate">
-                            {{ $this->taskUrl }}
-                        </code>
-                        <button
-                            x-on:click="
-                                navigator.clipboard.writeText('{{ $this->taskUrl }}');
-                                copied = true;
-                                setTimeout(() => copied = false, 2000);
-                                $dispatch('toast', { type: 'success', message: 'Lenke kopiert til utklippstavle' });
-                            "
-                            class="shrink-0 p-2 text-muted hover:text-accent bg-input border border-border rounded-md transition-colors cursor-pointer"
-                            title="Kopier lenke"
-                        >
-                            <svg x-show="!copied" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            <svg x-show="copied" x-cloak class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                        </button>
-                    </div>
-                    <p class="text-xs text-muted mt-2">
-                        Assistenten kan bruke denne lenken for å se og fullføre oppgaver uten å logge inn.
-                    </p>
-                </div>
-                <div class="shrink-0">
-                    <button
-                        wire:click="regenerateToken"
-                        wire:confirm="Er du sikker på at du vil generere en ny lenke? Den gamle lenken vil slutte å fungere."
-                        class="inline-flex items-center gap-2 px-3 py-2 text-sm text-muted hover:text-foreground bg-card-hover border border-border rounded-md transition-colors cursor-pointer"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        <span>Generer ny lenke</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    @endif
 
     {{-- Statistikk-kort --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -299,6 +313,7 @@
                 x-show="showFilters"
                 x-cloak
                 x-transition
+                x-on:click.outside="showFilters = false"
                 class="sm:hidden p-4 bg-card-hover border border-border rounded-lg space-y-3"
             >
                 <div class="flex items-center gap-2">
