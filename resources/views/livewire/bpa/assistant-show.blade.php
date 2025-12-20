@@ -20,21 +20,20 @@
 
     {{-- Assistent-info header --}}
     <div class="bg-card border border-border rounded-lg p-4 sm:p-6 mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-start gap-4">
-            {{-- Avatar --}}
+        {{-- Første rad: Avatar + Navn + Nummer + Type-badge --}}
+        <div class="flex items-center gap-3 mb-3">
+            {{-- Avatar (mindre) --}}
             <div
-                class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 flex items-center justify-center text-xl sm:text-2xl font-bold shrink-0"
+                class="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 flex items-center justify-center text-sm sm:text-base font-bold shrink-0"
                 style="background-color: {{ $assistant->color }}20; border-color: {{ $assistant->color }}50; color: {{ $assistant->color }}"
             >
                 {{ $assistant->initials }}
             </div>
 
-            {{-- Info --}}
-            <div class="flex-1 min-w-0">
-                <div class="flex flex-wrap items-center gap-2 mb-1">
-                    <h1 class="text-xl sm:text-2xl font-bold text-foreground">{{ $assistant->name }}</h1>
-                    <span class="text-muted-foreground">{{ $assistant->formatted_number }}</span>
-                </div>
+            {{-- Navn, nummer og type --}}
+            <div class="flex flex-wrap items-center gap-2 min-w-0">
+                <h1 class="text-lg sm:text-xl font-bold text-foreground">{{ $assistant->name }}</h1>
+                <span class="text-muted-foreground text-sm">{{ $assistant->formatted_number }}</span>
 
                 @php
                     $typeClasses = match($assistant->type) {
@@ -45,44 +44,44 @@
                     };
                 @endphp
 
-                <div class="flex flex-wrap items-center gap-2 mb-3">
-                    <span class="px-2.5 py-1 text-xs rounded-md border {{ $typeClasses }}">
-                        {{ $assistant->type_label }}
-                    </span>
-                    <span class="text-sm text-muted">
-                        Ansatt i {{ $this->employmentDuration }}
-                    </span>
-                </div>
-
-                {{-- Kontaktinfo og hurtighandlinger --}}
-                <div class="flex flex-wrap items-center gap-3">
-                    @if($assistant->phone)
-                        <a href="tel:{{ $assistant->phone }}" class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            {{ $assistant->phone }}
-                        </a>
-                    @endif
-                    @if($assistant->email)
-                        <a href="mailto:{{ $assistant->email }}" class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            {{ $assistant->email }}
-                        </a>
-                    @endif
-                    @if($assistant->send_monthly_report)
-                        <span class="text-xs text-accent flex items-center gap-1">
-                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                            </svg>
-                            Månedlig rapport
-                        </span>
-                    @endif
-                </div>
+                <span class="px-2 py-0.5 text-xs rounded-md border {{ $typeClasses }}">
+                    {{ $assistant->type_label }}
+                </span>
             </div>
+        </div>
+
+        {{-- Andre rad: Ansatt-varighet --}}
+        <div class="text-sm text-muted mb-2">
+            Ansatt i {{ $this->employmentDuration }}
+        </div>
+
+        {{-- Tredje rad: Kontaktinfo --}}
+        <div class="flex flex-wrap items-center gap-3">
+            @if($assistant->phone)
+                <a href="tel:{{ $assistant->phone }}" class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    {{ $assistant->phone }}
+                </a>
+            @endif
+            @if($assistant->email)
+                <a href="mailto:{{ $assistant->email }}" class="inline-flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    {{ $assistant->email }}
+                </a>
+            @endif
+            @if($assistant->send_monthly_report)
+                <span class="text-xs text-accent flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                    </svg>
+                    Månedlig rapport
+                </span>
+            @endif
         </div>
     </div>
 
@@ -160,65 +159,164 @@
     {{-- Arbeidshistorikk --}}
     <div class="bg-card border border-border rounded-lg overflow-hidden mb-6">
         {{-- Header med filtre --}}
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-6 py-4 border-b border-border">
-            {{-- Tittel --}}
-            <h2 class="text-lg font-semibold text-foreground shrink-0">Arbeidshistorikk</h2>
+        <div x-data="{ showFilters: false }" class="relative px-4 sm:px-6 py-4 border-b border-border space-y-3">
+            {{-- Første rad: Tittel + filter-ikon (mobil) / Tittel + type-filter + dato-filtre (desktop) --}}
+            <div class="flex items-center justify-between sm:justify-start gap-3">
+                {{-- Tittel --}}
+                <h2 class="text-lg font-semibold text-foreground shrink-0">Arbeidshistorikk</h2>
 
-            {{-- Type-filter sentrert --}}
-            <div class="flex items-center bg-card border border-border rounded-md overflow-hidden">
+                {{-- Filter-knapp (kun mobil) --}}
+                <button
+                    x-on:click="showFilters = !showFilters"
+                    class="sm:hidden p-2 text-muted hover:text-foreground bg-card border border-border rounded-md transition-colors cursor-pointer"
+                    :class="showFilters && 'bg-card-hover text-foreground'"
+                    title="Filtrer"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                </button>
+
+                {{-- Type-filter (kun desktop) --}}
+                <div class="hidden sm:flex items-center bg-card border border-border rounded-md overflow-hidden">
+                    <button
+                        wire:click="setTypeFilter(null)"
+                        class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === null ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    >
+                        Alle
+                    </button>
+                    <button
+                        wire:click="setTypeFilter('worked')"
+                        class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'worked' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    >
+                        Jobbet
+                    </button>
+                    <button
+                        wire:click="setTypeFilter('away')"
+                        class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'away' ? 'bg-warning text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    >
+                        Borte
+                    </button>
+                    <button
+                        wire:click="setTypeFilter('fullday')"
+                        class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'fullday' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    >
+                        Hel dag
+                    </button>
+                    <button
+                        wire:click="setTypeFilter('archived')"
+                        class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'archived' ? 'bg-muted-foreground text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    >
+                        Arkivert
+                    </button>
+                </div>
+
+                {{-- Dato og per-side filtre (kun desktop) --}}
+                <div class="hidden sm:flex items-center gap-3 ml-auto">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-muted">År:</label>
+                        <select
+                            wire:model.live="year"
+                            class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                        >
+                            @foreach($this->availableYears as $y)
+                                <option value="{{ $y }}">{{ $y }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-muted">Måned:</label>
+                        <select
+                            wire:model.live="month"
+                            class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                        >
+                            <option value="">Alle</option>
+                            <option value="1">Januar</option>
+                            <option value="2">Februar</option>
+                            <option value="3">Mars</option>
+                            <option value="4">April</option>
+                            <option value="5">Mai</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-muted">Per side:</label>
+                        <select
+                            wire:model.live="perPage"
+                            class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                        >
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Type-filter (kun mobil, alltid synlig) --}}
+            <div class="flex sm:hidden items-stretch bg-card border border-border rounded-md overflow-hidden">
                 <button
                     wire:click="setTypeFilter(null)"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === null ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="flex-1 px-2 py-2 text-sm transition-colors cursor-pointer {{ $typeFilter === null ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
-                    Alle typer
+                    Alle
                 </button>
                 <button
                     wire:click="setTypeFilter('worked')"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'worked' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="flex-1 px-2 py-2 text-sm transition-colors cursor-pointer {{ $typeFilter === 'worked' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
                     Jobbet
                 </button>
                 <button
                     wire:click="setTypeFilter('away')"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'away' ? 'bg-warning text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="flex-1 px-2 py-2 text-sm transition-colors cursor-pointer {{ $typeFilter === 'away' ? 'bg-warning text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
                     Borte
                 </button>
                 <button
                     wire:click="setTypeFilter('fullday')"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'fullday' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="flex-1 px-2 py-2 text-sm transition-colors cursor-pointer {{ $typeFilter === 'fullday' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
                     Hel dag
                 </button>
                 <button
                     wire:click="setTypeFilter('archived')"
-                    class="px-3 py-1.5 text-sm transition-colors cursor-pointer {{ $typeFilter === 'archived' ? 'bg-muted-foreground text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
+                    class="flex-1 px-2 py-2 text-sm transition-colors cursor-pointer {{ $typeFilter === 'archived' ? 'bg-muted-foreground text-black' : 'text-muted hover:text-foreground hover:bg-card-hover' }}"
                 >
                     Arkivert
                 </button>
             </div>
 
-            {{-- Dato og per-side filtre --}}
-            <div class="flex flex-wrap items-center gap-3 shrink-0">
-                {{-- År-filter --}}
+            {{-- Dato og per-side filtre dropdown (kun mobil) --}}
+            <div
+                x-show="showFilters"
+                x-cloak
+                x-transition
+                class="sm:hidden p-4 bg-card-hover border border-border rounded-lg space-y-3"
+            >
                 <div class="flex items-center gap-2">
-                    <label class="text-sm text-muted">År:</label>
+                    <label class="text-sm text-muted w-16">År:</label>
                     <select
                         wire:model.live="year"
-                        class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                        class="flex-1 bg-input border border-border rounded-md px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
                     >
                         @foreach($this->availableYears as $y)
                             <option value="{{ $y }}">{{ $y }}</option>
                         @endforeach
                     </select>
                 </div>
-
-                {{-- Måned-filter --}}
                 <div class="flex items-center gap-2">
-                    <label class="text-sm text-muted">Måned:</label>
+                    <label class="text-sm text-muted w-16">Måned:</label>
                     <select
                         wire:model.live="month"
-                        class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                        class="flex-1 bg-input border border-border rounded-md px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
                     >
                         <option value="">Alle</option>
                         <option value="1">Januar</option>
@@ -235,13 +333,11 @@
                         <option value="12">Desember</option>
                     </select>
                 </div>
-
-                {{-- Per side --}}
                 <div class="flex items-center gap-2">
-                    <label class="text-sm text-muted">Per side:</label>
+                    <label class="text-sm text-muted w-16">Per side:</label>
                     <select
                         wire:model.live="perPage"
-                        class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
+                        class="flex-1 bg-input border border-border rounded-md px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
                     >
                         <option value="10">10</option>
                         <option value="25">25</option>
