@@ -35,15 +35,11 @@
         </div>
         <div class="flex items-center gap-2">
             @if($weeklyPage > 1)
-                <button wire:click="prevPage('weekly')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
-                    Forrige
-                </button>
+                <x-button variant="secondary" size="sm" wire:click="prevPage('weekly')">Forrige</x-button>
             @endif
             <span class="text-xs text-muted-foreground">{{ $weeklyPage }} / {{ $this->weeklyTotalPages }}</span>
             @if($weeklyPage < $this->weeklyTotalPages)
-                <button wire:click="nextPage('weekly')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
-                    Neste
-                </button>
+                <x-button variant="secondary" size="sm" wire:click="nextPage('weekly')">Neste</x-button>
             @endif
         </div>
     </div>

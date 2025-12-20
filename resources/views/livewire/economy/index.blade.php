@@ -544,19 +544,8 @@
             </div>
 
             <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
-                <button
-                    type="button"
-                    @click="show = false"
-                    class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
-                >
-                    Avbryt
-                </button>
-                <button
-                    type="submit"
-                    class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
-                >
-                    Lagre endringer
-                </button>
+                <x-button type="button" variant="secondary" @click="show = false">Avbryt</x-button>
+                <x-button type="submit">Lagre endringer</x-button>
             </div>
         </form>
     </x-modal>

@@ -41,15 +41,11 @@
         </div>
         <div class="flex items-center gap-2">
             @if($shiftsPage > 1)
-                <button wire:click="prevPage('shifts')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
-                    Forrige
-                </button>
+                <x-button variant="secondary" size="sm" wire:click="prevPage('shifts')">Forrige</x-button>
             @endif
             <span class="text-xs text-muted-foreground">{{ $shiftsPage }} / {{ $this->shiftsTotalPages }}</span>
             @if($shiftsPage < $this->shiftsTotalPages)
-                <button wire:click="nextPage('shifts')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
-                    Neste
-                </button>
+                <x-button variant="secondary" size="sm" wire:click="nextPage('shifts')">Neste</x-button>
             @endif
         </div>
     </div>

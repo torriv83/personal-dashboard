@@ -535,14 +535,8 @@
 
                     {{-- Footer --}}
                     <div class="flex items-center justify-end gap-3 pt-4">
-                        <button type="button" wire:click="closePinModal"
-                            class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer">
-                            Avbryt
-                        </button>
-                        <button type="submit"
-                            class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer">
-                            Lagre PIN
-                        </button>
+                        <x-button type="button" variant="secondary" wire:click="closePinModal">Avbryt</x-button>
+                        <x-button type="submit">Lagre PIN</x-button>
                     </div>
                 </form>
             </div>
@@ -594,14 +588,8 @@
 
                     {{-- Footer --}}
                     <div class="flex items-center justify-end gap-3 pt-4">
-                        <button type="button" wire:click="closeRemovePinModal"
-                            class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer">
-                            Avbryt
-                        </button>
-                        <button type="submit"
-                            class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors cursor-pointer">
-                            Fjern PIN
-                        </button>
+                        <x-button type="button" variant="secondary" wire:click="closeRemovePinModal">Avbryt</x-button>
+                        <x-button type="submit" variant="danger">Fjern PIN</x-button>
                     </div>
                 </form>
             </div>

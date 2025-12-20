@@ -318,36 +318,21 @@
     <x-modal name="add-assistant" title="Legg til ny assistent" maxWidth="xl">
         <div class="space-y-4">
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Navn <span class="text-destructive">*</span></label>
-                    <input type="text" wire:model="createName" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Assistent nummer <span class="text-destructive">*</span></label>
-                    <input type="number" wire:model="createEmployeeNumber" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                </div>
+                <x-input type="text" wire:model="createName" label="Navn" :required="true" />
+                <x-input type="number" wire:model="createEmployeeNumber" label="Assistent nummer" :required="true" />
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">E-post <span class="text-destructive">*</span></label>
-                    <input type="email" wire:model="createEmail" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Telefon</label>
-                    <input type="tel" wire:model="createPhone" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent">
-                </div>
+                <x-input type="email" wire:model="createEmail" label="E-post" :required="true" />
+                <x-input type="tel" wire:model="createPhone" label="Telefon" />
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Type <span class="text-destructive">*</span></label>
-                    <select wire:model="createType" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                        <option value="primary">Fast ansatt</option>
-                        <option value="substitute">Vikar</option>
-                        <option value="oncall">Tilkalling</option>
-                    </select>
-                </div>
+                <x-select wire:model="createType" label="Type" :required="true" placeholder="">
+                    <option value="primary">Fast ansatt</option>
+                    <option value="substitute">Vikar</option>
+                    <option value="oncall">Tilkalling</option>
+                </x-select>
                 <div>
                     <label class="block text-sm font-medium text-muted mb-1">Ansatt dato <span class="text-destructive">*</span></label>
                     <div
@@ -361,7 +346,7 @@
                         }"
                         class="relative"
                     >
-                        <div class="flex items-center justify-between w-full bg-input border border-border rounded-md px-3 py-2 text-foreground cursor-pointer">
+                        <div class="flex items-center justify-between w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground cursor-pointer">
                             <span x-text="formatted" :class="value ? 'text-foreground' : 'text-muted'"></span>
                             <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -377,30 +362,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-foreground">Månedlig e-postrapport</p>
-                    <p class="text-xs text-muted">Send oversikt over arbeidstimer ved månedsslutt</p>
-                </div>
-                <button
-                    type="button"
-                    wire:click="$toggle('createSendMonthlyReport')"
-                    class="relative w-12 h-7 rounded-full transition-colors cursor-pointer {{ $createSendMonthlyReport ? 'bg-accent' : 'bg-border' }}"
-                >
-                    <span class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $createSendMonthlyReport ? 'translate-x-5' : '' }}"></span>
-                </button>
-            </div>
+            <x-toggle wire:model.live="createSendMonthlyReport" label="Månedlig e-postrapport" description="Send oversikt over arbeidstimer ved månedsslutt" />
 
             <div class="flex justify-end gap-2 pt-4">
-                <button
-                    x-on:click="$dispatch('close-modal', 'add-assistant')"
-                    class="px-4 py-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
-                >
-                    Avbryt
-                </button>
-                <button wire:click="createAssistant" class="px-4 py-2 bg-accent text-black text-sm rounded-md hover:opacity-90 transition-opacity cursor-pointer">
-                    Lagre assistent
-                </button>
+                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'add-assistant')">Avbryt</x-button>
+                <x-button wire:click="createAssistant">Lagre assistent</x-button>
             </div>
         </div>
     </x-modal>
@@ -409,36 +375,21 @@
     <x-modal name="edit-assistant" title="Rediger assistent" maxWidth="xl">
         <div class="space-y-4">
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Navn <span class="text-destructive">*</span></label>
-                    <input type="text" wire:model="editName" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Assistent nummer <span class="text-destructive">*</span></label>
-                    <input type="number" wire:model="editEmployeeNumber" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                </div>
+                <x-input type="text" wire:model="editName" label="Navn" :required="true" />
+                <x-input type="number" wire:model="editEmployeeNumber" label="Assistent nummer" :required="true" />
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">E-post <span class="text-destructive">*</span></label>
-                    <input type="email" wire:model="editEmail" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Telefon</label>
-                    <input type="tel" wire:model="editPhone" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent">
-                </div>
+                <x-input type="email" wire:model="editEmail" label="E-post" :required="true" />
+                <x-input type="tel" wire:model="editPhone" label="Telefon" />
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Type <span class="text-destructive">*</span></label>
-                    <select wire:model="editType" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                        <option value="primary">Fast ansatt</option>
-                        <option value="substitute">Vikar</option>
-                        <option value="oncall">Tilkalling</option>
-                    </select>
-                </div>
+                <x-select wire:model="editType" label="Type" :required="true" placeholder="">
+                    <option value="primary">Fast ansatt</option>
+                    <option value="substitute">Vikar</option>
+                    <option value="oncall">Tilkalling</option>
+                </x-select>
                 <div>
                     <label class="block text-sm font-medium text-muted mb-1">Ansatt dato <span class="text-destructive">*</span></label>
                     <div
@@ -452,7 +403,7 @@
                         }"
                         class="relative"
                     >
-                        <div class="flex items-center justify-between w-full bg-input border border-border rounded-md px-3 py-2 text-foreground cursor-pointer">
+                        <div class="flex items-center justify-between w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground cursor-pointer">
                             <span x-text="formatted" :class="value ? 'text-foreground' : 'text-muted'"></span>
                             <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -468,30 +419,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-foreground">Månedlig e-postrapport</p>
-                    <p class="text-xs text-muted">Send oversikt over arbeidstimer ved månedsslutt</p>
-                </div>
-                <button
-                    type="button"
-                    wire:click="$toggle('editSendMonthlyReport')"
-                    class="relative w-12 h-7 rounded-full transition-colors cursor-pointer {{ $editSendMonthlyReport ? 'bg-accent' : 'bg-border' }}"
-                >
-                    <span class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $editSendMonthlyReport ? 'translate-x-5' : '' }}"></span>
-                </button>
-            </div>
+            <x-toggle wire:model.live="editSendMonthlyReport" label="Månedlig e-postrapport" description="Send oversikt over arbeidstimer ved månedsslutt" />
 
             <div class="flex justify-end gap-2 pt-4">
-                <button
-                    x-on:click="$dispatch('close-modal', 'edit-assistant')"
-                    class="px-4 py-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
-                >
-                    Avbryt
-                </button>
-                <button wire:click="updateAssistant" class="px-4 py-2 bg-accent text-black text-sm rounded-md hover:opacity-90 transition-opacity cursor-pointer">
-                    Lagre endringer
-                </button>
+                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'edit-assistant')">Avbryt</x-button>
+                <x-button wire:click="updateAssistant">Lagre endringer</x-button>
             </div>
         </div>
     </x-modal>

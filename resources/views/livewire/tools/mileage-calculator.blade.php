@@ -232,15 +232,14 @@
                     </div>
                 </div>
 
-                <button
+                <x-button
                     type="submit"
                     wire:loading.attr="disabled"
                     wire:target="addDestination"
-                    class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer disabled:opacity-50"
                 >
                     <span wire:loading.remove wire:target="addDestination">Legg til destinasjon</span>
                     <span wire:loading wire:target="addDestination">Legger til...</span>
-                </button>
+                </x-button>
             </form>
         </div>
     </div>

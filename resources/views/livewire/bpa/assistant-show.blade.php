@@ -229,22 +229,15 @@
                 <div class="hidden sm:flex items-center gap-3 ml-auto">
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-muted">År:</label>
-                        <select
-                            wire:model.live="year"
-                            class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                        >
+                        <x-select wire:model.live="year" :inline="true" placeholder="" size="sm">
                             @foreach($this->availableYears as $y)
                                 <option value="{{ $y }}">{{ $y }}</option>
                             @endforeach
-                        </select>
+                        </x-select>
                     </div>
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-muted">Måned:</label>
-                        <select
-                            wire:model.live="month"
-                            class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                        >
-                            <option value="">Alle</option>
+                        <x-select wire:model.live="month" :inline="true" placeholder="Alle" size="sm">
                             <option value="1">Januar</option>
                             <option value="2">Februar</option>
                             <option value="3">Mars</option>
@@ -257,19 +250,16 @@
                             <option value="10">Oktober</option>
                             <option value="11">November</option>
                             <option value="12">Desember</option>
-                        </select>
+                        </x-select>
                     </div>
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-muted">Per side:</label>
-                        <select
-                            wire:model.live="perPage"
-                            class="bg-input border border-border rounded-md px-3 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                        >
+                        <x-select wire:model.live="perPage" :inline="true" placeholder="" size="sm">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
-                        </select>
+                        </x-select>
                     </div>
                 </div>
             </div>
@@ -318,22 +308,15 @@
             >
                 <div class="flex items-center gap-2">
                     <label class="text-sm text-muted w-16">År:</label>
-                    <select
-                        wire:model.live="year"
-                        class="flex-1 bg-input border border-border rounded-md px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                    >
+                    <x-select wire:model.live="year" :inline="true" placeholder="" wrapperClass="flex-1">
                         @foreach($this->availableYears as $y)
                             <option value="{{ $y }}">{{ $y }}</option>
                         @endforeach
-                    </select>
+                    </x-select>
                 </div>
                 <div class="flex items-center gap-2">
                     <label class="text-sm text-muted w-16">Måned:</label>
-                    <select
-                        wire:model.live="month"
-                        class="flex-1 bg-input border border-border rounded-md px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                    >
-                        <option value="">Alle</option>
+                    <x-select wire:model.live="month" :inline="true" placeholder="Alle" wrapperClass="flex-1">
                         <option value="1">Januar</option>
                         <option value="2">Februar</option>
                         <option value="3">Mars</option>
@@ -346,19 +329,16 @@
                         <option value="10">Oktober</option>
                         <option value="11">November</option>
                         <option value="12">Desember</option>
-                    </select>
+                    </x-select>
                 </div>
                 <div class="flex items-center gap-2">
                     <label class="text-sm text-muted w-16">Per side:</label>
-                    <select
-                        wire:model.live="perPage"
-                        class="flex-1 bg-input border border-border rounded-md px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                    >
+                    <x-select wire:model.live="perPage" :inline="true" placeholder="" wrapperClass="flex-1">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
-                    </select>
+                    </x-select>
                 </div>
             </div>
         </div>
@@ -584,36 +564,21 @@
     <x-modal name="edit-assistant" title="Rediger assistent" maxWidth="xl">
         <div class="space-y-4">
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Navn <span class="text-destructive">*</span></label>
-                    <input type="text" wire:model="editName" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Assistent nummer <span class="text-destructive">*</span></label>
-                    <input type="number" wire:model="editEmployeeNumber" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                </div>
+                <x-input type="text" wire:model="editName" label="Navn" :required="true" />
+                <x-input type="number" wire:model="editEmployeeNumber" label="Assistent nummer" :required="true" />
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">E-post <span class="text-destructive">*</span></label>
-                    <input type="email" wire:model="editEmail" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Telefon</label>
-                    <input type="tel" wire:model="editPhone" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent">
-                </div>
+                <x-input type="email" wire:model="editEmail" label="E-post" :required="true" />
+                <x-input type="tel" wire:model="editPhone" label="Telefon" />
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <label class="block text-sm font-medium text-muted mb-1">Type <span class="text-destructive">*</span></label>
-                    <select wire:model="editType" class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent cursor-pointer" required>
-                        <option value="primary">Fast ansatt</option>
-                        <option value="substitute">Vikar</option>
-                        <option value="oncall">Tilkalling</option>
-                    </select>
-                </div>
+                <x-select wire:model="editType" label="Type" :required="true" placeholder="">
+                    <option value="primary">Fast ansatt</option>
+                    <option value="substitute">Vikar</option>
+                    <option value="oncall">Tilkalling</option>
+                </x-select>
                 <div>
                     <label class="block text-sm font-medium text-muted mb-1">Ansatt dato <span class="text-destructive">*</span></label>
                     <div
@@ -627,7 +592,7 @@
                         }"
                         class="relative"
                     >
-                        <div class="flex items-center justify-between w-full bg-input border border-border rounded-md px-3 py-2 text-foreground cursor-pointer">
+                        <div class="flex items-center justify-between w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground cursor-pointer">
                             <span x-text="formatted" :class="value ? 'text-foreground' : 'text-muted'"></span>
                             <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -643,30 +608,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-between py-2">
-                <div>
-                    <p class="text-sm font-medium text-foreground">Månedlig e-postrapport</p>
-                    <p class="text-xs text-muted">Send oversikt over arbeidstimer ved månedsslutt</p>
-                </div>
-                <button
-                    type="button"
-                    wire:click="$toggle('editSendMonthlyReport')"
-                    class="relative w-12 h-7 rounded-full transition-colors cursor-pointer {{ $editSendMonthlyReport ? 'bg-accent' : 'bg-border' }}"
-                >
-                    <span class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $editSendMonthlyReport ? 'translate-x-5' : '' }}"></span>
-                </button>
-            </div>
+            <x-toggle wire:model.live="editSendMonthlyReport" label="Månedlig e-postrapport" description="Send oversikt over arbeidstimer ved månedsslutt" />
 
             <div class="flex justify-end gap-2 pt-4">
-                <button
-                    x-on:click="$dispatch('close-modal', 'edit-assistant')"
-                    class="px-4 py-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
-                >
-                    Avbryt
-                </button>
-                <button wire:click="updateAssistant" class="px-4 py-2 bg-accent text-black text-sm rounded-md hover:opacity-90 transition-opacity cursor-pointer">
-                    Lagre endringer
-                </button>
+                <x-button variant="ghost" x-on:click="$dispatch('close-modal', 'edit-assistant')">Avbryt</x-button>
+                <x-button wire:click="updateAssistant">Lagre endringer</x-button>
             </div>
         </div>
     </x-modal>
@@ -717,43 +663,19 @@
                         @endunless
 
                         {{-- Notat --}}
-                        <div>
-                            <label class="block text-sm font-medium text-muted mb-1">Notat</label>
-                            <input
-                                type="text"
-                                wire:model="shiftNote"
-                                class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent"
-                                placeholder="Valgfritt notat..."
-                            >
-                        </div>
+                        <x-input type="text" wire:model="shiftNote" label="Notat" placeholder="Valgfritt notat..." />
 
                         {{-- Checkboxer --}}
                         <div class="flex items-center gap-6">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" wire:model.live="shiftIsUnavailable" class="rounded border-border bg-input text-accent focus:ring-accent cursor-pointer">
-                                <span class="text-sm text-foreground">Borte</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" wire:model.live="shiftIsAllDay" class="rounded border-border bg-input text-accent focus:ring-accent cursor-pointer">
-                                <span class="text-sm text-foreground">Hel dag</span>
-                            </label>
+                            <x-checkbox wire:model.live="shiftIsUnavailable" label="Borte" size="sm" />
+                            <x-checkbox wire:model.live="shiftIsAllDay" label="Hel dag" size="sm" />
                         </div>
                     </div>
                 </div>
 
                 <div class="bg-card-hover px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
-                    <button
-                        wire:click="saveShift"
-                        class="w-full sm:w-auto px-4 py-2 bg-accent text-black text-sm rounded-md hover:opacity-90 transition-opacity cursor-pointer"
-                    >
-                        Lagre
-                    </button>
-                    <button
-                        wire:click="closeShiftModal"
-                        class="mt-2 sm:mt-0 w-full sm:w-auto px-4 py-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
-                    >
-                        Avbryt
-                    </button>
+                    <x-button wire:click="saveShift" class="w-full sm:w-auto">Lagre</x-button>
+                    <x-button variant="ghost" wire:click="closeShiftModal" class="mt-2 sm:mt-0 w-full sm:w-auto">Avbryt</x-button>
                 </div>
             </div>
         </div>

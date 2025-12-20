@@ -66,15 +66,11 @@
         </div>
         <div class="flex items-center gap-2">
             @if($employeesPage > 1)
-                <button wire:click="prevPage('employees')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
-                    Forrige
-                </button>
+                <x-button variant="secondary" size="sm" wire:click="prevPage('employees')">Forrige</x-button>
             @endif
             <span class="text-xs text-muted-foreground">{{ $employeesPage }} / {{ $this->employeesTotalPages }}</span>
             @if($employeesPage < $this->employeesTotalPages)
-                <button wire:click="nextPage('employees')" class="px-3 py-1.5 text-xs font-medium text-foreground bg-card-hover border border-border rounded hover:bg-input transition-colors cursor-pointer">
-                    Neste
-                </button>
+                <x-button variant="secondary" size="sm" wire:click="nextPage('employees')">Neste</x-button>
             @endif
         </div>
     </div>

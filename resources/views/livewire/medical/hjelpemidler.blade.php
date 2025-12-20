@@ -254,18 +254,8 @@
 
                 {{-- Footer --}}
                 <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end gap-3">
-                    <button
-                        wire:click="closeItemModal"
-                        class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
-                    >
-                        Avbryt
-                    </button>
-                    <button
-                        wire:click="saveItem"
-                        class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
-                    >
-                        {{ $editingItemId ? 'Lagre' : 'Legg til' }}
-                    </button>
+                    <x-button variant="secondary" wire:click="closeItemModal">Avbryt</x-button>
+                    <x-button wire:click="saveItem">{{ $editingItemId ? 'Lagre' : 'Legg til' }}</x-button>
                 </div>
             </div>
         </div>
@@ -316,18 +306,8 @@
 
                 {{-- Footer --}}
                 <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end gap-3">
-                    <button
-                        wire:click="closeKategoriModal"
-                        class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
-                    >
-                        Avbryt
-                    </button>
-                    <button
-                        wire:click="saveKategori"
-                        class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
-                    >
-                        {{ $editingKategoriId ? 'Lagre' : 'Opprett' }}
-                    </button>
+                    <x-button variant="secondary" wire:click="closeKategoriModal">Avbryt</x-button>
+                    <x-button wire:click="saveKategori">{{ $editingKategoriId ? 'Lagre' : 'Opprett' }}</x-button>
                 </div>
             </div>
         </div>
@@ -375,18 +355,8 @@
 
                 {{-- Footer --}}
                 <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end gap-3">
-                    <button
-                        wire:click="closeBrukerpassModal"
-                        class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
-                    >
-                        Avbryt
-                    </button>
-                    <button
-                        wire:click="saveBrukerpass"
-                        class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
-                    >
-                        Lagre
-                    </button>
+                    <x-button variant="secondary" wire:click="closeBrukerpassModal">Avbryt</x-button>
+                    <x-button wire:click="saveBrukerpass">Lagre</x-button>
                 </div>
             </div>
         </div>

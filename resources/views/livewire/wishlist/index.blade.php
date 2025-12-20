@@ -759,18 +759,8 @@
 
                 {{-- Footer --}}
                 <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end gap-3">
-                    <button
-                        wire:click="closeItemModal"
-                        class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
-                    >
-                        Avbryt
-                    </button>
-                    <button
-                        wire:click="saveItem"
-                        class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
-                    >
-                        {{ $editingItemId ? 'Lagre' : 'Legg til' }}
-                    </button>
+                    <x-button variant="secondary" wire:click="closeItemModal">Avbryt</x-button>
+                    <x-button wire:click="saveItem">{{ $editingItemId ? 'Lagre' : 'Legg til' }}</x-button>
                 </div>
             </div>
         </div>
@@ -825,18 +815,8 @@
 
                 {{-- Footer --}}
                 <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end gap-3">
-                    <button
-                        wire:click="closeGroupModal"
-                        class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
-                    >
-                        Avbryt
-                    </button>
-                    <button
-                        wire:click="saveGroup"
-                        class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
-                    >
-                        {{ $editingGroupId ? 'Lagre' : 'Opprett' }}
-                    </button>
+                    <x-button variant="secondary" wire:click="closeGroupModal">Avbryt</x-button>
+                    <x-button wire:click="saveGroup">{{ $editingGroupId ? 'Lagre' : 'Opprett' }}</x-button>
                 </div>
             </div>
         </div>
@@ -940,12 +920,7 @@
 
                 {{-- Footer --}}
                 <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end">
-                    <button
-                        wire:click="closeShareModal"
-                        class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
-                    >
-                        Lukk
-                    </button>
+                    <x-button variant="secondary" wire:click="closeShareModal">Lukk</x-button>
                 </div>
             </div>
         </div>

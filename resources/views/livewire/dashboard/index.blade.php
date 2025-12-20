@@ -373,12 +373,7 @@
                     >
                         Tilbakestill til standard
                     </button>
-                    <button
-                        wire:click="$set('showSettings', false)"
-                        class="px-4 py-2 bg-accent text-black font-medium rounded-lg hover:bg-accent/90 transition-colors cursor-pointer"
-                    >
-                        Ferdig
-                    </button>
+                    <x-button wire:click="$set('showSettings', false)">Ferdig</x-button>
                 </div>
             </div>
         </div>
@@ -554,12 +549,7 @@
                 </div>
 
                 <div class="flex items-center justify-end p-4 border-t border-border">
-                    <button
-                        wire:click="$set('showForecastModal', false)"
-                        class="px-4 py-2 bg-accent text-black font-medium rounded-lg hover:bg-accent/90 transition-colors cursor-pointer"
-                    >
-                        Lukk
-                    </button>
+                    <x-button wire:click="$set('showForecastModal', false)">Lukk</x-button>
                 </div>
             </div>
         </div>

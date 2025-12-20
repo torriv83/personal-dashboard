@@ -153,47 +153,32 @@
                     </div>
 
                     <div x-data="{ isShared: @entangle('listIsShared'), assistantId: @entangle('listAssistantId'), allowAssistantAdd: @entangle('listAllowAssistantAdd') }">
-                        <label class="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                x-model="isShared"
-                                @change="if(isShared) assistantId = null; else allowAssistantAdd = false"
-                                class="w-4 h-4 rounded border-border bg-input text-accent focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-card cursor-pointer"
-                            >
-                            <div>
-                                <span class="text-sm font-medium text-foreground">Delt liste</span>
-                                <p class="text-xs text-muted-foreground">Alle assistenter kan se denne listen</p>
-                            </div>
-                        </label>
+                        <x-checkbox
+                            x-model="isShared"
+                            x-on:change="if(isShared) assistantId = null; else allowAssistantAdd = false"
+                            label="Delt liste"
+                            description="Alle assistenter kan se denne listen"
+                            size="sm"
+                        />
 
                         {{-- Sub-option: Allow assistants to add tasks (only visible when shared) --}}
                         <div x-show="isShared" x-transition class="mt-3">
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    x-model="allowAssistantAdd"
-                                    class="w-4 h-4 rounded border-border bg-input text-accent focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-card cursor-pointer"
-                                >
-                                <div>
-                                    <span class="text-sm font-medium text-foreground">Tillat assistenter å legge til</span>
-                                    <p class="text-xs text-muted-foreground">Assistenter kan legge til oppgaver i denne listen</p>
-                                </div>
-                            </label>
+                            <x-checkbox
+                                x-model="allowAssistantAdd"
+                                label="Tillat assistenter å legge til"
+                                description="Assistenter kan legge til oppgaver i denne listen"
+                                size="sm"
+                            />
                         </div>
                     </div>
 
                     <div x-data="{ isShared: @entangle('listIsShared'), assistantId: @entangle('listAssistantId') }" x-show="!isShared" x-transition>
                         <label class="block text-sm font-medium text-foreground mb-1">Tildel til assistent</label>
-                        <select
-                            x-model="assistantId"
-                            @change="if(assistantId) isShared = false"
-                            class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
-                        >
-                            <option value="">Ingen (kun admin)</option>
+                        <x-select x-model="assistantId" x-on:change="if(assistantId) isShared = false" :inline="true" placeholder="Ingen (kun admin)">
                             @foreach($this->assistants as $assistant)
                                 <option value="{{ $assistant['id'] }}">{{ $assistant['name'] }}</option>
                             @endforeach
-                        </select>
+                        </x-select>
                         <p class="text-xs text-muted-foreground mt-1">Listen og alle oppgaver tilhører kun denne assistenten</p>
                     </div>
                 </div>

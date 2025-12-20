@@ -53,19 +53,11 @@
                 {{-- Body --}}
                 <div class="p-4 space-y-4">
                     <div class="grid gap-4 md:grid-cols-2">
-                        <div>
-                            <label class="block text-sm font-medium text-muted mb-1">Assistent</label>
-                            <select
-                                wire:model="assistant_id"
-                                class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                            >
-                                <option value="">Velg assistent...</option>
-                                @foreach($this->assistants as $assistant)
-                                    <option value="{{ $assistant->id }}">{{ $assistant->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('assistant_id') <span class="text-sm text-destructive">{{ $message }}</span> @enderror
-                        </div>
+                        <x-select wire:model="assistant_id" label="Assistent" placeholder="Velg assistent...">
+                            @foreach($this->assistants as $assistant)
+                                <option value="{{ $assistant->id }}">{{ $assistant->name }}</option>
+                            @endforeach
+                        </x-select>
                         <div>
                             <label class="block text-sm font-medium text-muted mb-1">Dato</label>
                             <div
@@ -79,7 +71,7 @@
                                 }"
                                 class="relative"
                             >
-                                <div class="flex items-center justify-between w-full bg-input border border-border rounded-md px-3 py-2 text-foreground cursor-pointer">
+                                <div class="flex items-center justify-between w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground cursor-pointer">
                                     <span x-text="formatted" :class="value ? 'text-foreground' : 'text-muted'"></span>
                                     <svg class="w-5 h-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -160,49 +152,18 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-muted mb-1">Beskrivelse</label>
-                        <textarea
-                            wire:model="note"
-                            class="w-full bg-input border border-border rounded-md px-3 py-2 text-foreground focus:ring-2 focus:ring-accent"
-                            rows="3"
-                        ></textarea>
-                    </div>
+                    <x-textarea wire:model="note" label="Beskrivelse" rows="3" />
 
                     <div class="grid gap-4 md:grid-cols-2">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                wire:model.live="is_unavailable"
-                                class="w-5 h-5 rounded border-border text-warning focus:ring-warning cursor-pointer"
-                            >
-                            <span class="text-sm text-muted">Borte / Utilgjengelig</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                wire:model.live="is_all_day"
-                                class="w-5 h-5 rounded border-border text-accent focus:ring-accent cursor-pointer"
-                            >
-                            <span class="text-sm text-muted">Hele dagen</span>
-                        </label>
+                        <x-checkbox wire:model.live="is_unavailable" label="Borte / Utilgjengelig" color="warning" />
+                        <x-checkbox wire:model.live="is_all_day" label="Hele dagen" />
                     </div>
                 </div>
 
                 {{-- Footer --}}
                 <div class="flex justify-end gap-2 p-4 border-t border-border">
-                    <button
-                        wire:click="closeModal"
-                        class="px-4 py-2 text-sm text-muted hover:text-foreground transition-colors cursor-pointer"
-                    >
-                        Avbryt
-                    </button>
-                    <button
-                        wire:click="save"
-                        class="px-4 py-2 bg-accent text-black text-sm rounded-md hover:opacity-90 transition-opacity cursor-pointer"
-                    >
-                        {{ $editingShiftId ? 'Oppdater' : 'Lagre oppføring' }}
-                    </button>
+                    <x-button variant="ghost" wire:click="closeModal">Avbryt</x-button>
+                    <x-button wire:click="save">{{ $editingShiftId ? 'Oppdater' : 'Lagre oppføring' }}</x-button>
                 </div>
             </div>
         </div>
@@ -283,16 +244,13 @@
             {{-- Per-side velger (skjult på mobil, vises i footer) --}}
             <div class="hidden sm:flex items-center gap-2">
                 <span class="text-sm text-muted">Vis</span>
-                <select
-                    wire:model.live="perPage"
-                    class="bg-card border border-border rounded-md px-2 py-1.5 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                >
+                <x-select wire:model.live="perPage" :inline="true" placeholder="" size="sm">
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
                     <option value="100">100</option>
                     <option value="250">250</option>
-                </select>
+                </x-select>
                 <span class="text-sm text-muted">per side</span>
             </div>
         </div>
@@ -431,16 +389,13 @@
                                         {{-- Per-side velger (kun mobil) --}}
                                         <div class="flex sm:hidden items-center gap-2">
                                             <span>·</span>
-                                            <select
-                                                wire:model.live="perPage"
-                                                class="bg-card border border-border rounded-md px-2 py-1 text-sm text-foreground focus:ring-2 focus:ring-accent cursor-pointer"
-                                            >
+                                            <x-select wire:model.live="perPage" :inline="true" placeholder="" size="sm">
                                                 <option value="10">10</option>
                                                 <option value="25">25</option>
                                                 <option value="50">50</option>
                                                 <option value="100">100</option>
                                                 <option value="250">250</option>
-                                            </select>
+                                            </x-select>
                                             <span>per side</span>
                                         </div>
                                     </div>
