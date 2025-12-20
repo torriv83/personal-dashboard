@@ -39,8 +39,8 @@
             class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
             @click.self="closeExpanded()"
         >
-            <div class="bg-card border border-border rounded-xl max-h-[95vh] overflow-auto shadow-2xl">
-                <div class="flex items-center justify-between p-5 border-b border-border">
+            <div class="bg-card border border-border rounded-xl max-h-[95vh] max-w-[95vw] flex flex-col shadow-2xl">
+                <div class="flex items-center justify-between p-5 border-b border-border shrink-0">
                     <h3 class="text-lg font-medium text-foreground">Brukte timer av totalen (%)</h3>
                     <button @click="closeExpanded()" class="p-2 text-muted-foreground hover:text-foreground hover:bg-card-hover rounded-lg transition-colors cursor-pointer" title="Lukk">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -48,7 +48,7 @@
                         </svg>
                     </button>
                 </div>
-                <div class="p-5">
+                <div class="p-5 overflow-auto">
                     <div x-ref="fullChart"></div>
                 </div>
             </div>
