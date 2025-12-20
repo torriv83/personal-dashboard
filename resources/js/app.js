@@ -17,6 +17,19 @@ window.percentageChart = percentageChart;
 // Register Alpine sort plugin
 Alpine.plugin(sort);
 
+// Register Alpine store for swipe loading state (persists across Livewire re-renders)
+Alpine.store('swipeLoader', {
+    loading: false,
+
+    show() {
+        this.loading = true;
+    },
+
+    hide() {
+        this.loading = false;
+    }
+});
+
 // Register Alpine store for context menu (persists across Livewire re-renders)
 Alpine.store('contextMenu', {
     show: false,

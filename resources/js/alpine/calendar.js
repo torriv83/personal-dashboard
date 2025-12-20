@@ -59,6 +59,14 @@ export default (entangledView) => ({
     _selectMoveHandler: null,
     _selectUpHandler: null,
 
+    // Swipe navigation state (mobile)
+    swipeStartX: 0,
+    swipeStartY: 0,
+    swipeStartTime: 0,
+    isSwiping: false,
+    swipeOffsetX: 0, // Current horizontal offset during swipe
+    isAnimatingSwipe: false, // True during slide-out animation
+
     // Absence popup is now in Alpine.store('absencePopup')
     // This getter provides backward compatibility for existing code
     get absencePopup() {
@@ -103,6 +111,171 @@ export default (entangledView) => ({
      */
     setView(newView) {
         this.view = newView;
+    },
+
+    // =========================================================================
+    // Swipe Navigation (mobile)
+    // =========================================================================
+
+    /**
+     * Handle touch start - record starting position and time
+     */
+    handleTouchStart(e) {
+        // Only handle single touch
+        if (e.touches.length !== 1) return;
+
+        // Don't start swipe if other operations are active
+        if (this.isCreatingShift || this.isSelectingDays ||
+            this.resizingShift || this.draggedShift) return;
+
+        this.swipeStartX = e.touches[0].clientX;
+        this.swipeStartY = e.touches[0].clientY;
+        this.swipeStartTime = Date.now();
+        this.isSwiping = false;
+    },
+
+    /**
+     * Handle touch move - detect if this is a horizontal swipe and update offset
+     */
+    handleTouchMove(e) {
+        // Skip if no start position recorded or animating
+        if (!this.swipeStartTime || this.isAnimatingSwipe) return;
+
+        // Don't interfere if other operations started
+        if (this.isCreatingShift || this.isSelectingDays ||
+            this.resizingShift || this.draggedShift) {
+            this.swipeStartTime = 0;
+            return;
+        }
+
+        const deltaX = e.touches[0].clientX - this.swipeStartX;
+        const deltaY = e.touches[0].clientY - this.swipeStartY;
+        const elapsed = Date.now() - this.swipeStartTime;
+
+        // Detect horizontal swipe early (within 150ms, before drag-to-create activates)
+        // Requires: >30px horizontal, horizontal > 1.5x vertical
+        if (!this.isSwiping && elapsed < 150 && Math.abs(deltaX) > 30 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+            this.isSwiping = true;
+            // Cancel any pending create/select operations
+            if (this.createTimeout) {
+                clearTimeout(this.createTimeout);
+                this.createTimeout = null;
+                this.createPending = false;
+            }
+            if (this.selectTimeout) {
+                clearTimeout(this.selectTimeout);
+                this.selectTimeout = null;
+                this.selectPending = false;
+            }
+        }
+
+        // Update visual offset while swiping (follow finger directly)
+        if (this.isSwiping) {
+            this.swipeOffsetX = deltaX;
+        }
+    },
+
+    /**
+     * Handle touch end - animate and navigate if valid swipe detected
+     */
+    handleTouchEnd(e) {
+        // Skip if no start position or other operations active
+        if (!this.swipeStartTime || this.isAnimatingSwipe) return;
+        if (this.isCreatingShift || this.isSelectingDays ||
+            this.resizingShift || this.draggedShift) {
+            this.resetSwipeState();
+            return;
+        }
+
+        const touch = e.changedTouches[0];
+        const deltaX = touch.clientX - this.swipeStartX;
+        const deltaY = touch.clientY - this.swipeStartY;
+        const elapsed = Date.now() - this.swipeStartTime;
+
+        // Valid swipe: >75px horizontal, horizontal > 1.5x vertical, <400ms
+        const isValidSwipe = Math.abs(deltaX) > 75 &&
+                            Math.abs(deltaX) > Math.abs(deltaY) * 1.5 &&
+                            elapsed < 400;
+
+        if (isValidSwipe || (this.isSwiping && Math.abs(this.swipeOffsetX) > 50)) {
+            e.preventDefault();
+
+            // Animate slide-out before navigating
+            this.isAnimatingSwipe = true;
+            const direction = deltaX > 0 ? 1 : -1;
+            this.swipeOffsetX = direction * window.innerWidth;
+
+            // Navigate after animation completes
+            setTimeout(async () => {
+                // Show skeleton while loading (using global store that persists)
+                this.$store.swipeLoader.show();
+
+                // Small delay to let Alpine render the skeleton before Livewire call
+                await new Promise(resolve => requestAnimationFrame(resolve));
+
+                // Wait for Livewire to finish updating
+                if (direction > 0) {
+                    await this.navigatePrevious();
+                } else {
+                    await this.navigateNext();
+                }
+
+                // Livewire is done - hide skeleton and animate in
+                this.$store.swipeLoader.hide();
+                this.swipeOffsetX = -direction * 50; // Start slightly offset
+                requestAnimationFrame(() => {
+                    this.swipeOffsetX = 0; // Animate to center
+                    setTimeout(() => {
+                        this.isAnimatingSwipe = false;
+                    }, 200);
+                });
+            }, 150);
+        } else {
+            // Snap back to center
+            this.swipeOffsetX = 0;
+            this.resetSwipeState();
+        }
+    },
+
+    /**
+     * Reset swipe state
+     */
+    resetSwipeState() {
+        this.swipeStartX = 0;
+        this.swipeStartY = 0;
+        this.swipeStartTime = 0;
+        this.isSwiping = false;
+        this.isAnimatingSwipe = false;
+    },
+
+    /**
+     * Navigate to previous period based on current view
+     * Returns a promise that resolves when Livewire is done
+     */
+    navigatePrevious() {
+        if (this.view === 'day') {
+            return this.$wire.previousDay();
+        } else if (this.view === 'week') {
+            return this.$wire.previousWeek();
+        } else if (this.view === 'month') {
+            return this.$wire.previousMonth();
+        }
+        return Promise.resolve();
+    },
+
+    /**
+     * Navigate to next period based on current view
+     * Returns a promise that resolves when Livewire is done
+     */
+    navigateNext() {
+        if (this.view === 'day') {
+            return this.$wire.nextDay();
+        } else if (this.view === 'week') {
+            return this.$wire.nextWeek();
+        } else if (this.view === 'month') {
+            return this.$wire.nextMonth();
+        }
+        return Promise.resolve();
     },
 
     // =========================================================================

@@ -10,7 +10,7 @@
     };
 @endphp
 
-<nav class="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border lg:hidden safe-area-bottom">
+<nav class="fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border lg:hidden safe-area-bottom transform-gpu">
     <div class="flex items-center justify-around h-16 px-2">
         @if($context === 'home')
             {{-- Startside: Modul-velger --}}
