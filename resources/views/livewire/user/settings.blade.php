@@ -38,7 +38,7 @@
                 class="px-4 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer flex items-center gap-2"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
                 </svg>
                 Verktøy
             </button>
@@ -117,18 +117,7 @@
                         >
                             <div class="flex items-center justify-between mb-1.5">
                                 <label for="weather_search" class="block text-sm font-medium text-foreground">Sted</label>
-                                <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
-                                    x-transition:enter-start="opacity-0 translate-x-2"
-                                    x-transition:enter-end="opacity-100 translate-x-0"
-                                    x-transition:leave="transition ease-in duration-150"
-                                    x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                                    class="flex items-center gap-1 text-xs text-accent">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Lagret
-                                </span>
+<x-saved-indicator />
                             </div>
                             <form wire:submit="searchWeatherLocation" class="flex gap-2">
                                 <div class="flex-1">
@@ -232,17 +221,7 @@
                         <div class="flex items-center justify-between mb-2">
                             <label for="lock_timeout" class="block text-sm font-medium text-foreground">Lås etter
                                 inaktivitet</label>
-                            <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-x-2"
-                                x-transition:enter-end="opacity-100 translate-x-0"
-                                x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100"
-                                x-transition:leave-end="opacity-0" class="flex items-center gap-1 text-xs text-accent">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                Lagret
-                            </span>
+<x-saved-indicator />
                         </div>
                         <select id="lock_timeout" wire:model="lockTimeoutMinutes" wire:change="updateLockTimeout"
                             class="w-full bg-input border border-border rounded-lg px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
@@ -328,17 +307,7 @@
                             >
                                 <div class="flex items-center justify-between mb-1.5">
                                     <label for="prescription_time" class="block text-sm text-foreground">Varslingstidspunkt</label>
-                                    <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
-                                        x-transition:enter-start="opacity-0 translate-x-2"
-                                        x-transition:enter-end="opacity-100 translate-x-0"
-                                        x-transition:leave="transition ease-in duration-150"
-                                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                                        class="flex items-center gap-1 text-xs text-accent">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        Lagret
-                                    </span>
+<x-saved-indicator />
                                 </div>
                                 <select
                                     id="prescription_time"
@@ -397,17 +366,7 @@
                                 >
                                     <div class="flex items-center justify-between mb-1.5">
                                         <label for="shift_hours" class="block text-sm text-foreground">Timer før vaktstart</label>
-                                        <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
-                                            x-transition:enter-start="opacity-0 translate-x-2"
-                                            x-transition:enter-end="opacity-100 translate-x-0"
-                                            x-transition:leave="transition ease-in duration-150"
-                                            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                                            class="flex items-center gap-1 text-xs text-accent">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                            Lagret
-                                        </span>
+<x-saved-indicator />
                                     </div>
                                     <select
                                         id="shift_hours"
@@ -446,18 +405,7 @@
                         x-on:bpa-saved.window="saved = true; setTimeout(() => saved = false, 2000)">
                         <div class="flex items-center justify-between mb-1.5">
                             <label for="bpa_hours_per_week" class="block text-sm font-medium text-foreground">Timer per uke</label>
-                            <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-x-2"
-                                x-transition:enter-end="opacity-100 translate-x-0"
-                                x-transition:leave="transition ease-in duration-150"
-                                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                                class="flex items-center gap-1 text-xs text-accent">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                Lagret
-                            </span>
+<x-saved-indicator />
                         </div>
                         <input type="number" id="bpa_hours_per_week" wire:model="bpaHoursPerWeek"
                             wire:change="saveBpaHoursPerWeek" step="0.5" min="0" max="168"
@@ -473,18 +421,7 @@
                         x-on:hourly-rate-saved.window="saved = true; setTimeout(() => saved = false, 2000)">
                         <div class="flex items-center justify-between mb-1.5">
                             <label for="bpa_hourly_rate" class="block text-sm font-medium text-foreground">Timesats (kr)</label>
-                            <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
-                                x-transition:enter-start="opacity-0 translate-x-2"
-                                x-transition:enter-end="opacity-100 translate-x-0"
-                                x-transition:leave="transition ease-in duration-150"
-                                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                                class="flex items-center gap-1 text-xs text-accent">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7" />
-                                </svg>
-                                Lagret
-                            </span>
+<x-saved-indicator />
                         </div>
                         <input type="number" id="bpa_hourly_rate" wire:model="bpaHourlyRate"
                             wire:change="saveBpaHourlyRate" step="0.01" min="0" max="1000"
@@ -516,18 +453,7 @@
                     x-on:mileage-home-saved.window="saved = true; setTimeout(() => saved = false, 2000)">
                     <div class="flex items-center justify-between mb-1.5">
                         <label for="mileage_home_address" class="block text-sm font-medium text-foreground">Hjemmeadresse</label>
-                        <span x-show="saved" x-cloak x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 translate-x-2"
-                            x-transition:enter-end="opacity-100 translate-x-0"
-                            x-transition:leave="transition ease-in duration-150"
-                            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                            class="flex items-center gap-1 text-xs text-accent">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 13l4 4L19 7" />
-                            </svg>
-                            Lagret
-                        </span>
+<x-saved-indicator />
                     </div>
                     <input
                         type="text"
