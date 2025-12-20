@@ -5,7 +5,10 @@ namespace App\Livewire\Bpa;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesCalendarNavigation;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesCalendarViews;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesRecurringShifts;
-use App\Livewire\Bpa\Calendar\Concerns\HandlesShiftCrud;
+use App\Livewire\Bpa\Calendar\Concerns\ShiftCrudOperations;
+use App\Livewire\Bpa\Calendar\Concerns\ShiftDragDropOperations;
+use App\Livewire\Bpa\Calendar\Concerns\ShiftModalDispatcher;
+use App\Livewire\Bpa\Calendar\Concerns\ShiftRecurrenceOperations;
 use App\Livewire\Concerns\FormatsMinutes;
 use App\Models\Assistant;
 use App\Models\Setting;
@@ -36,7 +39,10 @@ class Calendar extends Component
     use HandlesCalendarNavigation;
     use HandlesCalendarViews;
     use HandlesRecurringShifts;
-    use HandlesShiftCrud;
+    use ShiftCrudOperations;
+    use ShiftDragDropOperations;
+    use ShiftModalDispatcher;
+    use ShiftRecurrenceOperations;
 
     public int $year;
 
