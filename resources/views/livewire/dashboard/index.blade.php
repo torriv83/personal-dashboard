@@ -235,9 +235,17 @@
                                 </div>
                                 <h2 class="text-xl font-semibold text-foreground">Medisinsk</h2>
                             </div>
-                            @if ($this->expiringPrescriptionsCount > 0)
+                            @if ($this->expiredPrescriptionsCount > 0 || $this->expiringPrescriptionsCount > 0)
                                 <p class="text-muted text-sm">
-                                    {{ $this->expiringPrescriptionsCount }} {{ $this->expiringPrescriptionsCount === 1 ? 'resept' : 'resepter' }} utløper snart
+                                    @if ($this->expiredPrescriptionsCount > 0)
+                                        <span class="text-red-400">{{ $this->expiredPrescriptionsCount }} utgått</span>
+                                    @endif
+                                    @if ($this->expiredPrescriptionsCount > 0 && $this->expiringPrescriptionsCount > 0)
+                                        <span class="text-muted-foreground">,</span>
+                                    @endif
+                                    @if ($this->expiringPrescriptionsCount > 0)
+                                        {{ $this->expiringPrescriptionsCount }} utløper snart
+                                    @endif
                                 </p>
                             @else
                                 <p class="text-muted text-sm">Alle resepter er OK</p>

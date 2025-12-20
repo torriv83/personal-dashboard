@@ -207,6 +207,17 @@ class Index extends Component
     }
 
     /**
+     * Get count of expired prescriptions.
+     */
+    #[Computed]
+    public function expiredPrescriptionsCount(): int
+    {
+        return Prescription::query()
+            ->where('valid_to', '<', now())
+            ->count();
+    }
+
+    /**
      * Get "To Be Budgeted" from YNAB for current month.
      */
     #[Computed]
