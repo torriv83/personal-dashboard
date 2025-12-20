@@ -494,10 +494,13 @@
                                             default => 'bg-gray-500/15',
                                         };
                                     @endphp
-                                    <div class="flex items-center gap-4 p-3 bg-background border border-border rounded-lg">
+                                    <div class="flex items-center gap-3 sm:gap-4 p-3 bg-background border border-border rounded-lg">
                                         {{-- Day name --}}
-                                        <div class="w-24 shrink-0">
-                                            <div class="font-medium text-foreground">{{ $day['day_name'] }}</div>
+                                        <div class="w-14 sm:w-24 shrink-0">
+                                            <div class="font-medium text-foreground">
+                                                <span class="sm:hidden">{{ $day['day_short'] }}</span>
+                                                <span class="hidden sm:inline">{{ $day['day_name'] }}</span>
+                                            </div>
                                             <div class="text-xs text-muted">{{ \Carbon\Carbon::parse($day['date'])->format('d.m') }}</div>
                                         </div>
 
@@ -507,7 +510,7 @@
                                         </div>
 
                                         {{-- Description --}}
-                                        <div class="flex-1 text-sm text-muted">{{ $day['description'] }}</div>
+                                        <div class="flex-1 text-sm text-muted truncate">{{ $day['description'] }}</div>
 
                                         {{-- Temps --}}
                                         <div class="text-right shrink-0">
@@ -517,20 +520,20 @@
                                         </div>
 
                                         {{-- Extra info --}}
-                                        <div class="flex items-center gap-3 text-xs text-muted shrink-0">
+                                        <div class="flex items-center gap-2 sm:gap-3 text-xs text-muted shrink-0">
                                             @if($day['precipitation'] > 0)
                                                 <span class="flex items-center gap-1" title="Nedbør">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                                                     </svg>
-                                                    {{ $day['precipitation'] }} mm
+                                                    {{ $day['precipitation'] }}<span class="hidden sm:inline"> mm</span>
                                                 </span>
                                             @endif
                                             <span class="flex items-center gap-1" title="Vind">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                                 </svg>
-                                                {{ $day['wind_speed'] }} m/s
+                                                {{ $day['wind_speed'] }}<span class="hidden sm:inline"> m/s</span>
                                             </span>
                                         </div>
                                     </div>
