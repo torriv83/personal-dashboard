@@ -25,7 +25,7 @@
 
         {{-- Destinations List --}}
         @if($this->destinations->count() > 0)
-            <div class="bg-card border border-border rounded-lg overflow-hidden">
+            <div class="bg-card border border-border rounded-lg">
                 <div class="px-6 py-4 border-b border-border flex items-center justify-between">
                     <h2 class="text-lg font-medium text-foreground">Destinasjoner</h2>
                     <div class="flex items-center gap-3">

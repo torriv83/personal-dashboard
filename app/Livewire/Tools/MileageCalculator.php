@@ -38,7 +38,7 @@ class MileageCalculator extends Component
         ]);
 
         if (empty($this->homeAddress)) {
-            $this->dispatch('notify', message: 'Du må lagre en hjemmeadresse først', type: 'error');
+            $this->dispatch('toast', message: 'Du må lagre en hjemmeadresse først', type: 'error');
 
             return;
         }
@@ -46,6 +46,12 @@ class MileageCalculator extends Component
         try {
             $client = new OpenRouteService;
             $distance = $client->calculateDistance($this->homeAddress, $this->newDestinationAddress);
+
+            if ($distance === null) {
+                $this->dispatch('toast', message: 'Kunne ikke finne adressen. Prøv en mer spesifikk adresse.', type: 'error');
+
+                return;
+            }
 
             $maxSortOrder = MileageDestination::max('sort_order') ?? -1;
 
@@ -59,22 +65,22 @@ class MileageCalculator extends Component
             $this->newDestinationName = '';
             $this->newDestinationAddress = '';
 
-            $this->dispatch('notify', message: 'Destinasjon lagt til', type: 'success');
+            $this->dispatch('toast', message: 'Destinasjon lagt til', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('notify', message: 'Kunne ikke beregne avstand: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Kunne ikke beregne avstand: '.$e->getMessage(), type: 'error');
         }
     }
 
     public function deleteDestination(int $id): void
     {
         MileageDestination::findOrFail($id)->delete();
-        $this->dispatch('notify', message: 'Destinasjon slettet', type: 'success');
+        $this->dispatch('toast', message: 'Destinasjon slettet', type: 'success');
     }
 
     public function recalculateDistance(int $id): void
     {
         if (empty($this->homeAddress)) {
-            $this->dispatch('notify', message: 'Du må lagre en hjemmeadresse først', type: 'error');
+            $this->dispatch('toast', message: 'Du må lagre en hjemmeadresse først', type: 'error');
 
             return;
         }
@@ -84,11 +90,17 @@ class MileageCalculator extends Component
             $client = new OpenRouteService;
             $distance = $client->calculateDistance($this->homeAddress, $destination->address);
 
+            if ($distance === null) {
+                $this->dispatch('toast', message: 'Kunne ikke finne adressen. Prøv å oppdatere til en mer spesifikk adresse.', type: 'error');
+
+                return;
+            }
+
             $destination->update(['distance_km' => $distance]);
 
-            $this->dispatch('notify', message: 'Avstand oppdatert', type: 'success');
+            $this->dispatch('toast', message: 'Avstand oppdatert', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('notify', message: 'Kunne ikke beregne avstand: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Kunne ikke beregne avstand: '.$e->getMessage(), type: 'error');
         }
     }
 
