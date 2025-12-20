@@ -4,6 +4,9 @@ namespace App\Livewire\Bpa\Calendar\Concerns;
 
 use Carbon\Carbon;
 
+/**
+ * @property int $currentWeekNumber
+ */
 trait HandlesCalendarViews
 {
     public function getCalendarDaysProperty(): array

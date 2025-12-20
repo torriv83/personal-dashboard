@@ -31,7 +31,7 @@ class LoggingPushReportHandler implements ReportHandlerInterface
                 'status_code' => $statusCode,
                 'endpoint' => $subscription->endpoint,
                 'user_id' => $subscription->subscribable_id,
-                'created_at' => $subscription->created_at?->toDateTimeString(),
+                'created_at' => $subscription->getAttribute('created_at')?->toDateTimeString(),
             ]);
 
             $subscription->delete();

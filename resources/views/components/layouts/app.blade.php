@@ -99,10 +99,10 @@
         document.addEventListener('livewire:init', () => {
             // Handle 419 Page Expired (CSRF token mismatch)
             // This happens when session expires while on lock screen or PWA in background
-            // Using interceptRequest with preventDefault() to stop Livewire's default confirm dialog
-            Livewire.interceptRequest(({ onError }) => {
-                onError(({ response, preventDefault }) => {
-                    if (response.status === 419) {
+            // Using request hook with preventDefault() to stop Livewire's default confirm dialog
+            Livewire.hook('request', ({ fail }) => {
+                fail(({ status, preventDefault }) => {
+                    if (status === 419) {
                         preventDefault();
                         window.location.reload();
                     }
