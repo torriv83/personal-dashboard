@@ -1473,4 +1473,7 @@
             Slett
         </button>
     </div>
+
+    {{-- Add to Wishlist Modal (for moveToWishlist action) --}}
+    <livewire:bookmarks.add-to-wishlist-modal />
 </x-page-container>
