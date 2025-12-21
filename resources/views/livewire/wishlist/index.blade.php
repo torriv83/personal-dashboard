@@ -1079,12 +1079,13 @@
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 cursor-pointer"
         style="display: none;"
     >
-        <img
-            :src="lightboxImage"
-            @click.stop
-            class="max-w-[90vw] max-h-[90vh] rounded-lg shadow-2xl cursor-default"
-            alt="Forstørret bilde"
-        >
+        <div class="w-fit h-fit" @click.stop>
+            <img
+                :src="lightboxImage"
+                class="max-w-[90vw] max-h-[90vh] rounded-lg shadow-2xl"
+                alt="Forstørret bilde"
+            >
+        </div>
         <button
             @click="lightboxImage = null"
             class="absolute top-4 right-4 p-2 text-white/80 hover:text-white transition-colors cursor-pointer"
