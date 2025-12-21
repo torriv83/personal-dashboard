@@ -3,7 +3,6 @@
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\ResetPassword;
-use App\Livewire\Bookmarks\ImportLinkwarden;
 use App\Livewire\Bookmarks\Index as BookmarksIndex;
 use App\Livewire\Bookmarks\QuickAdd as BookmarksQuickAdd;
 use App\Livewire\Bpa\Assistants;
@@ -87,7 +86,6 @@ Route::middleware('auth')->group(function () {
     // Verktøy
     Route::prefix('verktoy')->name('tools.')->group(function () {
         Route::get('/bokmerker', BookmarksIndex::class)->name('bookmarks');
-        Route::get('/bokmerker/import', ImportLinkwarden::class)->name('bookmarks.import');
         Route::get('/port-generator', PortGenerator::class)->name('port-generator');
         Route::get('/kjoregodtgjorelse', MileageCalculator::class)->name('mileage-calculator');
     });

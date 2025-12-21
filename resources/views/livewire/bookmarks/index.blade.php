@@ -192,15 +192,6 @@
         </div>
         <div class="flex items-center gap-2">
             {{-- Desktop: Show all buttons --}}
-            <a
-                href="{{ route('tools.bookmarks.import') }}"
-                class="hidden sm:flex p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
-                title="Importer fra Linkwarden"
-            >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                </svg>
-            </a>
             <button
                 wire:click="checkDeadLinks"
                 class="hidden sm:flex p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
@@ -257,15 +248,6 @@
                     x-transition
                     class="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-1 z-50"
                 >
-                    <a
-                        href="{{ route('tools.bookmarks.import') }}"
-                        class="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        Importer
-                    </a>
                     <button
                         wire:click="checkDeadLinks"
                         @click="open = false"
