@@ -1,4 +1,17 @@
-<x-page-container class="space-y-6" x-data="{ draggingBookmarkId: null }">
+<x-page-container class="space-y-6" x-data="{
+    draggingBookmarkId: null,
+    contextMenu: { show: false, x: 0, y: 0, bookmarkId: null, isDeadBookmark: false },
+    openContextMenu(event, bookmarkId, isDead) {
+        this.contextMenu.x = event.clientX;
+        this.contextMenu.y = event.clientY;
+        this.contextMenu.bookmarkId = bookmarkId;
+        this.contextMenu.isDeadBookmark = isDead;
+        this.contextMenu.show = true;
+    },
+    closeContextMenu() {
+        this.contextMenu.show = false;
+    }
+}">
     <div class="flex gap-6">
         {{-- Sidebar (desktop only) --}}
         <aside class="w-64 shrink-0 hidden lg:block">
@@ -510,6 +523,7 @@
                 draggable="true"
                 @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
                 @dragend="draggingBookmarkId = null"
+                @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
                 class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors cursor-grab active:cursor-grabbing {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
             >
                 {{-- Top row: Checkbox + Domain --}}
@@ -1365,5 +1379,79 @@
         </div>
     @endif
         </main>
+    </div>
+
+    {{-- Context Menu (Right-click) --}}
+    <div
+        x-show="contextMenu.show"
+        x-cloak
+        @click.away="closeContextMenu()"
+        @keydown.escape.window="closeContextMenu()"
+        x-transition:enter="transition ease-out duration-100"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-75"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95"
+        :style="`position: fixed; left: ${contextMenu.x}px; top: ${contextMenu.y}px; z-index: 9999;`"
+        class="min-w-48 bg-card border border-border rounded-lg shadow-xl py-1"
+    >
+        {{-- Rediger --}}
+        <button
+            @click="$wire.openBookmarkModal(contextMenu.bookmarkId); closeContextMenu();"
+            class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Rediger
+        </button>
+
+        {{-- Sjekk lenke --}}
+        <button
+            @click="$wire.checkSingleDeadLink(contextMenu.bookmarkId); closeContextMenu();"
+            class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Sjekk lenke
+        </button>
+
+        {{-- Fjern død-status (only for dead bookmarks) --}}
+        <button
+            x-show="contextMenu.isDeadBookmark"
+            @click="$wire.clearDeadStatus(contextMenu.bookmarkId); closeContextMenu();"
+            class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+        >
+            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Fjern død-status
+        </button>
+
+        {{-- Flytt til ønskeliste --}}
+        <button
+            @click="$wire.moveToWishlist(contextMenu.bookmarkId); closeContextMenu();"
+            class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+        >
+            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            Flytt til ønskeliste
+        </button>
+
+        <div class="border-t border-border my-1"></div>
+
+        {{-- Slett --}}
+        <button
+            @click="if (confirm('Er du sikker på at du vil slette dette bokmerket?')) { $wire.deleteBookmark(contextMenu.bookmarkId); } closeContextMenu();"
+            class="w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Slett
+        </button>
     </div>
 </x-page-container>

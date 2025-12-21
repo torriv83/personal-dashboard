@@ -822,6 +822,13 @@ class Index extends Component
     {
         $bookmark = Bookmark::findOrFail($id);
         $bookmark->update(['is_dead' => false]);
+
+        // Also remove the "Død" tag if it exists
+        $deadTag = BookmarkTag::where('name', 'Død')->first();
+        if ($deadTag) {
+            $bookmark->tags()->detach($deadTag->id);
+        }
+
         unset($this->bookmarks);
         $this->dispatch('toast', type: 'success', message: 'Status fjernet.');
     }

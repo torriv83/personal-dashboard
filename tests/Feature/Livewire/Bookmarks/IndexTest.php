@@ -329,6 +329,21 @@ test('can clear dead status', function () {
     $this->assertFalse($bookmark->fresh()->is_dead);
 });
 
+test('clearing dead status also removes dead tag', function () {
+    $deadTag = BookmarkTag::factory()->create(['name' => 'Død', 'color' => 'red']);
+    $bookmark = Bookmark::factory()->create(['is_dead' => true]);
+    $bookmark->tags()->attach($deadTag);
+
+    expect($bookmark->tags()->where('name', 'Død')->exists())->toBeTrue();
+
+    Livewire::test(Index::class)
+        ->call('clearDeadStatus', $bookmark->id);
+
+    $bookmark->refresh();
+    expect($bookmark->is_dead)->toBeFalse();
+    expect($bookmark->tags()->where('name', 'Død')->exists())->toBeFalse();
+});
+
 // ====================
 // Move to Wishlist
 // ====================
