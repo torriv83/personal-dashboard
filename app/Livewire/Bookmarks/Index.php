@@ -18,6 +18,7 @@ use Livewire\Component;
  * @property-read Collection<int, BookmarkFolder> $folders
  * @property-read Collection<int, BookmarkFolder> $folderTree
  * @property-read Collection<int, BookmarkFolder> $rootFolders
+ * @property-read Collection<int, BookmarkFolder> $childFolders
  * @property-read Collection<int, BookmarkTag> $tags
  * @property-read int $totalBookmarksCount
  */
@@ -252,6 +253,25 @@ class Index extends Component
         }
 
         return BookmarkFolder::find($this->folderId);
+    }
+
+    /**
+     * Get child folders of the current folder.
+     *
+     * @return Collection<int, BookmarkFolder>
+     */
+    #[Computed]
+    public function childFolders(): Collection
+    {
+        if ($this->folderId === null) {
+            return collect();
+        }
+
+        return BookmarkFolder::query()
+            ->where('parent_id', $this->folderId)
+            ->withCount('bookmarks')
+            ->orderBy('sort_order')
+            ->get();
     }
 
     /**

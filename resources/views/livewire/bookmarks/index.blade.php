@@ -517,6 +517,30 @@
 
     {{-- Bookmarks Grid --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {{-- Child folders (shown first when inside a parent folder) --}}
+        @foreach($this->childFolders as $childFolder)
+            <div
+                wire:key="child-folder-{{ $childFolder->id }}"
+                wire:click="openFolder({{ $childFolder->id }})"
+                class="group relative bg-card border border-border rounded-lg hover:border-accent/50 transition-colors cursor-pointer"
+            >
+                <div class="p-4">
+                    {{-- Folder icon and name --}}
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h3 class="text-sm font-medium text-foreground truncate">{{ $childFolder->name }}</h3>
+                            <p class="text-xs text-muted-foreground">{{ $childFolder->bookmarks_count }} bokmerker</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+
         @forelse($this->bookmarks as $bookmark)
             <div
                 wire:key="bookmark-{{ $bookmark->id }}"
@@ -744,20 +768,22 @@
                 </div>
             </div>
         @empty
-            <div class="col-span-full text-center py-12">
-                <svg class="w-12 h-12 mx-auto text-muted-foreground mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-                <p class="text-muted-foreground">
-                    @if($search)
-                        Ingen bokmerker funnet for "{{ $search }}"
-                    @elseif($folderId)
-                        Ingen bokmerker i denne mappen
-                    @else
-                        Ingen bokmerker ennå. Legg til ditt første bokmerke!
-                    @endif
-                </p>
-            </div>
+            @if($this->childFolders->isEmpty())
+                <div class="col-span-full text-center py-12">
+                    <svg class="w-12 h-12 mx-auto text-muted-foreground mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                    <p class="text-muted-foreground">
+                        @if($search)
+                            Ingen bokmerker funnet for "{{ $search }}"
+                        @elseif($folderId)
+                            Ingen bokmerker i denne mappen
+                        @else
+                            Ingen bokmerker ennå. Legg til ditt første bokmerke!
+                        @endif
+                    </p>
+                </div>
+            @endif
         @endforelse
     </div>
 
