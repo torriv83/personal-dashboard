@@ -53,6 +53,11 @@ class Settings extends Component
     // Mileage calculator settings
     public string $mileageHomeAddress = '';
 
+    // Bookmarklet settings
+    public bool $showBookmarkToken = false;
+
+    public string $bookmarkToken = '';
+
     public function mount(): void
     {
         $this->lockTimeoutMinutes = Auth::user()->lock_timeout_minutes ?? 30;
@@ -75,6 +80,9 @@ class Settings extends Component
 
         // Mileage calculator
         $this->mileageHomeAddress = Setting::get('mileage_home_address', '');
+
+        // Bookmarklet
+        $this->bookmarkToken = Auth::user()->ensureBookmarkToken();
     }
 
     public function openPinModal(): void
@@ -304,6 +312,29 @@ class Settings extends Component
         Setting::set('mileage_home_address', $this->mileageHomeAddress);
 
         $this->dispatch('mileage-home-saved');
+    }
+
+    public function toggleBookmarkToken(): void
+    {
+        $this->showBookmarkToken = ! $this->showBookmarkToken;
+    }
+
+    public function regenerateBookmarkToken(): void
+    {
+        $this->bookmarkToken = Auth::user()->regenerateBookmarkToken();
+        $this->dispatch('toast', type: 'success', message: 'Token regenerert!');
+    }
+
+    public function getBookmarkletUrl(): string
+    {
+        return route('tools.bookmarks.add', ['token' => $this->bookmarkToken]);
+    }
+
+    public function getBookmarkletCode(): string
+    {
+        $url = $this->getBookmarkletUrl();
+
+        return "javascript:(function(){window.open('{$url}&url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title))})();";
     }
 
     public function render()

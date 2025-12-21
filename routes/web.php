@@ -3,6 +3,9 @@
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Bookmarks\ImportLinkwarden;
+use App\Livewire\Bookmarks\Index as BookmarksIndex;
+use App\Livewire\Bookmarks\QuickAdd as BookmarksQuickAdd;
 use App\Livewire\Bpa\Assistants;
 use App\Livewire\Bpa\AssistantShow;
 use App\Livewire\Bpa\Calendar;
@@ -32,6 +35,7 @@ Route::get('/delt/{token}', WishlistSharedView::class)->name('wishlist.shared');
 Route::get('/oppgaver/{assistant:token}', AssistantTasks::class)->name('tasks.assistant');
 Route::get('/oppgaver/{assistant:token}/manifest.json', [\App\Http\Controllers\AssistantPwaController::class, 'manifest'])->name('tasks.assistant.manifest');
 Route::get('/oppgaver/{assistant:token}/sw.js', [\App\Http\Controllers\AssistantPwaController::class, 'serviceWorker'])->name('tasks.assistant.sw');
+Route::get('/verktoy/bokmerker/legg-til', BookmarksQuickAdd::class)->name('tools.bookmarks.add');
 
 // Auth (gjester - redirect til dashboard hvis allerede innlogget)
 Route::middleware('guest')->group(function () {
@@ -82,6 +86,8 @@ Route::middleware('auth')->group(function () {
 
     // Verktøy
     Route::prefix('verktoy')->name('tools.')->group(function () {
+        Route::get('/bokmerker', BookmarksIndex::class)->name('bookmarks');
+        Route::get('/bokmerker/import', ImportLinkwarden::class)->name('bookmarks.import');
         Route::get('/port-generator', PortGenerator::class)->name('port-generator');
         Route::get('/kjoregodtgjorelse', MileageCalculator::class)->name('mileage-calculator');
     });

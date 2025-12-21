@@ -22,7 +22,22 @@
             "purpose": "any maskable"
         }
     ],
+    "share_target": {
+        "action": "/verktoy/bokmerker/legg-til",
+        "method": "GET",
+        "params": {
+            "url": "url",
+            "title": "title",
+            "text": "text"
+        }
+    },
     "shortcuts": [
+        {
+            "name": "Bokmerker",
+            "short_name": "Bokmerker",
+            "url": "/verktoy/bokmerker",
+            "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+        },
         {
             "name": "BPA Kalender",
             "short_name": "Kalender",

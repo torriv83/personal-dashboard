@@ -133,6 +133,9 @@
                 </svg>
             </x-slot>
 
+            <x-sidebar-sublink href="{{ route('tools.bookmarks') }}" :active="request()->routeIs('tools.bookmarks')">
+                Bokmerker
+            </x-sidebar-sublink>
             <x-sidebar-sublink href="{{ route('tools.mileage-calculator') }}" :active="request()->routeIs('tools.mileage-calculator')">
                 Kjøregodtgjørelse
             </x-sidebar-sublink>

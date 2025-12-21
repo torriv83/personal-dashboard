@@ -469,6 +469,101 @@
                     <p class="mt-1 text-xs text-muted">Startpunkt for alle avstandsberegninger</p>
                 </div>
             </x-card>
+
+            {{-- Bookmarklet --}}
+            <x-card>
+                <x-slot name="header">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        <h2 class="text-lg font-medium text-foreground">Bokmerker</h2>
+                    </div>
+                    <p class="mt-1 text-sm text-muted">Legg enkelt til bokmerker fra andre nettsider</p>
+                </x-slot>
+
+                <div class="space-y-6">
+                    {{-- Bookmarklet --}}
+                    <div>
+                        <h3 class="text-sm font-medium text-foreground mb-2">Bookmarklet</h3>
+                        <p class="text-xs text-muted mb-3">
+                            Dra lenken under til bokmerkelinjen i nettleseren. Klikk på den når du er på en side du vil lagre.
+                        </p>
+                        <a
+                            href="{{ $this->getBookmarkletCode() }}"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-accent text-black font-medium rounded-lg hover:bg-accent-hover transition-colors cursor-grab"
+                            onclick="event.preventDefault(); alert('Dra denne lenken til bokmerkelinjen i nettleseren din!');"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Legg til bokmerke
+                        </a>
+                    </div>
+
+                    {{-- Token --}}
+                    <div class="pt-4 border-t border-border">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-medium text-foreground">Token</h3>
+                            <button
+                                wire:click="toggleBookmarkToken"
+                                class="text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
+                            >
+                                {{ $showBookmarkToken ? 'Skjul' : 'Vis' }}
+                            </button>
+                        </div>
+                        <p class="text-xs text-muted mb-3">
+                            Token brukes for å autentisere bookmarklet-forespørsler. Hold denne hemmelig.
+                        </p>
+
+                        @if($showBookmarkToken)
+                            <div class="flex items-center gap-2 mb-3">
+                                <code class="flex-1 px-3 py-2 bg-input border border-border rounded-lg text-xs font-mono text-foreground break-all">
+                                    {{ $bookmarkToken }}
+                                </code>
+                                <button
+                                    type="button"
+                                    onclick="navigator.clipboard.writeText('{{ $bookmarkToken }}'); this.innerText = 'Kopiert!'; setTimeout(() => this.innerText = 'Kopier', 2000);"
+                                    class="px-3 py-2 text-xs font-medium text-foreground bg-input border border-border rounded-lg hover:bg-card-hover transition-colors cursor-pointer whitespace-nowrap"
+                                >
+                                    Kopier
+                                </button>
+                            </div>
+                        @endif
+
+                        <button
+                            wire:click="regenerateBookmarkToken"
+                            wire:confirm="Er du sikker? Eksisterende bookmarklet vil slutte å virke og må oppdateres."
+                            class="px-3 py-2 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors cursor-pointer"
+                        >
+                            Regenerer token
+                        </button>
+                        <p class="mt-2 text-xs text-muted">
+                            Obs! Regenerering gjør at eksisterende bookmarklet slutter å virke.
+                        </p>
+                    </div>
+
+                    {{-- Quick Add URL --}}
+                    <div class="pt-4 border-t border-border">
+                        <h3 class="text-sm font-medium text-foreground mb-2">Direktelenke</h3>
+                        <p class="text-xs text-muted mb-3">
+                            Du kan også bruke denne URL-en direkte for å legge til bokmerker.
+                        </p>
+                        <div class="flex items-center gap-2">
+                            <code class="flex-1 px-3 py-2 bg-input border border-border rounded-lg text-xs font-mono text-foreground break-all">
+                                {{ $this->getBookmarkletUrl() }}
+                            </code>
+                            <button
+                                type="button"
+                                onclick="navigator.clipboard.writeText('{{ $this->getBookmarkletUrl() }}'); this.innerText = 'Kopiert!'; setTimeout(() => this.innerText = 'Kopier', 2000);"
+                                class="px-3 py-2 text-xs font-medium text-foreground bg-input border border-border rounded-lg hover:bg-card-hover transition-colors cursor-pointer whitespace-nowrap"
+                            >
+                                Kopier
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </x-card>
         </div>
     </div>
 
