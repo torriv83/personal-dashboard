@@ -1082,7 +1082,7 @@
         <img
             :src="lightboxImage"
             @click.stop
-            class="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-default"
+            class="max-w-[90vw] max-h-[90vh] rounded-lg shadow-2xl cursor-default"
             alt="Forstørret bilde"
         >
         <button
