@@ -191,9 +191,10 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
+            {{-- Desktop: Show all buttons --}}
             <a
                 href="{{ route('tools.bookmarks.import') }}"
-                class="p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                class="hidden sm:flex p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
                 title="Importer fra Linkwarden"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +203,7 @@
             </a>
             <button
                 wire:click="checkDeadLinks"
-                class="p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                class="hidden sm:flex p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
                 title="Sjekk døde lenker"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,7 +212,7 @@
             </button>
             <button
                 wire:click="openTagModal"
-                class="p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                class="hidden sm:flex p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
                 title="Ny tag"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,13 +221,15 @@
             </button>
             <button
                 wire:click="openFolderModal"
-                class="p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                class="hidden sm:flex p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
                 title="Ny mappe"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
             </button>
+
+            {{-- Add bookmark (always visible) --}}
             <button
                 wire:click="openBookmarkModal"
                 class="p-2.5 text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
@@ -236,44 +239,214 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
             </button>
+
+            {{-- Mobile: Dropdown menu for secondary actions --}}
+            <div class="relative sm:hidden" x-data="{ open: false }">
+                <button
+                    @click="open = !open"
+                    class="p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                    title="Flere valg"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                    </svg>
+                </button>
+                <div
+                    x-show="open"
+                    @click.outside="open = false"
+                    x-transition
+                    class="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-lg shadow-lg py-1 z-50"
+                >
+                    <a
+                        href="{{ route('tools.bookmarks.import') }}"
+                        class="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Importer
+                    </a>
+                    <button
+                        wire:click="checkDeadLinks"
+                        @click="open = false"
+                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Sjekk døde lenker
+                    </button>
+                    <button
+                        wire:click="openTagModal"
+                        @click="open = false"
+                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Ny tag
+                    </button>
+                    <button
+                        wire:click="openFolderModal"
+                        @click="open = false"
+                        class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                        Ny mappe
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     {{-- Toolbar: Search and Sort --}}
-    <div class="flex flex-col sm:flex-row gap-4">
-        {{-- Search --}}
-        <div class="relative flex-1">
-            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-                type="text"
-                wire:model.live.debounce.300ms="search"
-                placeholder="Søk i bokmerker..."
-                class="w-full bg-input border border-border rounded-lg pl-10 pr-10 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-            >
-            @if($search)
+    <div class="flex items-center gap-2" x-data="{ showSearch: false }">
+        {{-- Mobile: Compact toolbar --}}
+        <div class="flex sm:hidden items-center justify-between w-full">
+            {{-- Search toggle/input --}}
+            <div class="relative">
+                <template x-if="!showSearch">
+                    <button
+                        @click="showSearch = true; $nextTick(() => $refs.mobileSearch.focus())"
+                        class="p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                        title="Søk"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+                </template>
+                <template x-if="showSearch">
+                    <div class="relative flex-1">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input
+                            x-ref="mobileSearch"
+                            type="text"
+                            wire:model.live.debounce.300ms="search"
+                            placeholder="Søk..."
+                            @keydown.escape="showSearch = false"
+                            class="w-full bg-input border border-border rounded-lg pl-10 pr-10 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                        >
+                        <button
+                            @click="showSearch = false; $wire.set('search', '')"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            {{-- Velg alle / valgt tekst --}}
+            @if(count($selectedIds) > 0)
                 <button
-                    wire:click="clearSearch"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    wire:click="$set('selectedIds', [])"
+                    class="text-sm text-accent hover:text-foreground cursor-pointer whitespace-nowrap"
+                    x-show="!showSearch"
                 >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    {{ count($selectedIds) }} valgt
+                </button>
+            @elseif($this->bookmarks->count() > 0)
+                <button
+                    wire:click="$set('selectAll', true)"
+                    class="text-sm text-muted-foreground hover:text-foreground cursor-pointer whitespace-nowrap"
+                    x-show="!showSearch"
+                >
+                    Velg alle ({{ $this->bookmarks->count() }})
                 </button>
             @endif
+
+            {{-- Sort dropdown --}}
+            <div class="relative" x-data="{ open: false }" x-show="!showSearch">
+                <button
+                    @click="open = !open"
+                    class="p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                    title="Sortering"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                    </svg>
+                </button>
+                <div
+                    x-show="open"
+                    @click.outside="open = false"
+                    x-transition
+                    class="absolute right-0 top-full mt-2 w-40 bg-card border border-border rounded-lg shadow-lg py-1 z-50"
+                >
+                    <button
+                        wire:click="$set('sortBy', 'newest')"
+                        @click="open = false"
+                        class="w-full px-4 py-2 text-left text-sm hover:bg-card-hover transition-colors cursor-pointer {{ $sortBy === 'newest' ? 'text-accent font-medium' : 'text-foreground' }}"
+                    >
+                        Nyeste først
+                    </button>
+                    <button
+                        wire:click="$set('sortBy', 'oldest')"
+                        @click="open = false"
+                        class="w-full px-4 py-2 text-left text-sm hover:bg-card-hover transition-colors cursor-pointer {{ $sortBy === 'oldest' ? 'text-accent font-medium' : 'text-foreground' }}"
+                    >
+                        Eldste først
+                    </button>
+                    <button
+                        wire:click="$set('sortBy', 'title_asc')"
+                        @click="open = false"
+                        class="w-full px-4 py-2 text-left text-sm hover:bg-card-hover transition-colors cursor-pointer {{ $sortBy === 'title_asc' ? 'text-accent font-medium' : 'text-foreground' }}"
+                    >
+                        A-Å
+                    </button>
+                    <button
+                        wire:click="$set('sortBy', 'title_desc')"
+                        @click="open = false"
+                        class="w-full px-4 py-2 text-left text-sm hover:bg-card-hover transition-colors cursor-pointer {{ $sortBy === 'title_desc' ? 'text-accent font-medium' : 'text-foreground' }}"
+                    >
+                        Å-A
+                    </button>
+                </div>
+            </div>
         </div>
 
-        {{-- Sort --}}
-        <select
-            wire:model.live="sortBy"
-            class="bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
-        >
-            <option value="newest">Nyeste først</option>
-            <option value="oldest">Eldste først</option>
-            <option value="title_asc">A-Å</option>
-            <option value="title_desc">Å-A</option>
-        </select>
+        {{-- Desktop: Full toolbar --}}
+        <div class="hidden sm:flex sm:flex-row gap-4 flex-1">
+            {{-- Search --}}
+            <div class="relative flex-1">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                    type="text"
+                    wire:model.live.debounce.300ms="search"
+                    placeholder="Søk i bokmerker..."
+                    class="w-full bg-input border border-border rounded-lg pl-10 pr-10 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                >
+                @if($search)
+                    <button
+                        wire:click="clearSearch"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                @endif
+            </div>
+
+            {{-- Sort --}}
+            <select
+                wire:model.live="sortBy"
+                class="bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
+            >
+                <option value="newest">Nyeste først</option>
+                <option value="oldest">Eldste først</option>
+                <option value="title_asc">A-Å</option>
+                <option value="title_desc">Å-A</option>
+            </select>
+        </div>
     </div>
 
     {{-- Bulk Actions --}}
@@ -313,8 +486,8 @@
             </div>
         </div>
     @elseif($this->bookmarks->count() > 0)
-        {{-- Quick select all button when inside a folder --}}
-        <div class="flex items-center justify-end">
+        {{-- Quick select all button (desktop only - mobile has it in toolbar) --}}
+        <div class="hidden sm:flex items-center justify-end">
             <button
                 wire:click="$set('selectAll', true)"
                 class="text-sm text-muted-foreground hover:text-foreground cursor-pointer"
@@ -429,7 +602,7 @@
                 </a>
 
                 {{-- Action buttons (visible on hover) --}}
-                <div class="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="absolute top-2 right-2 flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                     {{-- Quick tag dropdown --}}
                     @if($this->tags->count() > 0)
                         <div class="relative" x-data="{ open: false }">
