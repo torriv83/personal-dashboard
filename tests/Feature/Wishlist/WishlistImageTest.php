@@ -158,3 +158,34 @@ test('preserves local storage paths without re-downloading', function () {
     expect($item)->not->toBeNull()
         ->and($item->image_url)->toBe('/storage/wishlist-images/existing-image.jpg');
 });
+
+test('can paste image as base64 and store it locally', function () {
+    Illuminate\Support\Facades\Storage::fake('public');
+
+    // Minimal valid PNG base64 (1x1 transparent pixel)
+    $base64Png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+    Livewire::test(Index::class)
+        ->call('handlePastedImage', $base64Png)
+        ->assertDispatched('toast', type: 'success', message: 'Bilde limt inn');
+
+    // Verify the image was stored
+    $component = Livewire::test(Index::class);
+    $component->call('handlePastedImage', $base64Png);
+
+    $imageUrl = $component->get('itemImageUrl');
+    expect($imageUrl)->toStartWith('/storage/wishlist-images/')
+        ->and($imageUrl)->toEndWith('.png');
+});
+
+test('shows error when pasting invalid image format', function () {
+    Livewire::test(Index::class)
+        ->call('handlePastedImage', 'data:text/plain;base64,SGVsbG8gV29ybGQ=')
+        ->assertDispatched('toast', type: 'error', message: 'Ugyldig bildeformat');
+});
+
+test('shows error when pasting corrupted base64 data', function () {
+    Livewire::test(Index::class)
+        ->call('handlePastedImage', 'not-valid-base64-at-all')
+        ->assertDispatched('toast', type: 'error', message: 'Ugyldig bildeformat');
+});

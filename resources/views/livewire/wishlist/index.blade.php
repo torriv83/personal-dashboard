@@ -757,7 +757,26 @@
     @if($showItemModal)
         <div
             class="fixed inset-0 z-50 flex items-center justify-center"
-            x-data
+            x-data="{
+                handlePaste(event) {
+                    const items = event.clipboardData?.items;
+                    if (!items) return;
+
+                    for (const item of items) {
+                        if (item.type.startsWith('image/')) {
+                            event.preventDefault();
+                            const file = item.getAsFile();
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                $wire.handlePastedImage(e.target.result);
+                            };
+                            reader.readAsDataURL(file);
+                            break;
+                        }
+                    }
+                }
+            }"
+            x-on:paste.window="handlePaste($event)"
             x-on:keydown.escape.window="$wire.closeItemModal()"
         >
             {{-- Backdrop --}}
@@ -813,13 +832,13 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-foreground mb-1">Bilde-URL</label>
+                        <label class="block text-sm font-medium text-foreground mb-1">Bilde</label>
                         <div class="flex items-center gap-2">
                             <input
                                 type="url"
                                 wire:model="itemImageUrl"
                                 class="flex-1 bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                                placeholder="https://..."
+                                placeholder="https://... eller lim inn bilde (Ctrl+V)"
                             >
                             <button
                                 type="button"
@@ -833,6 +852,7 @@
                                 <span wire:loading wire:target="fetchImageFromUrl">Henter...</span>
                             </button>
                         </div>
+                        <p class="text-xs text-muted-foreground mt-1">Høyreklikk på et bilde fra nettet, velg "Kopier bilde", og lim inn her (Ctrl+V)</p>
                         @if($itemImageUrl)
                             <div class="mt-2">
                                 <img src="{{ $itemImageUrl }}" alt="Forhåndsvisning" class="h-20 w-20 object-cover rounded border border-border">
