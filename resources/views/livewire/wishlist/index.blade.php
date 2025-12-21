@@ -1,4 +1,4 @@
-<x-page-container class="space-y-6" x-data="{ expanded: [], moveDropdownOpen: null }">
+<x-page-container class="space-y-6" x-data="{ expanded: [], moveDropdownOpen: null, lightboxImage: null }">
     {{-- Header --}}
     <div class="flex items-center justify-between">
         <div>
@@ -6,6 +6,54 @@
             <p class="text-sm text-muted-foreground mt-1 hidden sm:block">Hold oversikt over ting du ønsker deg</p>
         </div>
         <div class="flex items-center gap-2">
+            {{-- Image Actions Dropdown --}}
+            <div class="relative" x-data="{ open: false }">
+                <button
+                    @click="open = !open"
+                    class="p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                    title="Bildehandlinger"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span class="sr-only">Bildehandlinger</span>
+                </button>
+                <div
+                    x-show="open"
+                    @click.away="open = false"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    class="absolute right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-lg z-50"
+                >
+                    <div class="py-1">
+                        <button
+                            wire:click="fetchMissingImages"
+                            @click="open = false"
+                            class="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                        >
+                            <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            Hent manglende bilder
+                        </button>
+                        <button
+                            wire:click="refetchAllImages"
+                            wire:confirm="Er du sikker? Dette vil slette alle eksisterende bilder og hente dem på nytt."
+                            @click="open = false"
+                            class="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                        >
+                            <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Hent alle bilder på nytt
+                        </button>
+                    </div>
+                </div>
+            </div>
             <button
                 wire:click="openGroupModal"
                 class="p-2.5 text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
@@ -94,8 +142,17 @@
                             @foreach($wishlist['items'] as $item)
                                 @php $isCompleted = in_array($item['status'], ['Spart', 'Kjøpt']); @endphp
                                 <div class="p-3 bg-card-hover/30 rounded-lg {{ $isCompleted ? 'opacity-60' : '' }}">
-                                    {{-- Line 1: Name + Price --}}
-                                    <div class="flex items-start justify-between gap-2">
+                                    {{-- Line 1: Image + Name + Price --}}
+                                    <div class="flex items-start gap-3">
+                                        @if($item['image_url'])
+                                            <img src="{{ $item['image_url'] }}" alt="{{ $item['navn'] }}" @click="lightboxImage = '{{ $item['image_url'] }}'" class="w-12 h-12 object-cover rounded border border-border shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+                                        @else
+                                            <div class="w-12 h-12 bg-muted-foreground/10 rounded border border-border shrink-0 flex items-center justify-center">
+                                                <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                        @endif
                                         <div class="flex-1 min-w-0">
                                             <p class="text-sm font-medium text-foreground {{ $isCompleted ? 'line-through' : '' }} truncate">{{ $item['navn'] }}</p>
                                             <div class="flex items-center gap-2 mt-1 flex-wrap">
@@ -144,23 +201,30 @@
                         x-sort:item="'item-{{ $wishlist['id'] }}'"
                         class="p-4 hover:bg-card-hover transition-colors {{ $isCompleted ? 'opacity-60' : '' }}"
                     >
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-start gap-3 flex-1 min-w-0">
-                                <svg class="w-4 h-4 text-muted-foreground cursor-grab mt-0.5 shrink-0" x-sort:handle fill="currentColor" viewBox="0 0 24 24">
-                                    <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
-                                    <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
-                                    <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
-                                </svg>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-foreground {{ $isCompleted ? 'line-through' : '' }} truncate">{{ $wishlist['navn'] }}</p>
-                                    <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                        <span class="text-xs text-muted-foreground">{{ $wishlist['antall'] }} × kr {{ number_format($wishlist['pris'], 0, ',', ' ') }}</span>
-                                        @if($wishlist['url'])
-                                            <a href="{{ $wishlist['url'] }}" target="_blank" class="text-accent hover:underline cursor-pointer text-xs flex items-center gap-0.5">
-                                                Lenke <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                                            </a>
-                                        @endif
-                                    </div>
+                        <div class="flex items-start gap-3">
+                            <svg class="w-4 h-4 text-muted-foreground cursor-grab mt-0.5 shrink-0" x-sort:handle fill="currentColor" viewBox="0 0 24 24">
+                                <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
+                                <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+                                <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
+                            </svg>
+                            @if($wishlist['image_url'])
+                                <img src="{{ $wishlist['image_url'] }}" alt="{{ $wishlist['navn'] }}" @click="lightboxImage = '{{ $wishlist['image_url'] }}'" class="w-12 h-12 object-cover rounded border border-border shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+                            @else
+                                <div class="w-12 h-12 bg-muted-foreground/10 rounded border border-border shrink-0 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            @endif
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-foreground {{ $isCompleted ? 'line-through' : '' }} truncate">{{ $wishlist['navn'] }}</p>
+                                <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                    <span class="text-xs text-muted-foreground">{{ $wishlist['antall'] }} × kr {{ number_format($wishlist['pris'], 0, ',', ' ') }}</span>
+                                    @if($wishlist['url'])
+                                        <a href="{{ $wishlist['url'] }}" target="_blank" class="text-accent hover:underline cursor-pointer text-xs flex items-center gap-0.5">
+                                            Lenke <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                             <span class="text-sm font-medium text-foreground whitespace-nowrap">kr {{ number_format($wishlist['pris'] * $wishlist['antall'], 0, ',', ' ') }}</span>
@@ -249,9 +313,10 @@
         {{-- Desktop Table Layout --}}
         <div class="hidden md:block overflow-x-auto"
             x-data="{
-                colWidths: { drag: 0, navn: 0, lenke: 0, pris: 0, antall: 0, status: 0, totalt: 0, handlinger: 0 },
+                colWidths: { drag: 0, bilde: 0, navn: 0, lenke: 0, pris: 0, antall: 0, status: 0, totalt: 0, handlinger: 0 },
                 measureColumns() {
                     this.colWidths.drag = this.$refs.thDrag?.offsetWidth || 0;
+                    this.colWidths.bilde = this.$refs.thBilde?.offsetWidth || 0;
                     this.colWidths.navn = this.$refs.thNavn?.offsetWidth || 0;
                     this.colWidths.lenke = this.$refs.thLenke?.offsetWidth || 0;
                     this.colWidths.pris = this.$refs.thPris?.offsetWidth || 0;
@@ -268,6 +333,7 @@
                 <thead>
                     <tr class="border-b border-border bg-card-hover/50">
                         <th x-ref="thDrag" class="w-10 px-3 py-3"></th>
+                        <th x-ref="thBilde" class="w-16 px-3 py-3"></th>
                         <th x-ref="thNavn" class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Navn</th>
                         <th x-ref="thLenke" class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Lenke</th>
                         <th x-ref="thPris" class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Pris</th>
@@ -288,7 +354,7 @@
                                 x-sort:item="'group-{{ $wishlist['id'] }}'"
                                 class="align-top"
                             >
-                                <td colspan="8" class="p-0">
+                                <td colspan="9" class="p-0">
                                     {{-- Group Header Row --}}
                                     <div class="flex items-center hover:bg-card-hover transition-colors cursor-pointer" @click="{{ $toggleClick }}">
                                         {{-- Drag Handle --}}
@@ -383,6 +449,7 @@
                                         <table class="w-full">
                                             <colgroup>
                                                 <col :style="'width: ' + colWidths.drag + 'px'">
+                                                <col :style="'width: ' + colWidths.bilde + 'px'">
                                                 <col :style="'width: ' + colWidths.navn + 'px'">
                                                 <col :style="'width: ' + colWidths.lenke + 'px'">
                                                 <col :style="'width: ' + colWidths.pris + 'px'">
@@ -398,6 +465,18 @@
                                                         {{-- Indent + no drag handle for child items --}}
                                                         <td class="w-10 px-3 py-3">
                                                             <div class="w-4 h-4 ml-2 border-l-2 border-b-2 border-border rounded-bl"></div>
+                                                        </td>
+                                                        {{-- Image --}}
+                                                        <td class="px-3 py-3">
+                                                            @if($item['image_url'])
+                                                                <img src="{{ $item['image_url'] }}" alt="{{ $item['navn'] }}" @click="lightboxImage = '{{ $item['image_url'] }}'" class="w-12 h-12 object-cover rounded border border-border cursor-pointer hover:opacity-80 transition-opacity">
+                                                            @else
+                                                                <div class="w-12 h-12 bg-muted-foreground/10 rounded border border-border flex items-center justify-center">
+                                                                    <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                    </svg>
+                                                                </div>
+                                                            @endif
                                                         </td>
                                                         {{-- Name --}}
                                                         <td class="px-4 py-3">
@@ -503,6 +582,18 @@
                                         <circle cx="9" cy="18" r="1.5" />
                                         <circle cx="15" cy="18" r="1.5" />
                                     </svg>
+                                </td>
+                                {{-- Image --}}
+                                <td class="px-3 py-4">
+                                    @if($wishlist['image_url'])
+                                        <img src="{{ $wishlist['image_url'] }}" alt="{{ $wishlist['navn'] }}" @click="lightboxImage = '{{ $wishlist['image_url'] }}'" class="w-12 h-12 object-cover rounded border border-border cursor-pointer hover:opacity-80 transition-opacity">
+                                    @else
+                                        <div class="w-12 h-12 bg-muted-foreground/10 rounded border border-border flex items-center justify-center">
+                                            <svg class="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    @endif
                                 </td>
                                 {{-- Name --}}
                                 <td class="px-4 py-4">
@@ -627,7 +718,7 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="8" class="px-5 py-12 text-center text-muted-foreground">
+                            <td colspan="9" class="px-5 py-12 text-center text-muted-foreground">
                                 <div class="flex flex-col items-center gap-2">
                                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -719,6 +810,34 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             placeholder="https://..."
                         >
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-1">Bilde-URL</label>
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="url"
+                                wire:model="itemImageUrl"
+                                class="flex-1 bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                placeholder="https://..."
+                            >
+                            <button
+                                type="button"
+                                wire:click="fetchImageFromUrl"
+                                wire:loading.attr="disabled"
+                                wire:target="fetchImageFromUrl"
+                                class="px-3 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Hent bilde fra URL"
+                            >
+                                <span wire:loading.remove wire:target="fetchImageFromUrl">Hent bilde</span>
+                                <span wire:loading wire:target="fetchImageFromUrl">Henter...</span>
+                            </button>
+                        </div>
+                        @if($itemImageUrl)
+                            <div class="mt-2">
+                                <img src="{{ $itemImageUrl }}" alt="Forhåndsvisning" class="h-20 w-20 object-cover rounded border border-border">
+                            </div>
+                        @endif
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
@@ -925,4 +1044,35 @@
             </div>
         </div>
     @endif
+
+    {{-- Image Lightbox --}}
+    <div
+        x-show="lightboxImage"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @click="lightboxImage = null"
+        @keydown.escape.window="lightboxImage = null"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 cursor-pointer"
+        style="display: none;"
+    >
+        <img
+            :src="lightboxImage"
+            @click.stop
+            class="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-default"
+            alt="Forstørret bilde"
+        >
+        <button
+            @click="lightboxImage = null"
+            class="absolute top-4 right-4 p-2 text-white/80 hover:text-white transition-colors cursor-pointer"
+            title="Lukk"
+        >
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
 </x-page-container>

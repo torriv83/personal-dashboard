@@ -20,6 +20,7 @@ class WishlistItemFactory extends Factory
             'group_id' => null,
             'name' => fake()->words(4, true),
             'url' => fake()->url(),
+            'image_url' => fake()->boolean(30) ? fake()->imageUrl() : null,
             'price' => fake()->numberBetween(100, 50000),
             'quantity' => fake()->numberBetween(1, 5),
             'status' => fake()->randomElement(['waiting', 'saving', 'saved', 'purchased']),

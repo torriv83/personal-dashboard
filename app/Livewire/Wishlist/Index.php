@@ -5,6 +5,7 @@ namespace App\Livewire\Wishlist;
 use App\Enums\WishlistStatus;
 use App\Models\WishlistGroup;
 use App\Models\WishlistItem;
+use App\Services\OpenGraphService;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -12,7 +13,7 @@ use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
- * @property-read Collection<int, array{id: int, navn: string, url: ?string, pris: ?int, antall: ?int, status: ?string, prioritet: int, is_group: bool, items: array<int, array{id: int, navn: string, url: ?string, pris: int, antall: int, status: string}>}> $wishlists
+ * @property-read Collection<int, array{id: int, navn: string, url: ?string, image_url: ?string, pris: ?int, antall: ?int, status: ?string, prioritet: int, is_group: bool, items: array<int, array{id: int, navn: string, url: ?string, image_url: ?string, pris: int, antall: int, status: string}>}> $wishlists
  * @property-read int $totalRemaining
  * @property-read int $totalAll
  * @property-read array<int, array{id: int, name: string}> $groups
@@ -44,11 +45,15 @@ class Index extends Component
 
     public string $itemUrl = '';
 
+    public string $itemImageUrl = '';
+
     public int $itemPris = 0;
 
     public int $itemAntall = 1;
 
     public string $itemStatus = 'waiting';
+
+    public bool $fetchingImage = false;
 
     // Form data for group
     public ?int $editingGroupId = null;
@@ -82,7 +87,7 @@ class Index extends Component
     }
 
     /**
-     * @return Collection<int, array{id: int, navn: string, url: ?string, pris: ?int, antall: ?int, status: ?string, prioritet: int, is_group: bool, items: array<int, array{id: int, navn: string, url: ?string, pris: int, antall: int, status: string}>}>
+     * @return Collection<int, array{id: int, navn: string, url: ?string, image_url: ?string, pris: ?int, antall: ?int, status: ?string, prioritet: int, is_group: bool, items: array<int, array{id: int, navn: string, url: ?string, image_url: ?string, pris: int, antall: int, status: string}>}>
      */
     #[Computed]
     public function wishlists(): Collection
@@ -108,6 +113,7 @@ class Index extends Component
                 'id' => $group->id,
                 'navn' => $group->name,
                 'url' => null,
+                'image_url' => null,
                 'pris' => null,
                 'antall' => null,
                 'status' => null,
@@ -119,6 +125,7 @@ class Index extends Component
                     'id' => $item->id,
                     'navn' => $item->name,
                     'url' => $item->url,
+                    'image_url' => $item->image_url,
                     'pris' => $item->price,
                     'antall' => $item->quantity,
                     'status' => $item->status->label(),
@@ -133,6 +140,7 @@ class Index extends Component
                 'id' => $item->id,
                 'navn' => $item->name,
                 'url' => $item->url,
+                'image_url' => $item->image_url,
                 'pris' => $item->price,
                 'antall' => $item->quantity,
                 'status' => $item->status->label(),
@@ -216,6 +224,7 @@ class Index extends Component
             if ($item) {
                 $this->itemNavn = $item->name;
                 $this->itemUrl = $item->url ?? '';
+                $this->itemImageUrl = $item->image_url ?? '';
                 $this->itemPris = $item->price;
                 $this->itemAntall = $item->quantity;
                 $this->itemStatus = $item->status->value;
@@ -232,15 +241,42 @@ class Index extends Component
         $this->resetItemForm();
     }
 
+    public function fetchImageFromUrl(): void
+    {
+        if (! $this->itemUrl) {
+            $this->dispatch('toast', type: 'error', message: 'Legg inn en URL først');
+
+            return;
+        }
+
+        $this->fetchingImage = true;
+
+        try {
+            $openGraphService = app(OpenGraphService::class);
+            $fetchedImageUrl = $openGraphService->fetchImage($this->itemUrl);
+
+            if ($fetchedImageUrl) {
+                $this->itemImageUrl = $fetchedImageUrl;
+                $this->dispatch('toast', type: 'success', message: 'Bilde hentet');
+            } else {
+                $this->dispatch('toast', type: 'error', message: 'Fant ikke bilde på denne siden');
+            }
+        } finally {
+            $this->fetchingImage = false;
+        }
+    }
+
     public function resetItemForm(): void
     {
         $this->editingItemId = null;
         $this->editingItemGroupId = null;
         $this->itemNavn = '';
         $this->itemUrl = '';
+        $this->itemImageUrl = '';
         $this->itemPris = 0;
         $this->itemAntall = 1;
         $this->itemStatus = 'waiting';
+        $this->fetchingImage = false;
         $this->resetValidation();
     }
 
@@ -249,6 +285,11 @@ class Index extends Component
         $validated = $this->validate([
             'itemNavn' => 'required|string|max:255',
             'itemUrl' => 'nullable|url|max:2048',
+            'itemImageUrl' => ['nullable', 'string', 'max:2048', function ($attribute, $value, $fail) {
+                if ($value && ! str_starts_with($value, '/storage/') && ! filter_var($value, FILTER_VALIDATE_URL)) {
+                    $fail('Bilde-URL må være en gyldig lenke.');
+                }
+            }],
             'itemPris' => 'required|integer|min:0',
             'itemAntall' => 'required|integer|min:1',
             'itemStatus' => 'required|in:waiting,saving,saved,purchased',
@@ -261,9 +302,32 @@ class Index extends Component
             'itemAntall.min' => 'Antall må være minst 1.',
         ]);
 
+        $openGraphService = app(OpenGraphService::class);
+        $imageUrl = null;
+
+        // Handle image URL - always store locally
+        if ($validated['itemImageUrl']) {
+            // Check if it's already a local path
+            if (str_starts_with($validated['itemImageUrl'], '/storage/')) {
+                $imageUrl = $validated['itemImageUrl'];
+            } else {
+                // Download external image and store locally
+                $imageUrl = $openGraphService->downloadAndStoreImage($validated['itemImageUrl']);
+            }
+        }
+
+        // Auto-fetch image if URL is provided but no image_url (new items only)
+        if (! $imageUrl && $validated['itemUrl'] && ! $this->editingItemId) {
+            $fetchedImageUrl = $openGraphService->fetchImage($validated['itemUrl']);
+            if ($fetchedImageUrl) {
+                $imageUrl = $fetchedImageUrl;
+            }
+        }
+
         $data = [
             'name' => $validated['itemNavn'],
             'url' => $validated['itemUrl'] ?: null,
+            'image_url' => $imageUrl,
             'price' => $validated['itemPris'],
             'quantity' => $validated['itemAntall'],
             'status' => $validated['itemStatus'],
@@ -572,6 +636,18 @@ class Index extends Component
         $group->generateShareToken();
         $this->shareUrl = $group->getShareUrl();
         $this->dispatch('toast', type: 'success', message: 'Ny delingslenke er generert');
+    }
+
+    public function fetchMissingImages(): void
+    {
+        \App\Jobs\FetchWishlistImagesJob::dispatch(refetch: false);
+        $this->dispatch('toast', type: 'success', message: 'Henter manglende bilder i bakgrunnen');
+    }
+
+    public function refetchAllImages(): void
+    {
+        \App\Jobs\FetchWishlistImagesJob::dispatch(refetch: true);
+        $this->dispatch('toast', type: 'success', message: 'Henter alle bilder på nytt i bakgrunnen');
     }
 
     public function render()

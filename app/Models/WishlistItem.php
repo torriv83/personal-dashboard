@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $group_id
  * @property string $name
  * @property string|null $url
+ * @property string|null $image_url
  * @property int $price
  * @property int $quantity
  * @property WishlistStatus $status
@@ -28,6 +29,7 @@ class WishlistItem extends Model
         'group_id',
         'name',
         'url',
+        'image_url',
         'price',
         'quantity',
         'status',
