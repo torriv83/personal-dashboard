@@ -1,4 +1,105 @@
 <x-page-container class="space-y-6">
+    <div class="flex gap-6">
+        {{-- Sidebar (desktop only) --}}
+        <aside class="w-64 shrink-0 hidden lg:block">
+            <div class="bg-card border border-border rounded-lg p-4 sticky top-4">
+                {{-- All bookmarks --}}
+                <button
+                    wire:click="$set('folderId', null)"
+                    class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer {{ $folderId === null ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                    Alle bokmerker
+                </button>
+
+                {{-- Folder tree --}}
+                @if($this->folderTree->count() > 0)
+                    <div class="mt-3 pt-3 border-t border-border space-y-1">
+                        @foreach($this->folderTree as $folder)
+                            @php $isExpanded = in_array($folder->id, $expandedFolders); @endphp
+                            <div wire:key="folder-{{ $folder->id }}-{{ $isExpanded ? 'expanded' : 'collapsed' }}" x-data="{ expanded: @js($isExpanded) }">
+                                {{-- Parent folder --}}
+                                <div class="flex items-center gap-1">
+                                    @if($folder->children->count() > 0)
+                                        <button
+                                            @click="expanded = !expanded; $wire.toggleFolderExpanded({{ $folder->id }})"
+                                            class="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+                                        >
+                                            <svg
+                                                class="w-3 h-3 transition-transform"
+                                                :class="{ 'rotate-90': expanded }"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <div class="w-5"></div>
+                                    @endif
+                                    <button
+                                        wire:click="openFolder({{ $folder->id }})"
+                                        class="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $folder->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                                    >
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                        </svg>
+                                        <span class="truncate flex-1">{{ $folder->name }}</span>
+                                        <span class="text-xs opacity-70 shrink-0">{{ $folder->bookmarks_count + $folder->children->sum('bookmarks_count') }}</span>
+                                    </button>
+                                </div>
+
+                                {{-- Children (subfolders) --}}
+                                @if($folder->children->count() > 0)
+                                    <div x-show="expanded" x-collapse class="ml-5 mt-1 space-y-1">
+                                        @foreach($folder->children as $child)
+                                            <button
+                                                wire:click="openFolder({{ $child->id }})"
+                                                class="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $child->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                                            >
+                                                <svg class="w-3.5 h-3.5 shrink-0 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                                </svg>
+                                                <span class="truncate flex-1">{{ $child->name }}</span>
+                                                <span class="text-xs opacity-70 shrink-0">{{ $child->bookmarks_count }}</span>
+                                            </button>
+                                        @endforeach
+
+                                        {{-- Add subfolder button --}}
+                                        <button
+                                            wire:click="openFolderModal(null, {{ $folder->id }})"
+                                            class="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
+                                        >
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            <span class="text-xs">Ny undermappe</span>
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                {{-- Add folder button --}}
+                <button
+                    wire:click="openFolderModal"
+                    class="w-full flex items-center gap-2 px-3 py-2 mt-3 text-sm text-muted-foreground hover:text-foreground rounded-lg hover:bg-card-hover transition-colors cursor-pointer border border-dashed border-border"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Ny mappe
+                </button>
+            </div>
+        </aside>
+
+        {{-- Main content --}}
+        <main class="flex-1 min-w-0 space-y-6">
     {{-- Header --}}
     <div class="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-4">
         <div class="flex items-center gap-3">
@@ -17,12 +118,35 @@
             <div>
                 @if($folderId)
                     @php $currentFolder = $this->getCurrentFolder(); @endphp
-                    <h1 class="text-2xl font-bold text-foreground flex items-center gap-2">
-                        <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                        </svg>
-                        {{ $currentFolder?->name ?? 'Mappe' }}
-                    </h1>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-2xl font-bold text-foreground flex items-center gap-2">
+                            <svg class="w-6 h-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                            {{ $currentFolder?->name ?? 'Mappe' }}
+                        </h1>
+                        {{-- Edit folder --}}
+                        <button
+                            wire:click="openFolderModal({{ $folderId }})"
+                            class="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
+                            title="Rediger mappe"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        {{-- Delete folder --}}
+                        <button
+                            x-data
+                            @click="if(confirm('Slette mappen? Bokmerker flyttes til ingen mappe.')) $wire.deleteFolder({{ $folderId }})"
+                            class="p-1.5 text-muted-foreground hover:text-destructive rounded-lg hover:bg-card-hover transition-colors cursor-pointer"
+                            title="Slett mappe"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
                     <p class="text-sm text-muted-foreground mt-1 hidden sm:block">{{ $this->totalBookmarksCount }} bokmerker i mappen</p>
                 @else
                     <h1 class="text-2xl font-bold text-foreground">Bokmerker</h1>
@@ -437,88 +561,6 @@
         </div>
     @endif
 
-    {{-- Folder Section (only on main view, not inside a folder) --}}
-    @if($this->folders->count() > 0 && !$folderId)
-        <div class="mt-8">
-            <h2 class="text-lg font-semibold text-foreground mb-4">Mapper</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach($this->folders as $folder)
-                    <div class="group bg-card border border-border rounded-lg overflow-hidden hover:border-accent/50 transition-colors">
-                        {{-- Clickable folder content --}}
-                        <button
-                            wire:click="openFolder({{ $folder->id }})"
-                            class="w-full p-4 flex items-center gap-3 text-left cursor-pointer"
-                        >
-                            <div class="p-2 bg-card-hover rounded-lg">
-                                <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                </svg>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <span class="font-medium text-foreground truncate">{{ $folder->name }}</span>
-                                    @if($folder->is_default)
-                                        <span class="shrink-0 text-xs text-accent">(standard)</span>
-                                    @endif
-                                </div>
-                                <span class="text-sm text-muted-foreground">{{ $folder->bookmarks_count }} bokmerker</span>
-                            </div>
-                            <svg class="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-
-                        {{-- Action buttons --}}
-                        <div class="px-4 pb-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                                wire:click="openFolderModal({{ $folder->id }})"
-                                class="p-1.5 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
-                                title="Rediger"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
-                            <div class="relative" x-data="{ open: false }">
-                                <button
-                                    @click.stop="open = !open"
-                                    class="p-1.5 text-muted-foreground hover:text-destructive rounded transition-colors cursor-pointer"
-                                    title="Slett"
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                                <div
-                                    x-show="open"
-                                    @click.away="open = false"
-                                    x-transition
-                                    class="absolute left-0 bottom-full mb-2 w-48 bg-card border border-border rounded-lg shadow-lg z-50"
-                                >
-                                    <button
-                                        wire:click="deleteFolder({{ $folder->id }})"
-                                        @click="open = false"
-                                        class="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-                                    >
-                                        Slett mappe, behold bokmerker
-                                    </button>
-                                    <button
-                                        wire:click="deleteFolderWithBookmarks({{ $folder->id }})"
-                                        wire:confirm="Er du sikker? Dette sletter mappen og alle {{ $folder->bookmarks_count }} bokmerker i den."
-                                        @click="open = false"
-                                        class="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive hover:text-white transition-colors cursor-pointer"
-                                    >
-                                        Slett mappe med innhold
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
     {{-- Bookmark Modal --}}
     @if($showBookmarkModal)
         <div
@@ -610,11 +652,15 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
                         >
                             <option value="">Ingen mappe</option>
-                            @foreach($this->folders as $folder)
+                            @foreach($this->folderTree as $folder)
                                 <option value="{{ $folder->id }}">
-                                    {{ $folder->name }}
-                                    @if($folder->is_default) (standard) @endif
+                                    {{ $folder->name }}@if($folder->is_default) (standard)@endif
                                 </option>
+                                @foreach($folder->children as $child)
+                                    <option value="{{ $child->id }}">
+                                        &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ $child->name }}@if($child->is_default) (standard)@endif
+                                    </option>
+                                @endforeach
                             @endforeach
                         </select>
                     </div>
@@ -703,6 +749,28 @@
                             <p class="text-xs text-destructive mt-1">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    {{-- Parent folder --}}
+                    @if($this->rootFolders->count() > 0)
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-1">Overordnet mappe</label>
+                            <select
+                                wire:model="folderParentId"
+                                class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
+                            >
+                                <option value="">Ingen (hovedmappe)</option>
+                                @foreach($this->rootFolders as $rootFolder)
+                                    @if($rootFolder->id !== $editingFolderId)
+                                        <option value="{{ $rootFolder->id }}">{{ $rootFolder->name }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                            @error('folderParentId')
+                                <p class="text-xs text-destructive mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-muted-foreground mt-1">Velg en mappe for å opprette en undermappe.</p>
+                        </div>
+                    @endif
 
                     <div class="flex items-center gap-2">
                         <input
@@ -884,8 +952,11 @@
                         class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
                     >
                         <option value="">Fjern fra mappe</option>
-                        @foreach($this->folders as $folder)
+                        @foreach($this->folderTree as $folder)
                             <option value="{{ $folder->id }}">{{ $folder->name }}</option>
+                            @foreach($folder->children as $child)
+                                <option value="{{ $child->id }}">&nbsp;&nbsp;&nbsp;&nbsp;↳ {{ $child->name }}</option>
+                            @endforeach
                         @endforeach
                     </select>
                 </div>
@@ -898,4 +969,6 @@
             </div>
         </div>
     @endif
+        </main>
+    </div>
 </x-page-container>

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\BookmarkFolder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -30,6 +31,16 @@ class BookmarkFolderFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_default' => true,
+        ]);
+    }
+
+    /**
+     * Set this folder as a child of the given parent folder.
+     */
+    public function withParent(BookmarkFolder $parent): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'parent_id' => $parent->id,
         ]);
     }
 }

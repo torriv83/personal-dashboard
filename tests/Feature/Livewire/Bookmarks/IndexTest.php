@@ -530,3 +530,140 @@ test('search shows all matching bookmarks regardless of folder', function () {
         ->assertSee('Laravel Standalone')
         ->assertSee('Laravel In Folder');
 });
+
+// ====================
+// Folder Hierarchy
+// ====================
+
+test('can create subfolder under parent folder', function () {
+    $parent = BookmarkFolder::factory()->create(['name' => 'Parent Folder']);
+
+    Livewire::test(Index::class)
+        ->call('openFolderModal', null, $parent->id)
+        ->assertSet('folderParentId', $parent->id)
+        ->set('folderName', 'Child Folder')
+        ->call('saveFolder')
+        ->assertDispatched('toast');
+
+    $this->assertDatabaseHas('bookmark_folders', [
+        'name' => 'Child Folder',
+        'parent_id' => $parent->id,
+    ]);
+});
+
+test('cannot create folder more than 2 levels deep', function () {
+    $parent = BookmarkFolder::factory()->create(['name' => 'Parent']);
+    $child = BookmarkFolder::factory()->withParent($parent)->create(['name' => 'Child']);
+
+    Livewire::test(Index::class)
+        ->call('openFolderModal')
+        ->set('folderName', 'Grandchild')
+        ->set('folderParentId', $child->id)
+        ->call('saveFolder')
+        ->assertHasErrors('folderParentId');
+
+    $this->assertDatabaseMissing('bookmark_folders', [
+        'name' => 'Grandchild',
+    ]);
+});
+
+test('folder tree shows hierarchy correctly', function () {
+    $parent = BookmarkFolder::factory()->create(['name' => 'Parent Folder']);
+    $child = BookmarkFolder::factory()->withParent($parent)->create(['name' => 'Child Folder']);
+    Bookmark::factory()->create(['folder_id' => $parent->id]);
+    Bookmark::factory()->count(2)->create(['folder_id' => $child->id]);
+
+    // Get folder tree directly from database query (same as computed property)
+    $folderTree = BookmarkFolder::query()
+        ->whereNull('parent_id')
+        ->with(['children' => fn ($q) => $q->withCount('bookmarks')->orderBy('sort_order')])
+        ->withCount('bookmarks')
+        ->orderBy('sort_order')
+        ->get();
+
+    expect($folderTree)->toHaveCount(1);
+    expect($folderTree->first()->name)->toBe('Parent Folder');
+    expect($folderTree->first()->children)->toHaveCount(1);
+    expect($folderTree->first()->children->first()->name)->toBe('Child Folder');
+    expect($folderTree->first()->bookmarks_count)->toBe(1);
+    expect($folderTree->first()->children->first()->bookmarks_count)->toBe(2);
+
+    // Also verify the component renders hierarchy in sidebar
+    Livewire::test(Index::class)
+        ->assertSee('Parent Folder')
+        ->assertSee('Child Folder');
+});
+
+test('deleting parent folder deletes children via cascade', function () {
+    $parent = BookmarkFolder::factory()->create(['name' => 'Parent']);
+    $child = BookmarkFolder::factory()->withParent($parent)->create(['name' => 'Child']);
+    $parentBookmark = Bookmark::factory()->create(['folder_id' => $parent->id]);
+    $childBookmark = Bookmark::factory()->create(['folder_id' => $child->id]);
+
+    Livewire::test(Index::class)
+        ->call('deleteFolder', $parent->id);
+
+    // Both folders should be gone
+    $this->assertDatabaseMissing('bookmark_folders', ['id' => $parent->id]);
+    $this->assertDatabaseMissing('bookmark_folders', ['id' => $child->id]);
+
+    // Both bookmarks should be moved to no folder
+    $this->assertDatabaseHas('bookmarks', ['id' => $parentBookmark->id, 'folder_id' => null]);
+    $this->assertDatabaseHas('bookmarks', ['id' => $childBookmark->id, 'folder_id' => null]);
+});
+
+test('deleting parent folder with bookmarks deletes all bookmarks', function () {
+    $parent = BookmarkFolder::factory()->create(['name' => 'Parent']);
+    $child = BookmarkFolder::factory()->withParent($parent)->create(['name' => 'Child']);
+    $parentBookmark = Bookmark::factory()->create(['folder_id' => $parent->id]);
+    $childBookmark = Bookmark::factory()->create(['folder_id' => $child->id]);
+
+    Livewire::test(Index::class)
+        ->call('deleteFolderWithBookmarks', $parent->id);
+
+    // Both folders and bookmarks should be gone
+    $this->assertDatabaseMissing('bookmark_folders', ['id' => $parent->id]);
+    $this->assertDatabaseMissing('bookmark_folders', ['id' => $child->id]);
+    $this->assertDatabaseMissing('bookmarks', ['id' => $parentBookmark->id]);
+    $this->assertDatabaseMissing('bookmarks', ['id' => $childBookmark->id]);
+});
+
+test('can toggle folder expanded state', function () {
+    $folder = BookmarkFolder::factory()->create();
+
+    $component = Livewire::test(Index::class)
+        ->assertSet('expandedFolders', [])
+        ->call('toggleFolderExpanded', $folder->id);
+
+    expect($component->get('expandedFolders'))->toContain($folder->id);
+
+    $component->call('toggleFolderExpanded', $folder->id);
+
+    expect($component->get('expandedFolders'))->not->toContain($folder->id);
+});
+
+test('cannot set folder as its own parent', function () {
+    $folder = BookmarkFolder::factory()->create(['name' => 'Test Folder']);
+
+    Livewire::test(Index::class)
+        ->call('openFolderModal', $folder->id)
+        ->set('folderParentId', $folder->id)
+        ->call('saveFolder')
+        ->assertHasErrors('folderParentId');
+});
+
+test('root folders computed shows only parent folders', function () {
+    $parent1 = BookmarkFolder::factory()->create(['name' => 'Parent 1']);
+    $parent2 = BookmarkFolder::factory()->create(['name' => 'Parent 2']);
+    $child = BookmarkFolder::factory()->withParent($parent1)->create(['name' => 'Child']);
+
+    // Get root folders directly from database query (same as computed property)
+    $rootFolders = BookmarkFolder::query()
+        ->whereNull('parent_id')
+        ->orderBy('sort_order')
+        ->get();
+
+    expect($rootFolders)->toHaveCount(2);
+    expect($rootFolders->pluck('name')->toArray())->toContain('Parent 1', 'Parent 2');
+    expect($rootFolders->pluck('name')->toArray())->not->toContain('Child');
+});

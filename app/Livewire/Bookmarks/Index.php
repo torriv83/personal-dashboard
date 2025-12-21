@@ -16,6 +16,8 @@ use Livewire\Component;
 /**
  * @property-read Collection<int, Bookmark> $bookmarks
  * @property-read Collection<int, BookmarkFolder> $folders
+ * @property-read Collection<int, BookmarkFolder> $folderTree
+ * @property-read Collection<int, BookmarkFolder> $rootFolders
  * @property-read Collection<int, BookmarkTag> $tags
  * @property-read int $totalBookmarksCount
  */
@@ -62,7 +64,13 @@ class Index extends Component
 
     public string $folderName = '';
 
+    public ?int $folderParentId = null;
+
     public bool $folderIsDefault = false;
+
+    // Sidebar state
+    /** @var array<int, int> */
+    public array $expandedFolders = [];
 
     // Tag modal state
     public bool $showTagModal = false;
@@ -181,6 +189,36 @@ class Index extends Component
     }
 
     /**
+     * Get hierarchical folder tree (root folders with children).
+     *
+     * @return Collection<int, BookmarkFolder>
+     */
+    #[Computed]
+    public function folderTree(): Collection
+    {
+        return BookmarkFolder::query()
+            ->whereNull('parent_id')
+            ->with(['children' => fn ($q) => $q->withCount('bookmarks')->orderBy('sort_order')])
+            ->withCount('bookmarks')
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    /**
+     * Get root folders (for parent dropdown in modal).
+     *
+     * @return Collection<int, BookmarkFolder>
+     */
+    #[Computed]
+    public function rootFolders(): Collection
+    {
+        return BookmarkFolder::query()
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    /**
      * Get all tags.
      *
      * @return Collection<int, BookmarkTag>
@@ -232,6 +270,21 @@ class Index extends Component
         unset($this->totalBookmarksCount);
     }
 
+    /**
+     * Toggle folder expanded/collapsed state in sidebar.
+     */
+    public function toggleFolderExpanded(int $folderId): void
+    {
+        if (in_array($folderId, $this->expandedFolders, true)) {
+            $this->expandedFolders = array_values(array_filter(
+                $this->expandedFolders,
+                fn ($id) => $id !== $folderId
+            ));
+        } else {
+            $this->expandedFolders[] = $folderId;
+        }
+    }
+
     // ====================
     // Bookmark CRUD
     // ====================
@@ -249,9 +302,13 @@ class Index extends Component
             $this->bookmarkFolderId = $bookmark->folder_id;
             $this->bookmarkTagIds = $bookmark->tags->pluck('id')->toArray();
         } else {
-            // Set default folder if available
-            $defaultFolder = BookmarkFolder::getDefault();
-            $this->bookmarkFolderId = $defaultFolder?->id;
+            // Use current folder, or fall back to default folder
+            if ($this->folderId !== null) {
+                $this->bookmarkFolderId = $this->folderId;
+            } else {
+                $defaultFolder = BookmarkFolder::getDefault();
+                $this->bookmarkFolderId = $defaultFolder?->id;
+            }
         }
 
         $this->showBookmarkModal = true;
@@ -401,7 +458,7 @@ class Index extends Component
     // Folder CRUD
     // ====================
 
-    public function openFolderModal(?int $id = null): void
+    public function openFolderModal(?int $id = null, ?int $parentId = null): void
     {
         $this->resetFolderForm();
 
@@ -409,7 +466,11 @@ class Index extends Component
             $folder = BookmarkFolder::findOrFail($id);
             $this->editingFolderId = $folder->id;
             $this->folderName = $folder->name;
+            $this->folderParentId = $folder->parent_id;
             $this->folderIsDefault = $folder->is_default;
+        } elseif ($parentId !== null) {
+            // Creating a subfolder under a parent
+            $this->folderParentId = $parentId;
         }
 
         $this->showFolderModal = true;
@@ -425,6 +486,7 @@ class Index extends Component
     {
         $this->editingFolderId = null;
         $this->folderName = '';
+        $this->folderParentId = null;
         $this->folderIsDefault = false;
         $this->resetErrorBag();
     }
@@ -433,14 +495,36 @@ class Index extends Component
     {
         $this->validate([
             'folderName' => ['required', 'string', 'max:255'],
+            'folderParentId' => ['nullable', 'exists:bookmark_folders,id'],
         ], [
             'folderName.required' => 'Mappenavn er påkrevd.',
             'folderName.max' => 'Mappenavnet kan ikke være lengre enn 255 tegn.',
         ]);
 
+        // Validate max 2 levels: parent cannot be a subfolder
+        if ($this->folderParentId !== null) {
+            $parent = BookmarkFolder::find($this->folderParentId);
+            if ($parent !== null && $parent->parent_id !== null) {
+                $this->addError('folderParentId', 'Kan ikke opprette mappe under en undermappe (maks 2 nivåer).');
+
+                return;
+            }
+        }
+
         if ($this->editingFolderId !== null) {
             $folder = BookmarkFolder::findOrFail($this->editingFolderId);
-            $folder->update(['name' => $this->folderName]);
+
+            // Cannot set parent to self or own children
+            if ($this->folderParentId === $folder->id) {
+                $this->addError('folderParentId', 'Kan ikke sette mappe som sin egen overordnede.');
+
+                return;
+            }
+
+            $folder->update([
+                'name' => $this->folderName,
+                'parent_id' => $this->folderParentId,
+            ]);
 
             if ($this->folderIsDefault) {
                 $folder->setAsDefault();
@@ -453,6 +537,7 @@ class Index extends Component
             $maxSortOrder = BookmarkFolder::max('sort_order') ?? 0;
             $folder = BookmarkFolder::create([
                 'name' => $this->folderName,
+                'parent_id' => $this->folderParentId,
                 'sort_order' => $maxSortOrder + 1,
             ]);
 
@@ -465,18 +550,30 @@ class Index extends Component
 
         $this->closeFolderModal();
         unset($this->folders);
+        unset($this->folderTree);
+        unset($this->rootFolders);
     }
 
     public function deleteFolder(int $id): void
     {
         $folder = BookmarkFolder::findOrFail($id);
 
-        // Move all bookmarks to no folder
+        // Move all bookmarks to no folder (including subfolders)
         Bookmark::where('folder_id', $id)->update(['folder_id' => null]);
+
+        // Move bookmarks from child folders to no folder
+        $childIds = $folder->children->pluck('id')->toArray();
+        if (! empty($childIds)) {
+            Bookmark::whereIn('folder_id', $childIds)->update(['folder_id' => null]);
+        }
+
+        // Children will be cascade-deleted by the database
 
         $folder->delete();
         $this->dispatch('toast', type: 'success', message: 'Mappe slettet! Bokmerker er nå uten mappe.');
         unset($this->folders);
+        unset($this->folderTree);
+        unset($this->rootFolders);
         unset($this->bookmarks);
     }
 
@@ -487,9 +584,19 @@ class Index extends Component
         // Delete all bookmarks in the folder
         Bookmark::where('folder_id', $id)->delete();
 
+        // Delete bookmarks in child folders
+        $childIds = $folder->children->pluck('id')->toArray();
+        if (! empty($childIds)) {
+            Bookmark::whereIn('folder_id', $childIds)->delete();
+        }
+
+        // Children will be cascade-deleted by the database
+
         $folder->delete();
         $this->dispatch('toast', type: 'success', message: 'Mappe og alle bokmerker slettet!');
         unset($this->folders);
+        unset($this->folderTree);
+        unset($this->rootFolders);
         unset($this->bookmarks);
     }
 

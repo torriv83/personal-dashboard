@@ -57,40 +57,54 @@ class ImportLinkwarden extends Component
                 return;
             }
 
-            // Build collection paths
+            // Build collection hierarchy info
             $collections = collect($json['collections'])->keyBy('id');
-            $collectionPaths = [];
+            $collectionInfo = [];
 
             foreach ($collections as $id => $c) {
+                // Build full path for display and skip checking
                 $path = $c['name'];
                 $parentId = $c['parentId'] ?? null;
+                $depth = 0;
 
                 while ($parentId && isset($collections[$parentId])) {
                     $parent = $collections[$parentId];
                     $path = $parent['name'].' > '.$path;
                     $parentId = $parent['parentId'] ?? null;
+                    $depth++;
                 }
 
-                $collectionPaths[$id] = $path;
+                $collectionInfo[$id] = [
+                    'name' => $c['name'],
+                    'path' => $path,
+                    'parentId' => $c['parentId'] ?? null,
+                    'depth' => $depth,
+                ];
             }
 
             // Count stats
-            $skipFolders = ['Privat > Ønskeliste'];
+            $skipFolders = [];
             $totalLinks = 0;
             $skippedLinks = 0;
             $folders = [];
 
             foreach ($collections as $id => $c) {
                 $linkCount = count($c['links'] ?? []);
-                $path = $collectionPaths[$id];
+                $info = $collectionInfo[$id];
 
-                if (in_array($path, $skipFolders)) {
+                if (in_array($info['path'], $skipFolders)) {
                     $skippedLinks += $linkCount;
                 } else {
                     $totalLinks += $linkCount;
                     if ($linkCount > 0) {
+                        // Show hierarchical display with depth indicator
+                        $displayName = $info['depth'] > 0
+                            ? str_repeat('  ', $info['depth']).'↳ '.$info['name']
+                            : $info['name'];
+
                         $folders[] = [
-                            'name' => $path,
+                            'name' => $displayName,
+                            'path' => $info['path'],
                             'count' => $linkCount,
                         ];
                     }
@@ -124,45 +138,94 @@ class ImportLinkwarden extends Component
             $json = json_decode($content, true);
 
             $collections = collect($json['collections'])->keyBy('id');
-            $collectionPaths = [];
 
+            // Build hierarchy info for each collection
+            $collectionInfo = [];
             foreach ($collections as $id => $c) {
                 $path = $c['name'];
                 $parentId = $c['parentId'] ?? null;
+                $ancestors = [];
 
-                while ($parentId && isset($collections[$parentId])) {
-                    $parent = $collections[$parentId];
-                    $path = $parent['name'].' > '.$path;
-                    $parentId = $parent['parentId'] ?? null;
+                // Collect all ancestors
+                $tempParentId = $parentId;
+                while ($tempParentId && isset($collections[$tempParentId])) {
+                    $ancestor = $collections[$tempParentId];
+                    $ancestors[] = $tempParentId;
+                    $path = $ancestor['name'].' > '.$path;
+                    $tempParentId = $ancestor['parentId'] ?? null;
                 }
 
-                $collectionPaths[$id] = $path;
+                $collectionInfo[$id] = [
+                    'name' => $c['name'],
+                    'path' => $path,
+                    'linkwardenParentId' => $parentId,
+                    'ancestors' => array_reverse($ancestors), // Root first
+                    'depth' => count($ancestors),
+                ];
             }
 
-            $skipFolders = ['Privat > Ønskeliste'];
+            $skipFolders = [];
 
             DB::beginTransaction();
 
-            // Create folders
+            // Create folders with proper hierarchy (max 2 levels)
+            // Maps Linkwarden collection ID -> our BookmarkFolder ID
             $folderMap = [];
             $sortOrder = BookmarkFolder::max('sort_order') ?? 0;
             $foldersCreated = 0;
 
-            foreach ($collectionPaths as $collectionId => $path) {
-                if (in_array($path, $skipFolders)) {
+            // First pass: Create all root folders (depth 0)
+            foreach ($collectionInfo as $collectionId => $info) {
+                if (in_array($info['path'], $skipFolders)) {
                     continue;
                 }
 
-                $folder = BookmarkFolder::where('name', $path)->first();
-                if (! $folder) {
-                    $sortOrder++;
-                    $folder = BookmarkFolder::create([
-                        'name' => $path,
-                        'sort_order' => $sortOrder,
-                    ]);
-                    $foldersCreated++;
+                if ($info['depth'] === 0) {
+                    $folder = BookmarkFolder::where('name', $info['name'])
+                        ->whereNull('parent_id')
+                        ->first();
+
+                    if (! $folder) {
+                        $sortOrder++;
+                        $folder = BookmarkFolder::create([
+                            'name' => $info['name'],
+                            'parent_id' => null,
+                            'sort_order' => $sortOrder,
+                        ]);
+                        $foldersCreated++;
+                    }
+                    $folderMap[$collectionId] = $folder->id;
                 }
-                $folderMap[$collectionId] = $folder->id;
+            }
+
+            // Second pass: Create child folders (depth 1+)
+            // For depth > 1, we flatten to depth 1 (child of the root ancestor)
+            foreach ($collectionInfo as $collectionId => $info) {
+                if (in_array($info['path'], $skipFolders)) {
+                    continue;
+                }
+
+                if ($info['depth'] > 0) {
+                    // Find the root ancestor (first in ancestors array)
+                    $rootAncestorId = $info['ancestors'][0] ?? null;
+                    $parentFolderId = $rootAncestorId ? ($folderMap[$rootAncestorId] ?? null) : null;
+
+                    // Check if folder already exists with this name under this parent
+                    $folder = BookmarkFolder::where('name', $info['name'])
+                        ->where('parent_id', $parentFolderId)
+                        ->first();
+
+                    if (! $folder) {
+                        $sortOrder++;
+                        $folder = BookmarkFolder::create([
+                            'name' => $info['name'],
+                            'parent_id' => $parentFolderId,
+                            'sort_order' => $sortOrder,
+                        ]);
+                        $foldersCreated++;
+                    }
+                    $folderMap[$collectionId] = $folder->id;
+                }
             }
 
             // Import bookmarks
@@ -171,9 +234,9 @@ class ImportLinkwarden extends Component
             $bookmarkSortOrder = Bookmark::max('sort_order') ?? 0;
 
             foreach ($collections as $collectionId => $c) {
-                $path = $collectionPaths[$collectionId];
+                $info = $collectionInfo[$collectionId];
 
-                if (in_array($path, $skipFolders)) {
+                if (in_array($info['path'], $skipFolders)) {
                     continue;
                 }
 
