@@ -783,3 +783,35 @@ test('can close preview modal', function () {
         ->assertSet('previewUrl', '')
         ->assertSet('previewTitle', '');
 });
+
+// ====================
+// Mobile Folder Sidebar
+// ====================
+
+test('can toggle mobile folder sidebar', function () {
+    Livewire::test(Index::class)
+        ->assertSet('showMobileFolderSidebar', false)
+        ->call('toggleMobileFolderSidebar')
+        ->assertSet('showMobileFolderSidebar', true)
+        ->call('toggleMobileFolderSidebar')
+        ->assertSet('showMobileFolderSidebar', false);
+});
+
+test('can close mobile folder sidebar', function () {
+    Livewire::test(Index::class)
+        ->call('toggleMobileFolderSidebar')
+        ->assertSet('showMobileFolderSidebar', true)
+        ->call('closeMobileFolderSidebar')
+        ->assertSet('showMobileFolderSidebar', false);
+});
+
+test('opening folder closes mobile sidebar', function () {
+    $folder = BookmarkFolder::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('toggleMobileFolderSidebar')
+        ->assertSet('showMobileFolderSidebar', true)
+        ->call('openFolder', $folder->id)
+        ->assertSet('showMobileFolderSidebar', false)
+        ->assertSet('folderId', $folder->id);
+});

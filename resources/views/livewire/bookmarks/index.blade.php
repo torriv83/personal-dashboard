@@ -1256,6 +1256,132 @@
             </div>
         </div>
     @endif
+
+    {{-- Mobile Folder Sidebar --}}
+    @if($showMobileFolderSidebar)
+        <div
+            class="fixed inset-0 z-50 lg:hidden"
+            x-data="{ draggingBookmarkId: null }"
+            @keydown.escape.window="$wire.closeMobileFolderSidebar()"
+        >
+            {{-- Backdrop --}}
+            <div
+                class="absolute inset-0 bg-black/50"
+                wire:click="closeMobileFolderSidebar"
+            ></div>
+
+            {{-- Sidebar --}}
+            <div class="absolute inset-y-0 left-0 w-72 bg-card border-r border-border shadow-xl flex flex-col">
+                {{-- Header --}}
+                <div class="flex items-center justify-between px-4 py-3 border-b border-border">
+                    <h2 class="text-lg font-semibold text-foreground">Mapper</h2>
+                    <button
+                        wire:click="closeMobileFolderSidebar"
+                        class="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Content --}}
+                <div class="flex-1 overflow-y-auto p-4 space-y-2">
+                    {{-- All bookmarks --}}
+                    <button
+                        wire:click="$set('folderId', null); $set('showMobileFolderSidebar', false)"
+                        class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer {{ $folderId === null ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        Alle bokmerker
+                    </button>
+
+                    {{-- Folder tree --}}
+                    @if($this->folderTree->count() > 0)
+                        <div class="mt-3 pt-3 border-t border-border space-y-1">
+                            @foreach($this->folderTree as $folder)
+                                @php $isExpanded = in_array($folder->id, $expandedFolders); @endphp
+                                <div
+                                    wire:key="mobile-folder-{{ $folder->id }}"
+                                    x-data="{ expanded: @js($isExpanded) }"
+                                >
+                                    {{-- Parent folder --}}
+                                    <div class="flex items-center gap-1">
+                                        @if($folder->children->count() > 0)
+                                            <button
+                                                @click="expanded = !expanded; $wire.toggleFolderExpanded({{ $folder->id }})"
+                                                class="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+                                            >
+                                                <svg
+                                                    class="w-3 h-3 transition-transform"
+                                                    :class="{ 'rotate-90': expanded }"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </button>
+                                        @else
+                                            <div class="w-5"></div>
+                                        @endif
+                                        <button
+                                            wire:click="openFolder({{ $folder->id }})"
+                                            class="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $folder->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                                        >
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                            </svg>
+                                            <span class="truncate flex-1">{{ $folder->name }}</span>
+                                            <span class="text-xs opacity-70 shrink-0">{{ $folder->bookmarks_count + $folder->children->sum('bookmarks_count') }}</span>
+                                        </button>
+                                    </div>
+
+                                    {{-- Children (subfolders) --}}
+                                    @if($folder->children->count() > 0)
+                                        <div
+                                            x-show="expanded"
+                                            x-collapse
+                                            class="ml-5 mt-1 space-y-1"
+                                        >
+                                            @foreach($folder->children as $child)
+                                                <button
+                                                    wire:key="mobile-folder-{{ $child->id }}"
+                                                    wire:click="openFolder({{ $child->id }})"
+                                                    class="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $child->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                                                >
+                                                    <svg class="w-3.5 h-3.5 shrink-0 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                                    </svg>
+                                                    <span class="truncate flex-1">{{ $child->name }}</span>
+                                                    <span class="text-xs opacity-70 shrink-0">{{ $child->bookmarks_count }}</span>
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-4 py-3 border-t border-border">
+                    <button
+                        wire:click="openFolderModal"
+                        class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Ny mappe
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
         </main>
     </div>
 </x-page-container>

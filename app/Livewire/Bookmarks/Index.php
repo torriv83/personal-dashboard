@@ -72,6 +72,9 @@ class Index extends Component
     /** @var array<int, int> */
     public array $expandedFolders = [];
 
+    // Mobile folder sidebar
+    public bool $showMobileFolderSidebar = false;
+
     // Preview modal state
     public bool $showPreviewModal = false;
 
@@ -260,6 +263,7 @@ class Index extends Component
         $this->selectedIds = [];
         $this->selectAll = false;
         $this->limit = self::PER_PAGE;
+        $this->showMobileFolderSidebar = false;
         unset($this->bookmarks);
         unset($this->totalBookmarksCount);
     }
@@ -292,10 +296,28 @@ class Index extends Component
         }
     }
 
+    /**
+     * Toggle mobile folder sidebar.
+     */
+    #[\Livewire\Attributes\On('toggleMobileFolderSidebar')]
+    public function toggleMobileFolderSidebar(): void
+    {
+        $this->showMobileFolderSidebar = ! $this->showMobileFolderSidebar;
+    }
+
+    /**
+     * Close mobile folder sidebar.
+     */
+    public function closeMobileFolderSidebar(): void
+    {
+        $this->showMobileFolderSidebar = false;
+    }
+
     // ====================
     // Bookmark CRUD
     // ====================
 
+    #[\Livewire\Attributes\On('openBookmarkModal')]
     public function openBookmarkModal(?int $id = null): void
     {
         $this->resetBookmarkForm();
@@ -465,6 +487,7 @@ class Index extends Component
     // Folder CRUD
     // ====================
 
+    #[\Livewire\Attributes\On('openFolderModal')]
     public function openFolderModal(?int $id = null, ?int $parentId = null): void
     {
         $this->resetFolderForm();
@@ -611,6 +634,7 @@ class Index extends Component
     // Tag CRUD
     // ====================
 
+    #[\Livewire\Attributes\On('openTagModal')]
     public function openTagModal(?int $id = null): void
     {
         $this->resetTagForm();
@@ -781,6 +805,7 @@ class Index extends Component
     // Dead link check
     // ====================
 
+    #[\Livewire\Attributes\On('checkDeadLinks')]
     public function checkDeadLinks(): void
     {
         CheckDeadBookmarksJob::dispatch();
