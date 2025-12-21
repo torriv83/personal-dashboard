@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * @property int $id
@@ -19,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read BookmarkFolder|null $folder
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, BookmarkTag> $tags
  */
 class Bookmark extends Model
 {
@@ -68,6 +70,14 @@ class Bookmark extends Model
     public function isStandalone(): bool
     {
         return $this->folder_id === null;
+    }
+
+    /**
+     * @return BelongsToMany<BookmarkTag, $this>
+     */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(BookmarkTag::class, 'bookmark_tag', 'bookmark_id', 'tag_id');
     }
 
     /**

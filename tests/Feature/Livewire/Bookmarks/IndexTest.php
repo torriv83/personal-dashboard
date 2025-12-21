@@ -4,6 +4,7 @@ use App\Jobs\CheckDeadBookmarksJob;
 use App\Livewire\Bookmarks\Index;
 use App\Models\Bookmark;
 use App\Models\BookmarkFolder;
+use App\Models\BookmarkTag;
 use App\Models\User;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
@@ -272,6 +273,25 @@ test('can bulk move bookmarks to folder', function () {
     }
 });
 
+test('can bulk move bookmarks out of folder to root', function () {
+    $folder = BookmarkFolder::factory()->create();
+    $bookmarks = Bookmark::factory()->count(3)->create(['folder_id' => $folder->id]);
+
+    // Navigate into folder first
+    Livewire::test(Index::class)
+        ->call('openFolder', $folder->id)
+        ->set('selectedIds', $bookmarks->pluck('id')->toArray())
+        ->call('openMoveModal')
+        ->assertSet('showMoveModal', true)
+        ->set('moveToFolderId', '') // Empty string = remove from folder
+        ->call('bulkMove')
+        ->assertDispatched('toast');
+
+    foreach ($bookmarks as $bookmark) {
+        $this->assertNull($bookmark->fresh()->folder_id);
+    }
+});
+
 // ====================
 // Dead Link Check
 // ====================
@@ -341,4 +361,172 @@ test('can move bookmark to folder', function () {
         ->call('moveToFolder', $bookmark->id, $folder->id);
 
     $this->assertEquals($folder->id, $bookmark->fresh()->folder_id);
+});
+
+// ====================
+// Tag CRUD
+// ====================
+
+test('can create a tag', function () {
+    Livewire::test(Index::class)
+        ->call('openTagModal')
+        ->assertSet('showTagModal', true)
+        ->set('tagName', 'Work')
+        ->set('tagColor', '#ef4444')
+        ->call('saveTag')
+        ->assertSet('showTagModal', false)
+        ->assertDispatched('toast');
+
+    $this->assertDatabaseHas('bookmark_tags', [
+        'name' => 'Work',
+        'color' => '#ef4444',
+    ]);
+});
+
+test('can update a tag', function () {
+    $tag = BookmarkTag::factory()->create(['name' => 'Old Tag', 'color' => '#3b82f6']);
+
+    Livewire::test(Index::class)
+        ->call('openTagModal', $tag->id)
+        ->assertSet('editingTagId', $tag->id)
+        ->assertSet('tagName', 'Old Tag')
+        ->set('tagName', 'New Tag')
+        ->set('tagColor', '#22c55e')
+        ->call('saveTag');
+
+    $this->assertDatabaseHas('bookmark_tags', [
+        'id' => $tag->id,
+        'name' => 'New Tag',
+        'color' => '#22c55e',
+    ]);
+});
+
+test('can delete a tag', function () {
+    $tag = BookmarkTag::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('openTagModal', $tag->id)
+        ->call('deleteTag', $tag->id)
+        ->assertSet('showTagModal', false)
+        ->assertDispatched('toast');
+
+    $this->assertDatabaseMissing('bookmark_tags', ['id' => $tag->id]);
+});
+
+test('can filter by tag', function () {
+    $tag = BookmarkTag::factory()->create(['name' => 'Important']);
+    $bookmarkWithTag = Bookmark::factory()->create(['title' => 'Tagged Bookmark']);
+    $bookmarkWithTag->tags()->attach($tag->id);
+    $bookmarkWithoutTag = Bookmark::factory()->create(['title' => 'Untagged Bookmark']);
+
+    Livewire::test(Index::class)
+        ->call('setTagFilter', $tag->id)
+        ->assertSet('tagId', $tag->id)
+        ->assertSee('Tagged Bookmark')
+        ->assertDontSee('Untagged Bookmark');
+});
+
+test('can filter by tag across folders', function () {
+    $tag = BookmarkTag::factory()->create(['name' => 'Work']);
+    $folder1 = BookmarkFolder::factory()->create(['name' => 'Folder 1']);
+    $folder2 = BookmarkFolder::factory()->create(['name' => 'Folder 2']);
+
+    $bookmark1 = Bookmark::factory()->create(['title' => 'In Folder 1', 'folder_id' => $folder1->id]);
+    $bookmark1->tags()->attach($tag->id);
+
+    $bookmark2 = Bookmark::factory()->create(['title' => 'In Folder 2', 'folder_id' => $folder2->id]);
+    $bookmark2->tags()->attach($tag->id);
+
+    $standaloneWithTag = Bookmark::factory()->create(['title' => 'Standalone Tagged', 'folder_id' => null]);
+    $standaloneWithTag->tags()->attach($tag->id);
+
+    // When filtering by tag, should see ALL bookmarks with that tag regardless of folder
+    Livewire::test(Index::class)
+        ->call('setTagFilter', $tag->id)
+        ->assertSee('In Folder 1')
+        ->assertSee('In Folder 2')
+        ->assertSee('Standalone Tagged');
+});
+
+test('can add tags to bookmark', function () {
+    $tag = BookmarkTag::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('openBookmarkModal')
+        ->set('bookmarkUrl', 'https://example.com')
+        ->set('bookmarkTitle', 'Example')
+        ->set('bookmarkTagIds', [$tag->id])
+        ->call('saveBookmark');
+
+    $bookmark = Bookmark::where('url', 'https://example.com')->first();
+    expect($bookmark->tags)->toHaveCount(1);
+    expect($bookmark->tags->first()->id)->toBe($tag->id);
+});
+
+test('can toggle bookmark tag from card', function () {
+    $tag = BookmarkTag::factory()->create();
+    $bookmark = Bookmark::factory()->create();
+
+    // Initially no tags
+    expect($bookmark->tags)->toHaveCount(0);
+
+    // Toggle on
+    Livewire::test(Index::class)
+        ->call('toggleBookmarkTag', $bookmark->id, $tag->id);
+
+    expect($bookmark->fresh()->tags)->toHaveCount(1);
+    expect($bookmark->fresh()->tags->first()->id)->toBe($tag->id);
+
+    // Toggle off
+    Livewire::test(Index::class)
+        ->call('toggleBookmarkTag', $bookmark->id, $tag->id);
+
+    expect($bookmark->fresh()->tags)->toHaveCount(0);
+});
+
+// ====================
+// Folder Navigation
+// ====================
+
+test('can navigate into folder', function () {
+    $folder = BookmarkFolder::factory()->create(['name' => 'My Folder']);
+    $bookmarkInFolder = Bookmark::factory()->create(['folder_id' => $folder->id, 'title' => 'Folder Bookmark']);
+    $bookmarkOutside = Bookmark::factory()->create(['folder_id' => null, 'title' => 'Outside Bookmark']);
+
+    Livewire::test(Index::class)
+        ->call('openFolder', $folder->id)
+        ->assertSet('folderId', $folder->id)
+        ->assertSee('Folder Bookmark')
+        ->assertDontSee('Outside Bookmark');
+});
+
+test('can go back from folder', function () {
+    $folder = BookmarkFolder::factory()->create();
+
+    Livewire::test(Index::class)
+        ->call('openFolder', $folder->id)
+        ->assertSet('folderId', $folder->id)
+        ->call('goBack')
+        ->assertSet('folderId', null);
+});
+
+test('main view shows only standalone bookmarks', function () {
+    $folder = BookmarkFolder::factory()->create();
+    Bookmark::factory()->create(['folder_id' => null, 'title' => 'Standalone Bookmark']);
+    Bookmark::factory()->create(['folder_id' => $folder->id, 'title' => 'Folder Bookmark']);
+
+    Livewire::test(Index::class)
+        ->assertSee('Standalone Bookmark')
+        ->assertDontSee('Folder Bookmark');
+});
+
+test('search shows all matching bookmarks regardless of folder', function () {
+    $folder = BookmarkFolder::factory()->create();
+    Bookmark::factory()->create(['folder_id' => null, 'title' => 'Laravel Standalone']);
+    Bookmark::factory()->create(['folder_id' => $folder->id, 'title' => 'Laravel In Folder']);
+
+    Livewire::test(Index::class)
+        ->set('search', 'Laravel')
+        ->assertSee('Laravel Standalone')
+        ->assertSee('Laravel In Folder');
 });

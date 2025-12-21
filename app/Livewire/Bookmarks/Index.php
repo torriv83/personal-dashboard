@@ -5,6 +5,7 @@ namespace App\Livewire\Bookmarks;
 use App\Jobs\CheckDeadBookmarksJob;
 use App\Models\Bookmark;
 use App\Models\BookmarkFolder;
+use App\Models\BookmarkTag;
 use App\Services\OpenGraphService;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -15,10 +16,14 @@ use Livewire\Component;
 /**
  * @property-read Collection<int, Bookmark> $bookmarks
  * @property-read Collection<int, BookmarkFolder> $folders
+ * @property-read Collection<int, BookmarkTag> $tags
+ * @property-read int $totalBookmarksCount
  */
 #[Layout('components.layouts.app')]
 class Index extends Component
 {
+    private const PER_PAGE = 24;
+
     // Search and filter
     #[Url]
     public string $search = '';
@@ -27,7 +32,13 @@ class Index extends Component
     public ?int $folderId = null;
 
     #[Url]
+    public ?int $tagId = null;
+
+    #[Url]
     public string $sortBy = 'newest';
+
+    // Pagination
+    public int $limit = self::PER_PAGE;
 
     // Bookmark modal state
     public bool $showBookmarkModal = false;
@@ -53,6 +64,18 @@ class Index extends Component
 
     public bool $folderIsDefault = false;
 
+    // Tag modal state
+    public bool $showTagModal = false;
+
+    public ?int $editingTagId = null;
+
+    public string $tagName = '';
+
+    public string $tagColor = '#6366f1';
+
+    /** @var array<int, int> */
+    public array $bookmarkTagIds = [];
+
     // Bulk selection
     /** @var array<int, int> */
     public array $selectedIds = [];
@@ -65,14 +88,13 @@ class Index extends Component
     public ?int $moveToFolderId = null;
 
     /**
-     * Get all bookmarks, filtered and sorted.
+     * Build the base query for bookmarks.
      *
-     * @return Collection<int, Bookmark>
+     * @return \Illuminate\Database\Eloquent\Builder<Bookmark>
      */
-    #[Computed]
-    public function bookmarks(): Collection
+    private function bookmarksQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $query = Bookmark::query()->with('folder');
+        $query = Bookmark::query()->with(['folder', 'tags']);
 
         // Search
         if ($this->search !== '') {
@@ -83,20 +105,65 @@ class Index extends Component
             });
         }
 
-        // Filter by folder
+        // Filter by folder OR show only standalone bookmarks
         if ($this->folderId !== null) {
+            // Inside a specific folder
             $query->where('folder_id', $this->folderId);
+        } elseif ($this->search === '' && $this->tagId === null) {
+            // Main view (no search, no tag filter): only show bookmarks WITHOUT folder
+            $query->whereNull('folder_id');
+        }
+        // When searching OR filtering by tag, show all matching bookmarks regardless of folder
+
+        // Filter by tag (works across all folders)
+        if ($this->tagId !== null) {
+            $query->whereHas('tags', fn ($q) => $q->where('bookmark_tags.id', $this->tagId));
         }
 
         // Sort
-        $query = match ($this->sortBy) {
+        return match ($this->sortBy) {
             'title_asc' => $query->orderBy('title', 'asc'),
             'title_desc' => $query->orderBy('title', 'desc'),
             'oldest' => $query->orderBy('created_at', 'asc'),
             default => $query->orderBy('created_at', 'desc'), // newest
         };
+    }
 
-        return $query->get();
+    /**
+     * Get bookmarks with limit applied.
+     *
+     * @return Collection<int, Bookmark>
+     */
+    #[Computed]
+    public function bookmarks(): Collection
+    {
+        return $this->bookmarksQuery()->take($this->limit)->get();
+    }
+
+    /**
+     * Get total count of bookmarks (without limit).
+     */
+    #[Computed]
+    public function totalBookmarksCount(): int
+    {
+        return $this->bookmarksQuery()->count();
+    }
+
+    /**
+     * Load more bookmarks.
+     */
+    public function loadMore(): void
+    {
+        $this->limit += self::PER_PAGE;
+        unset($this->bookmarks);
+    }
+
+    /**
+     * Check if there are more bookmarks to load.
+     */
+    public function hasMoreBookmarks(): bool
+    {
+        return $this->limit < $this->totalBookmarksCount;
     }
 
     /**
@@ -111,6 +178,58 @@ class Index extends Component
             ->withCount('bookmarks')
             ->orderBy('sort_order')
             ->get();
+    }
+
+    /**
+     * Get all tags.
+     *
+     * @return Collection<int, BookmarkTag>
+     */
+    #[Computed]
+    public function tags(): Collection
+    {
+        return BookmarkTag::query()
+            ->withCount('bookmarks')
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    /**
+     * Get the current folder (when inside a folder).
+     */
+    public function getCurrentFolder(): ?BookmarkFolder
+    {
+        if ($this->folderId === null) {
+            return null;
+        }
+
+        return BookmarkFolder::find($this->folderId);
+    }
+
+    /**
+     * Open a folder (navigate into it).
+     */
+    public function openFolder(int $folderId): void
+    {
+        $this->folderId = $folderId;
+        $this->selectedIds = [];
+        $this->selectAll = false;
+        $this->limit = self::PER_PAGE;
+        unset($this->bookmarks);
+        unset($this->totalBookmarksCount);
+    }
+
+    /**
+     * Go back to main view (exit folder).
+     */
+    public function goBack(): void
+    {
+        $this->folderId = null;
+        $this->selectedIds = [];
+        $this->selectAll = false;
+        $this->limit = self::PER_PAGE;
+        unset($this->bookmarks);
+        unset($this->totalBookmarksCount);
     }
 
     // ====================
@@ -128,6 +247,7 @@ class Index extends Component
             $this->bookmarkTitle = $bookmark->title;
             $this->bookmarkDescription = $bookmark->description ?? '';
             $this->bookmarkFolderId = $bookmark->folder_id;
+            $this->bookmarkTagIds = $bookmark->tags->pluck('id')->toArray();
         } else {
             // Set default folder if available
             $defaultFolder = BookmarkFolder::getDefault();
@@ -150,6 +270,7 @@ class Index extends Component
         $this->bookmarkTitle = '';
         $this->bookmarkDescription = '';
         $this->bookmarkFolderId = null;
+        $this->bookmarkTagIds = [];
         $this->resetErrorBag();
     }
 
@@ -234,16 +355,18 @@ class Index extends Component
                 'description' => $this->bookmarkDescription ?: null,
                 'folder_id' => $this->bookmarkFolderId,
             ]);
+            $bookmark->tags()->sync($this->bookmarkTagIds);
             $this->dispatch('toast', type: 'success', message: 'Bokmerke oppdatert!');
         } else {
             $maxSortOrder = Bookmark::max('sort_order') ?? 0;
-            Bookmark::create([
+            $bookmark = Bookmark::create([
                 'url' => $this->bookmarkUrl,
                 'title' => $this->bookmarkTitle,
                 'description' => $this->bookmarkDescription ?: null,
                 'folder_id' => $this->bookmarkFolderId,
                 'sort_order' => $maxSortOrder + 1,
             ]);
+            $bookmark->tags()->sync($this->bookmarkTagIds);
             $this->dispatch('toast', type: 'success', message: 'Bokmerke opprettet!');
         }
 
@@ -371,6 +494,109 @@ class Index extends Component
     }
 
     // ====================
+    // Tag CRUD
+    // ====================
+
+    public function openTagModal(?int $id = null): void
+    {
+        $this->resetTagForm();
+
+        if ($id !== null) {
+            $tag = BookmarkTag::findOrFail($id);
+            $this->editingTagId = $tag->id;
+            $this->tagName = $tag->name;
+            $this->tagColor = $tag->color;
+        }
+
+        $this->showTagModal = true;
+    }
+
+    public function closeTagModal(): void
+    {
+        $this->showTagModal = false;
+        $this->resetTagForm();
+    }
+
+    public function resetTagForm(): void
+    {
+        $this->editingTagId = null;
+        $this->tagName = '';
+        $this->tagColor = '#6366f1';
+        $this->resetErrorBag();
+    }
+
+    public function saveTag(): void
+    {
+        $this->validate([
+            'tagName' => ['required', 'string', 'max:255'],
+            'tagColor' => ['required', 'string', 'max:7'],
+        ], [
+            'tagName.required' => 'Tagnavn er påkrevd.',
+            'tagName.max' => 'Tagnavnet kan ikke være lengre enn 255 tegn.',
+        ]);
+
+        if ($this->editingTagId !== null) {
+            $tag = BookmarkTag::findOrFail($this->editingTagId);
+            $tag->update([
+                'name' => $this->tagName,
+                'color' => $this->tagColor,
+            ]);
+            $this->dispatch('toast', type: 'success', message: 'Tag oppdatert!');
+        } else {
+            $maxSortOrder = BookmarkTag::max('sort_order') ?? 0;
+            BookmarkTag::create([
+                'name' => $this->tagName,
+                'color' => $this->tagColor,
+                'sort_order' => $maxSortOrder + 1,
+            ]);
+            $this->dispatch('toast', type: 'success', message: 'Tag opprettet!');
+        }
+
+        $this->closeTagModal();
+        unset($this->tags);
+    }
+
+    public function deleteTag(int $id): void
+    {
+        $tag = BookmarkTag::findOrFail($id);
+        $tag->delete();
+        $this->dispatch('toast', type: 'success', message: 'Tag slettet!');
+        $this->closeTagModal();
+        unset($this->tags);
+        unset($this->bookmarks);
+    }
+
+    /**
+     * Set tag filter.
+     */
+    public function setTagFilter(?int $tagId): void
+    {
+        $this->tagId = $tagId;
+        $this->selectedIds = [];
+        $this->selectAll = false;
+        $this->limit = self::PER_PAGE;
+        unset($this->bookmarks);
+        unset($this->totalBookmarksCount);
+    }
+
+    /**
+     * Toggle a tag on/off for a specific bookmark (quick tag from card).
+     */
+    public function toggleBookmarkTag(int $bookmarkId, int $tagId): void
+    {
+        $bookmark = Bookmark::findOrFail($bookmarkId);
+
+        if ($bookmark->tags()->where('bookmark_tags.id', $tagId)->exists()) {
+            $bookmark->tags()->detach($tagId);
+        } else {
+            $bookmark->tags()->attach($tagId);
+        }
+
+        unset($this->bookmarks);
+        unset($this->tags);
+    }
+
+    // ====================
     // Bulk operations
     // ====================
 
@@ -405,8 +631,11 @@ class Index extends Component
             return;
         }
 
+        // Convert empty string to null for "remove from folder"
+        $folderId = $this->moveToFolderId ?: null;
+
         Bookmark::whereIn('id', $this->selectedIds)
-            ->update(['folder_id' => $this->moveToFolderId]);
+            ->update(['folder_id' => $folderId]);
 
         $count = count($this->selectedIds);
         $this->dispatch('toast', type: 'success', message: "{$count} bokmerker flyttet!");
@@ -489,13 +718,34 @@ class Index extends Component
         $this->folderId = $folderId;
         $this->selectedIds = [];
         $this->selectAll = false;
+        $this->limit = self::PER_PAGE;
         unset($this->bookmarks);
+        unset($this->totalBookmarksCount);
     }
 
     public function clearSearch(): void
     {
         $this->search = '';
+        $this->limit = self::PER_PAGE;
         unset($this->bookmarks);
+        unset($this->totalBookmarksCount);
+    }
+
+    /**
+     * Reset limit when search changes.
+     */
+    public function updatedSearch(): void
+    {
+        $this->limit = self::PER_PAGE;
+        unset($this->totalBookmarksCount);
+    }
+
+    /**
+     * Reset limit when sort changes.
+     */
+    public function updatedSortBy(): void
+    {
+        $this->limit = self::PER_PAGE;
     }
 
     // ====================
