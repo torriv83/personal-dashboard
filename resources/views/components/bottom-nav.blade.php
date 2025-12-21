@@ -281,12 +281,12 @@
             </x-bottom-nav-item>
 
             <x-bottom-nav-item
-                @click="Livewire.dispatch('checkDeadLinks')"
-                label="Sjekk"
+                @click="Livewire.dispatch('toggleMobileSearch')"
+                label="Søk"
                 :active="false"
             >
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
             </x-bottom-nav-item>
         @endif

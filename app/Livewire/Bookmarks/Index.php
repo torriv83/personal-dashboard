@@ -76,6 +76,9 @@ class Index extends Component
     // Mobile folder sidebar
     public bool $showMobileFolderSidebar = false;
 
+    // Mobile search
+    public bool $showMobileSearch = false;
+
     // Preview modal state
     public bool $showPreviewModal = false;
 
@@ -331,6 +334,24 @@ class Index extends Component
     public function closeMobileFolderSidebar(): void
     {
         $this->showMobileFolderSidebar = false;
+    }
+
+    /**
+     * Toggle mobile search.
+     */
+    #[\Livewire\Attributes\On('toggleMobileSearch')]
+    public function toggleMobileSearch(): void
+    {
+        $this->showMobileSearch = ! $this->showMobileSearch;
+    }
+
+    /**
+     * Close mobile search.
+     */
+    public function closeMobileSearch(): void
+    {
+        $this->showMobileSearch = false;
+        $this->search = '';
     }
 
     // ====================
