@@ -316,7 +316,7 @@
         @forelse($this->bookmarks as $bookmark)
             <div
                 wire:key="bookmark-{{ $bookmark->id }}"
-                class="group relative bg-card border rounded-lg overflow-hidden hover:border-accent/50 transition-colors {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
+                class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
             >
                 {{-- Top row: Checkbox + Domain --}}
                 <div class="flex items-center gap-2 p-4 pb-0">
