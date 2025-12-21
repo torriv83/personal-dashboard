@@ -667,3 +667,49 @@ test('root folders computed shows only parent folders', function () {
     expect($rootFolders->pluck('name')->toArray())->toContain('Parent 1', 'Parent 2');
     expect($rootFolders->pluck('name')->toArray())->not->toContain('Child');
 });
+
+test('can reorder root folders via drag and drop', function () {
+    $folder1 = BookmarkFolder::factory()->create(['name' => 'Folder 1', 'sort_order' => 0]);
+    $folder2 = BookmarkFolder::factory()->create(['name' => 'Folder 2', 'sort_order' => 1]);
+    $folder3 = BookmarkFolder::factory()->create(['name' => 'Folder 3', 'sort_order' => 2]);
+
+    // Move folder3 to position 0 (first)
+    Livewire::test(Index::class)
+        ->call('updateFolderOrder', "folder-{$folder3->id}", 0);
+
+    expect($folder3->fresh()->sort_order)->toBe(0);
+    expect($folder1->fresh()->sort_order)->toBe(1);
+    expect($folder2->fresh()->sort_order)->toBe(2);
+});
+
+test('can reorder subfolders via drag and drop', function () {
+    $parent = BookmarkFolder::factory()->create(['name' => 'Parent']);
+    $child1 = BookmarkFolder::factory()->withParent($parent)->create(['name' => 'Child 1', 'sort_order' => 0]);
+    $child2 = BookmarkFolder::factory()->withParent($parent)->create(['name' => 'Child 2', 'sort_order' => 1]);
+    $child3 = BookmarkFolder::factory()->withParent($parent)->create(['name' => 'Child 3', 'sort_order' => 2]);
+
+    // Move child1 to position 2 (last)
+    Livewire::test(Index::class)
+        ->call('updateFolderOrder', "folder-{$child1->id}", 2);
+
+    expect($child2->fresh()->sort_order)->toBe(0);
+    expect($child3->fresh()->sort_order)->toBe(1);
+    expect($child1->fresh()->sort_order)->toBe(2);
+});
+
+test('folder reorder only affects same level folders', function () {
+    $root1 = BookmarkFolder::factory()->create(['name' => 'Root 1', 'sort_order' => 0]);
+    $root2 = BookmarkFolder::factory()->create(['name' => 'Root 2', 'sort_order' => 1]);
+    $child1 = BookmarkFolder::factory()->withParent($root1)->create(['name' => 'Child 1', 'sort_order' => 0]);
+    $child2 = BookmarkFolder::factory()->withParent($root1)->create(['name' => 'Child 2', 'sort_order' => 1]);
+
+    // Reorder root folders - should not affect children
+    Livewire::test(Index::class)
+        ->call('updateFolderOrder', "folder-{$root2->id}", 0);
+
+    expect($root2->fresh()->sort_order)->toBe(0);
+    expect($root1->fresh()->sort_order)->toBe(1);
+    // Children should be unaffected
+    expect($child1->fresh()->sort_order)->toBe(0);
+    expect($child2->fresh()->sort_order)->toBe(1);
+});

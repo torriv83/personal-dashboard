@@ -891,6 +891,48 @@ class Index extends Component
         unset($this->bookmarks);
     }
 
+    /**
+     * Update folder order (drag and drop in sidebar).
+     */
+    public function updateFolderOrder(string $item, int $position): void
+    {
+        // Format: "folder-{id}"
+        if (! str_starts_with($item, 'folder-')) {
+            return;
+        }
+
+        $id = (int) str_replace('folder-', '', $item);
+        $folder = BookmarkFolder::find($id);
+
+        if ($folder === null) {
+            return;
+        }
+
+        // Get folders at the same level (same parent_id)
+        $folders = BookmarkFolder::query()
+            ->where('parent_id', $folder->parent_id)
+            ->orderBy('sort_order')
+            ->get();
+
+        $movedFolder = $folders->firstWhere('id', $id);
+        if ($movedFolder === null) {
+            return;
+        }
+
+        $filtered = $folders->filter(fn ($f) => $f->id !== $id)->values();
+        $filtered->splice($position, 0, [$movedFolder]);
+
+        foreach ($filtered as $index => $f) {
+            if ($f->sort_order !== $index) {
+                $f->update(['sort_order' => $index]);
+            }
+        }
+
+        unset($this->folders);
+        unset($this->folderTree);
+        unset($this->rootFolders);
+    }
+
     public function render()
     {
         return view('livewire.bookmarks.index');

@@ -2,6 +2,13 @@
     <div class="flex gap-6">
         {{-- Sidebar (desktop only) --}}
         <aside class="w-64 shrink-0 hidden lg:block">
+            {{-- Sidebar header (matches main content header height) --}}
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-foreground">Mapper</h2>
+                <p class="text-sm text-muted-foreground mt-1">Organiser bokmerkene dine</p>
+            </div>
+
+            {{-- Folder navigation --}}
             <div class="bg-card border border-border rounded-lg p-4 sticky top-4">
                 {{-- All bookmarks --}}
                 <button
@@ -16,12 +23,20 @@
 
                 {{-- Folder tree --}}
                 @if($this->folderTree->count() > 0)
-                    <div class="mt-3 pt-3 border-t border-border space-y-1">
+                    <div
+                        class="mt-3 pt-3 border-t border-border space-y-1"
+                        x-sort="$wire.updateFolderOrder($item, $position)"
+                        wire:ignore.self
+                    >
                         @foreach($this->folderTree as $folder)
                             @php $isExpanded = in_array($folder->id, $expandedFolders); @endphp
-                            <div wire:key="folder-{{ $folder->id }}-{{ $isExpanded ? 'expanded' : 'collapsed' }}" x-data="{ expanded: @js($isExpanded) }">
+                            <div
+                                wire:key="folder-{{ $folder->id }}-{{ $isExpanded ? 'expanded' : 'collapsed' }}"
+                                x-sort:item="'folder-{{ $folder->id }}'"
+                                x-data="{ expanded: @js($isExpanded) }"
+                            >
                                 {{-- Parent folder --}}
-                                <div class="flex items-center gap-1">
+                                <div class="flex items-center gap-1 cursor-grab active:cursor-grabbing">
                                     @if($folder->children->count() > 0)
                                         <button
                                             @click="expanded = !expanded; $wire.toggleFolderExpanded({{ $folder->id }})"
@@ -54,18 +69,30 @@
 
                                 {{-- Children (subfolders) --}}
                                 @if($folder->children->count() > 0)
-                                    <div x-show="expanded" x-collapse class="ml-5 mt-1 space-y-1">
+                                    <div
+                                        x-show="expanded"
+                                        x-collapse
+                                        class="ml-5 mt-1 space-y-1"
+                                        x-sort="$wire.updateFolderOrder($item, $position)"
+                                        wire:ignore.self
+                                    >
                                         @foreach($folder->children as $child)
-                                            <button
-                                                wire:click="openFolder({{ $child->id }})"
-                                                class="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $child->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                                            <div
+                                                wire:key="folder-{{ $child->id }}"
+                                                x-sort:item="'folder-{{ $child->id }}'"
+                                                class="cursor-grab active:cursor-grabbing"
                                             >
-                                                <svg class="w-3.5 h-3.5 shrink-0 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                                </svg>
-                                                <span class="truncate flex-1">{{ $child->name }}</span>
-                                                <span class="text-xs opacity-70 shrink-0">{{ $child->bookmarks_count }}</span>
-                                            </button>
+                                                <button
+                                                    wire:click="openFolder({{ $child->id }})"
+                                                    class="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $child->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                                                >
+                                                    <svg class="w-3.5 h-3.5 shrink-0 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                                    </svg>
+                                                    <span class="truncate flex-1">{{ $child->name }}</span>
+                                                    <span class="text-xs opacity-70 shrink-0">{{ $child->bookmarks_count }}</span>
+                                                </button>
+                                            </div>
                                         @endforeach
 
                                         {{-- Add subfolder button --}}
