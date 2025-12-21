@@ -713,3 +713,73 @@ test('folder reorder only affects same level folders', function () {
     expect($child1->fresh()->sort_order)->toBe(0);
     expect($child2->fresh()->sort_order)->toBe(1);
 });
+
+// ====================
+// Drag Bookmark to Folder
+// ====================
+
+test('can drop bookmark onto folder to move it', function () {
+    $folder = BookmarkFolder::factory()->create(['name' => 'Target Folder']);
+    $bookmark = Bookmark::factory()->create(['folder_id' => null]);
+
+    Livewire::test(Index::class)
+        ->call('dropBookmarkToFolder', $bookmark->id, $folder->id)
+        ->assertDispatched('toast');
+
+    expect($bookmark->fresh()->folder_id)->toBe($folder->id);
+});
+
+test('can drop bookmark onto all bookmarks to remove from folder', function () {
+    $folder = BookmarkFolder::factory()->create();
+    $bookmark = Bookmark::factory()->create(['folder_id' => $folder->id]);
+
+    Livewire::test(Index::class)
+        ->call('dropBookmarkToFolder', $bookmark->id, null)
+        ->assertDispatched('toast');
+
+    expect($bookmark->fresh()->folder_id)->toBeNull();
+});
+
+test('dropping bookmark onto same folder does nothing', function () {
+    $folder = BookmarkFolder::factory()->create();
+    $bookmark = Bookmark::factory()->create(['folder_id' => $folder->id]);
+
+    Livewire::test(Index::class)
+        ->call('dropBookmarkToFolder', $bookmark->id, $folder->id)
+        ->assertNotDispatched('toast');
+
+    expect($bookmark->fresh()->folder_id)->toBe($folder->id);
+});
+
+// ====================
+// Preview Modal
+// ====================
+
+test('can open preview modal for bookmark', function () {
+    $bookmark = Bookmark::factory()->create([
+        'url' => 'https://example.com',
+        'title' => 'Example Site',
+    ]);
+
+    Livewire::test(Index::class)
+        ->assertSet('showPreviewModal', false)
+        ->call('openPreview', $bookmark->id)
+        ->assertSet('showPreviewModal', true)
+        ->assertSet('previewUrl', 'https://example.com')
+        ->assertSet('previewTitle', 'Example Site');
+});
+
+test('can close preview modal', function () {
+    $bookmark = Bookmark::factory()->create([
+        'url' => 'https://example.com',
+        'title' => 'Example Site',
+    ]);
+
+    Livewire::test(Index::class)
+        ->call('openPreview', $bookmark->id)
+        ->assertSet('showPreviewModal', true)
+        ->call('closePreview')
+        ->assertSet('showPreviewModal', false)
+        ->assertSet('previewUrl', '')
+        ->assertSet('previewTitle', '');
+});

@@ -72,6 +72,13 @@ class Index extends Component
     /** @var array<int, int> */
     public array $expandedFolders = [];
 
+    // Preview modal state
+    public bool $showPreviewModal = false;
+
+    public string $previewUrl = '';
+
+    public string $previewTitle = '';
+
     // Tag modal state
     public bool $showTagModal = false;
 
@@ -931,6 +938,62 @@ class Index extends Component
         unset($this->folders);
         unset($this->folderTree);
         unset($this->rootFolders);
+    }
+
+    /**
+     * Drop bookmark onto folder (drag and drop from grid to sidebar).
+     */
+    public function dropBookmarkToFolder(int $bookmarkId, ?int $folderId): void
+    {
+        $bookmark = Bookmark::find($bookmarkId);
+
+        if ($bookmark === null) {
+            return;
+        }
+
+        // Don't move if already in that folder
+        if ($bookmark->folder_id === $folderId) {
+            return;
+        }
+
+        $bookmark->update(['folder_id' => $folderId]);
+
+        $folderName = $folderId
+            ? (BookmarkFolder::find($folderId)->name ?? 'mappe')
+            : 'Alle bokmerker';
+
+        $this->dispatch('toast', type: 'success', message: "Flyttet til {$folderName}");
+
+        unset($this->bookmarks);
+        unset($this->folders);
+        unset($this->folderTree);
+        unset($this->rootFolders);
+    }
+
+    /**
+     * Open preview modal for a bookmark.
+     */
+    public function openPreview(int $bookmarkId): void
+    {
+        $bookmark = Bookmark::find($bookmarkId);
+
+        if ($bookmark === null) {
+            return;
+        }
+
+        $this->previewUrl = $bookmark->url;
+        $this->previewTitle = $bookmark->title;
+        $this->showPreviewModal = true;
+    }
+
+    /**
+     * Close preview modal.
+     */
+    public function closePreview(): void
+    {
+        $this->showPreviewModal = false;
+        $this->previewUrl = '';
+        $this->previewTitle = '';
     }
 
     public function render()

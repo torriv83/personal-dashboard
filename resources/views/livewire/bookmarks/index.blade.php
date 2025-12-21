@@ -1,4 +1,4 @@
-<x-page-container class="space-y-6">
+<x-page-container class="space-y-6" x-data="{ draggingBookmarkId: null }">
     <div class="flex gap-6">
         {{-- Sidebar (desktop only) --}}
         <aside class="w-64 shrink-0 hidden lg:block">
@@ -10,9 +10,12 @@
 
             {{-- Folder navigation --}}
             <div class="bg-card border border-border rounded-lg p-4 sticky top-4">
-                {{-- All bookmarks --}}
+                {{-- All bookmarks (drop target for removing from folder) --}}
                 <button
                     wire:click="$set('folderId', null)"
+                    @dragover.prevent="$el.classList.add('ring-2', 'ring-accent')"
+                    @dragleave="$el.classList.remove('ring-2', 'ring-accent')"
+                    @drop.prevent="if (draggingBookmarkId) { $wire.dropBookmarkToFolder(draggingBookmarkId, null); $el.classList.remove('ring-2', 'ring-accent'); draggingBookmarkId = null; }"
                     class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer {{ $folderId === null ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,6 +60,9 @@
                                     @endif
                                     <button
                                         wire:click="openFolder({{ $folder->id }})"
+                                        @dragover.prevent="$el.classList.add('ring-2', 'ring-accent')"
+                                        @dragleave="$el.classList.remove('ring-2', 'ring-accent')"
+                                        @drop.prevent="if (draggingBookmarkId) { $wire.dropBookmarkToFolder(draggingBookmarkId, {{ $folder->id }}); $el.classList.remove('ring-2', 'ring-accent'); draggingBookmarkId = null; }"
                                         class="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $folder->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
                                     >
                                         <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -84,6 +90,9 @@
                                             >
                                                 <button
                                                     wire:click="openFolder({{ $child->id }})"
+                                                    @dragover.prevent="$el.classList.add('ring-2', 'ring-accent')"
+                                                    @dragleave="$el.classList.remove('ring-2', 'ring-accent')"
+                                                    @drop.prevent="if (draggingBookmarkId) { $wire.dropBookmarkToFolder(draggingBookmarkId, {{ $child->id }}); $el.classList.remove('ring-2', 'ring-accent'); draggingBookmarkId = null; }"
                                                     class="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $child->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
                                                 >
                                                     <svg class="w-3.5 h-3.5 shrink-0 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -343,7 +352,10 @@
         @forelse($this->bookmarks as $bookmark)
             <div
                 wire:key="bookmark-{{ $bookmark->id }}"
-                class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
+                draggable="true"
+                @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
+                @dragend="draggingBookmarkId = null"
+                class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors cursor-grab active:cursor-grabbing {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
             >
                 {{-- Top row: Checkbox + Domain --}}
                 <div class="flex items-center gap-2 p-4 pb-0">
@@ -463,6 +475,18 @@
                     >
                         <svg class="w-4 h-4" fill="{{ $bookmark->is_read ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </button>
+
+                    {{-- Preview --}}
+                    <button
+                        wire:click="openPreview({{ $bookmark->id }})"
+                        class="p-1.5 text-muted-foreground hover:text-foreground bg-card/80 backdrop-blur rounded transition-colors cursor-pointer"
+                        title="Forhåndsvisning"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                     </button>
 
@@ -992,6 +1016,69 @@
                 <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end gap-3">
                     <x-button variant="secondary" wire:click="closeMoveModal">Avbryt</x-button>
                     <x-button wire:click="bulkMove">Flytt</x-button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Preview Modal --}}
+    @if($showPreviewModal)
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            x-data
+            @keydown.escape.window="$wire.closePreview()"
+        >
+            {{-- Backdrop --}}
+            <div
+                class="absolute inset-0 bg-black/70"
+                wire:click="closePreview"
+            ></div>
+
+            {{-- Modal --}}
+            <div class="relative bg-card border border-border rounded-lg shadow-xl w-full max-w-6xl h-[85vh] flex flex-col">
+                {{-- Header --}}
+                <div class="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <h3 class="text-lg font-semibold text-foreground truncate">{{ $previewTitle }}</h3>
+                        <a
+                            href="{{ $previewUrl }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="text-xs text-muted-foreground hover:text-accent truncate cursor-pointer"
+                        >
+                            {{ $previewUrl }}
+                        </a>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <a
+                            href="{{ $previewUrl }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="p-1.5 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+                            title="Åpne i ny fane"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </a>
+                        <button
+                            wire:click="closePreview"
+                            class="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Iframe --}}
+                <div class="flex-1 min-h-0 bg-white">
+                    <iframe
+                        src="{{ $previewUrl }}"
+                        class="w-full h-full border-0"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                    ></iframe>
                 </div>
             </div>
         </div>
