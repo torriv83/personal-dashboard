@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1a1a1a"/>
+
+  <!-- Bookmark shape -->
+  <path d="M140 80 h232 a24 24 0 0 1 24 24 v328 l-140 -80 l-140 80 V104 a24 24 0 0 1 24 -24z"
+        fill="#c8ff00"/>
+
+  <!-- Star inside bookmark -->
+  <polygon points="256,160 272,210 324,210 282,244 298,296 256,264 214,296 230,244 188,210 240,210"
+           fill="#1a1a1a"/>
+</svg>
