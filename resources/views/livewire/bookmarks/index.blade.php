@@ -535,7 +535,7 @@
                         draggable="true"
                         @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
                         @dragend="draggingBookmarkId = null"
-                        @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
+                        @contextmenu.prevent="if (!$event.sourceCapabilities?.firesTouchEvents) openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
                         class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 sm:cursor-grab {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }} ring-2 ring-accent/20"
                     >
                         {{-- Top row: Checkbox + Domain --}}
