@@ -1,6 +1,7 @@
 <x-page-container class="space-y-6" x-data="{
     draggingBookmarkId: null,
     contextMenu: { show: false, x: 0, y: 0, bookmarkId: null, isDeadBookmark: false },
+
     openContextMenu(event, bookmarkId, isDead) {
         this.contextMenu.x = event.clientX;
         this.contextMenu.y = event.clientY;
@@ -25,16 +26,20 @@
             <div class="bg-card border border-border rounded-lg p-4 sticky top-4">
                 {{-- All bookmarks (drop target for removing from folder) --}}
                 <button
-                    wire:click="$set('folderId', null)"
+                    wire:click="openFolder(null)"
                     @dragover.prevent="$el.classList.add('ring-2', 'ring-accent')"
                     @dragleave="$el.classList.remove('ring-2', 'ring-accent')"
                     @drop.prevent="if (draggingBookmarkId) { $wire.dropBookmarkToFolder(draggingBookmarkId, null); $el.classList.remove('ring-2', 'ring-accent'); draggingBookmarkId = null; }"
-                    class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer {{ $folderId === null ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                    @class([
+                        'w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer',
+                        'bg-accent text-black font-medium' => $folderId === null,
+                        'text-foreground hover:bg-card-hover' => $folderId !== null,
+                    ])
                 >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                     </svg>
-                    Alle bokmerker
+                    <span>Alle bokmerker</span>
                 </button>
 
                 {{-- Folder tree --}}
@@ -91,7 +96,7 @@
                                     <div
                                         x-show="expanded"
                                         x-collapse
-                                        class="ml-5 mt-1 space-y-1"
+                                        class="ml-9 mt-1 space-y-1"
                                         x-sort="$wire.updateFolderOrder($item, $position)"
                                         wire:ignore.self
                                     >
@@ -1304,13 +1309,17 @@
                 <div class="flex-1 overflow-y-auto p-4 space-y-2">
                     {{-- All bookmarks --}}
                     <button
-                        wire:click="$set('folderId', null); $set('showMobileFolderSidebar', false)"
-                        class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer {{ $folderId === null ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                        wire:click="openFolder(null)"
+                        @class([
+                            'w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors cursor-pointer',
+                            'bg-accent text-black font-medium' => $folderId === null,
+                            'text-foreground hover:bg-card-hover' => $folderId !== null,
+                        ])
                     >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                         </svg>
-                        Alle bokmerker
+                        <span>Alle bokmerker</span>
                     </button>
 
                     {{-- Folder tree --}}
@@ -1343,7 +1352,7 @@
                                             <div class="w-5"></div>
                                         @endif
                                         <button
-                                            wire:click="openFolder({{ $folder->id }})"
+                                            wire:click="openFolder({{ $folder->id }}); $wire.closeMobileFolderSidebar()"
                                             class="flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $folder->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
                                         >
                                             <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1359,12 +1368,12 @@
                                         <div
                                             x-show="expanded"
                                             x-collapse
-                                            class="ml-5 mt-1 space-y-1"
+                                            class="ml-9 mt-1 space-y-1"
                                         >
                                             @foreach($folder->children as $child)
                                                 <button
                                                     wire:key="mobile-folder-{{ $child->id }}"
-                                                    wire:click="openFolder({{ $child->id }})"
+                                                    wire:click="openFolder({{ $child->id }}); $wire.closeMobileFolderSidebar()"
                                                     class="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-lg transition-colors cursor-pointer text-left {{ $folderId === $child->id ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
                                                 >
                                                     <svg class="w-3.5 h-3.5 shrink-0 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">

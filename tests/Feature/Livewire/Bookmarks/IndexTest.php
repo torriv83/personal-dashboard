@@ -14,6 +14,29 @@ beforeEach(function () {
     $this->actingAs($this->user);
 });
 
+/**
+ * Helper to check if a bookmark card is rendered in the grid.
+ * This checks for the actual card element, not JSON data in script tags.
+ */
+function assertBookmarkCardVisible(\Livewire\Features\SupportTesting\Testable $component, string $title): void
+{
+    // Check for the bookmark card div with the title inside
+    $html = $component->html();
+    // Remove script tags to avoid matching JSON data
+    $htmlWithoutScripts = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
+
+    expect($htmlWithoutScripts)->toContain($title);
+}
+
+function assertBookmarkCardNotVisible(\Livewire\Features\SupportTesting\Testable $component, string $title): void
+{
+    $html = $component->html();
+    // Remove script tags to avoid matching JSON data
+    $htmlWithoutScripts = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
+
+    expect($htmlWithoutScripts)->not->toContain($title);
+}
+
 // ====================
 // Page Access
 // ====================
@@ -187,10 +210,11 @@ test('can search bookmarks', function () {
     Bookmark::factory()->create(['title' => 'Laravel Documentation']);
     Bookmark::factory()->create(['title' => 'Vue.js Guide']);
 
-    Livewire::test(Index::class)
-        ->set('search', 'Laravel')
-        ->assertSee('Laravel Documentation')
-        ->assertDontSee('Vue.js Guide');
+    $component = Livewire::test(Index::class)
+        ->set('search', 'Laravel');
+
+    assertBookmarkCardVisible($component, 'Laravel Documentation');
+    assertBookmarkCardNotVisible($component, 'Vue.js Guide');
 });
 
 test('can filter by folder', function () {
@@ -198,10 +222,11 @@ test('can filter by folder', function () {
     Bookmark::factory()->create(['folder_id' => $folder->id, 'title' => 'In Folder Bookmark']);
     Bookmark::factory()->create(['folder_id' => null, 'title' => 'No Folder Bookmark']);
 
-    Livewire::test(Index::class)
-        ->set('folderId', $folder->id)
-        ->assertSee('In Folder Bookmark')
-        ->assertDontSee('No Folder Bookmark');
+    $component = Livewire::test(Index::class)
+        ->set('folderId', $folder->id);
+
+    assertBookmarkCardVisible($component, 'In Folder Bookmark');
+    assertBookmarkCardNotVisible($component, 'No Folder Bookmark');
 });
 
 test('can sort bookmarks', function () {
@@ -530,9 +555,10 @@ test('main view shows only standalone bookmarks', function () {
     Bookmark::factory()->create(['folder_id' => null, 'title' => 'Standalone Bookmark']);
     Bookmark::factory()->create(['folder_id' => $folder->id, 'title' => 'Folder Bookmark']);
 
-    Livewire::test(Index::class)
-        ->assertSee('Standalone Bookmark')
-        ->assertDontSee('Folder Bookmark');
+    $component = Livewire::test(Index::class);
+
+    assertBookmarkCardVisible($component, 'Standalone Bookmark');
+    assertBookmarkCardNotVisible($component, 'Folder Bookmark');
 });
 
 test('search shows all matching bookmarks regardless of folder', function () {
@@ -540,10 +566,11 @@ test('search shows all matching bookmarks regardless of folder', function () {
     Bookmark::factory()->create(['folder_id' => null, 'title' => 'Laravel Standalone']);
     Bookmark::factory()->create(['folder_id' => $folder->id, 'title' => 'Laravel In Folder']);
 
-    Livewire::test(Index::class)
-        ->set('search', 'Laravel')
-        ->assertSee('Laravel Standalone')
-        ->assertSee('Laravel In Folder');
+    $component = Livewire::test(Index::class)
+        ->set('search', 'Laravel');
+
+    assertBookmarkCardVisible($component, 'Laravel Standalone');
+    assertBookmarkCardVisible($component, 'Laravel In Folder');
 });
 
 // ====================

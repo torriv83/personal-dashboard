@@ -6,6 +6,7 @@ use App\Jobs\CheckDeadBookmarksJob;
 use App\Models\Bookmark;
 use App\Models\BookmarkFolder;
 use App\Models\BookmarkTag;
+use App\Services\BookmarkCacheService;
 use App\Services\OpenGraphService;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
@@ -25,7 +26,14 @@ use Livewire\Component;
 #[Layout('components.layouts.app', ['manifest' => '/manifests/bokmerker.json'])]
 class Index extends Component
 {
-    private const PER_PAGE = 24;
+    public const PER_PAGE = 24;
+
+    private BookmarkCacheService $cacheService;
+
+    public function boot(BookmarkCacheService $cacheService): void
+    {
+        $this->cacheService = $cacheService;
+    }
 
     // Search and filter
     #[Url]
@@ -189,61 +197,47 @@ class Index extends Component
     }
 
     /**
-     * Get all folders.
+     * Get all folders (cached).
      *
      * @return Collection<int, BookmarkFolder>
      */
     #[Computed]
     public function folders(): Collection
     {
-        return BookmarkFolder::query()
-            ->withCount('bookmarks')
-            ->orderBy('sort_order')
-            ->get();
+        return $this->cacheService->getFolders();
     }
 
     /**
-     * Get hierarchical folder tree (root folders with children).
+     * Get hierarchical folder tree (cached).
      *
      * @return Collection<int, BookmarkFolder>
      */
     #[Computed]
     public function folderTree(): Collection
     {
-        return BookmarkFolder::query()
-            ->whereNull('parent_id')
-            ->with(['children' => fn ($q) => $q->withCount('bookmarks')->orderBy('sort_order')])
-            ->withCount('bookmarks')
-            ->orderBy('sort_order')
-            ->get();
+        return $this->cacheService->getFolderTree();
     }
 
     /**
-     * Get root folders (for parent dropdown in modal).
+     * Get root folders (cached).
      *
      * @return Collection<int, BookmarkFolder>
      */
     #[Computed]
     public function rootFolders(): Collection
     {
-        return BookmarkFolder::query()
-            ->whereNull('parent_id')
-            ->orderBy('sort_order')
-            ->get();
+        return $this->cacheService->getRootFolders();
     }
 
     /**
-     * Get all tags.
+     * Get all tags (cached).
      *
      * @return Collection<int, BookmarkTag>
      */
     #[Computed]
     public function tags(): Collection
     {
-        return BookmarkTag::query()
-            ->withCount('bookmarks')
-            ->orderBy('sort_order')
-            ->get();
+        return $this->cacheService->getTags();
     }
 
     /**
@@ -280,7 +274,7 @@ class Index extends Component
     /**
      * Open a folder (navigate into it).
      */
-    public function openFolder(int $folderId): void
+    public function openFolder(?int $folderId): void
     {
         $this->folderId = $folderId;
         $this->selectedIds = [];
@@ -498,6 +492,7 @@ class Index extends Component
         }
 
         $this->closeBookmarkModal();
+        $this->cacheService->clearAll();
         unset($this->bookmarks);
     }
 
@@ -505,6 +500,7 @@ class Index extends Component
     {
         Bookmark::findOrFail($id)->delete();
         $this->dispatch('toast', type: 'success', message: 'Bokmerke slettet!');
+        $this->cacheService->clearAll();
         unset($this->bookmarks);
     }
 
@@ -512,6 +508,7 @@ class Index extends Component
     {
         $bookmark = Bookmark::findOrFail($id);
         $bookmark->update(['is_read' => ! $bookmark->is_read]);
+        $this->cacheService->clearBookmarks();
         unset($this->bookmarks);
     }
 
@@ -520,6 +517,7 @@ class Index extends Component
         $bookmark = Bookmark::findOrFail($bookmarkId);
         $bookmark->update(['folder_id' => $folderId]);
         $this->dispatch('toast', type: 'success', message: 'Bokmerke flyttet!');
+        $this->cacheService->clearAll();
         unset($this->bookmarks);
         unset($this->folders);
     }
@@ -620,6 +618,7 @@ class Index extends Component
         }
 
         $this->closeFolderModal();
+        $this->cacheService->clearAll();
         unset($this->folders);
         unset($this->folderTree);
         unset($this->rootFolders);
@@ -642,6 +641,7 @@ class Index extends Component
 
         $folder->delete();
         $this->dispatch('toast', type: 'success', message: 'Mappe slettet! Bokmerker er nå uten mappe.');
+        $this->cacheService->clearAll();
         unset($this->folders);
         unset($this->folderTree);
         unset($this->rootFolders);
@@ -665,6 +665,7 @@ class Index extends Component
 
         $folder->delete();
         $this->dispatch('toast', type: 'success', message: 'Mappe og alle bokmerker slettet!');
+        $this->cacheService->clearAll();
         unset($this->folders);
         unset($this->folderTree);
         unset($this->rootFolders);
@@ -732,6 +733,7 @@ class Index extends Component
         }
 
         $this->closeTagModal();
+        $this->cacheService->clearTags();
         unset($this->tags);
     }
 
@@ -741,6 +743,7 @@ class Index extends Component
         $tag->delete();
         $this->dispatch('toast', type: 'success', message: 'Tag slettet!');
         $this->closeTagModal();
+        $this->cacheService->clearAll();
         unset($this->tags);
         unset($this->bookmarks);
     }
@@ -771,6 +774,7 @@ class Index extends Component
             $bookmark->tags()->attach($tagId);
         }
 
+        $this->cacheService->clearAll();
         unset($this->bookmarks);
         unset($this->tags);
     }
@@ -822,6 +826,7 @@ class Index extends Component
         $this->selectedIds = [];
         $this->selectAll = false;
         $this->closeMoveModal();
+        $this->cacheService->clearAll();
         unset($this->bookmarks);
         unset($this->folders);
     }
@@ -839,6 +844,7 @@ class Index extends Component
 
         $this->selectedIds = [];
         $this->selectAll = false;
+        $this->cacheService->clearAll();
         unset($this->bookmarks);
     }
 
@@ -870,6 +876,7 @@ class Index extends Component
             $bookmark->tags()->detach($deadTag->id);
         }
 
+        $this->cacheService->clearAll();
         unset($this->bookmarks);
         $this->dispatch('toast', type: 'success', message: 'Status fjernet.');
     }
@@ -968,6 +975,7 @@ class Index extends Component
             }
         }
 
+        $this->cacheService->clearBookmarks();
         unset($this->bookmarks);
     }
 
@@ -1008,6 +1016,7 @@ class Index extends Component
             }
         }
 
+        $this->cacheService->clearFolders();
         unset($this->folders);
         unset($this->folderTree);
         unset($this->rootFolders);
@@ -1037,6 +1046,7 @@ class Index extends Component
 
         $this->dispatch('toast', type: 'success', message: "Flyttet til {$folderName}");
 
+        $this->cacheService->clearAll();
         unset($this->bookmarks);
         unset($this->folders);
         unset($this->folderTree);
