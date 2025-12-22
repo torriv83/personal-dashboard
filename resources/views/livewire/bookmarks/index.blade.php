@@ -1,9 +1,6 @@
 <x-page-container class="space-y-6" x-data="{
     draggingBookmarkId: null,
     contextMenu: { show: false, x: 0, y: 0, bookmarkId: null, isDeadBookmark: false },
-    longPressTimer: null,
-    dragEnabledId: null,
-    touchStartPos: { x: 0, y: 0 },
 
     openContextMenu(event, bookmarkId, isDead) {
         this.contextMenu.x = event.clientX;
@@ -14,49 +11,6 @@
     },
     closeContextMenu() {
         this.contextMenu.show = false;
-    },
-
-    handleTouchStart(event, bookmarkId) {
-        // Store initial touch position
-        this.touchStartPos.x = event.touches[0].clientX;
-        this.touchStartPos.y = event.touches[0].clientY;
-
-        // Set timer for long-press (600ms)
-        this.longPressTimer = setTimeout(() => {
-            // Enable drag for this bookmark (visual feedback via :class binding)
-            this.dragEnabledId = bookmarkId;
-
-            // Haptic feedback (vibration)
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
-        }, 600);
-    },
-
-    handleTouchMove(event) {
-        // If user moves finger more than 10px, cancel long-press and allow scroll
-        const deltaX = Math.abs(event.touches[0].clientX - this.touchStartPos.x);
-        const deltaY = Math.abs(event.touches[0].clientY - this.touchStartPos.y);
-
-        if (deltaX > 10 || deltaY > 10) {
-            this.cancelLongPress();
-        }
-    },
-
-    handleTouchEnd() {
-        this.cancelLongPress();
-        this.dragEnabledId = null;
-    },
-
-    cancelLongPress() {
-        if (this.longPressTimer) {
-            clearTimeout(this.longPressTimer);
-            this.longPressTimer = null;
-        }
-    },
-
-    isDragEnabled(bookmarkId) {
-        return this.dragEnabledId === bookmarkId;
     }
 }">
     <div class="flex gap-6">
@@ -572,20 +526,17 @@
             <div
                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
                 x-sort="$wire.updatePinnedOrder($item, $position)"
+                x-sort:config="{ delay: 400, delayOnTouchOnly: true, touchStartThreshold: 5 }"
             >
                 @foreach($this->pinnedBookmarks as $bookmark)
                     <div
                         wire:key="pinned-{{ $bookmark->id }}"
                         x-sort:item="'pinned-{{ $bookmark->id }}'"
-                        :draggable="isDragEnabled({{ $bookmark->id }}) ? 'true' : 'false'"
+                        draggable="true"
                         @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
-                        @dragend="draggingBookmarkId = null; dragEnabledId = null"
-                        @touchstart="handleTouchStart($event, {{ $bookmark->id }})"
-                        @touchmove="handleTouchMove($event)"
-                        @touchend="handleTouchEnd()"
+                        @dragend="draggingBookmarkId = null"
                         @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
-                        class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }} ring-2 ring-accent/20"
-                        :class="isDragEnabled({{ $bookmark->id }}) ? 'cursor-grabbing scale-[1.02] shadow-lg' : 'sm:cursor-grab'"
+                        class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 sm:cursor-grab {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }} ring-2 ring-accent/20"
                     >
                         {{-- Top row: Checkbox + Domain --}}
                         <div class="flex items-center gap-2 p-4 pb-0">
@@ -851,15 +802,11 @@
         @forelse($this->bookmarks as $bookmark)
             <div
                 wire:key="bookmark-{{ $bookmark->id }}"
-                :draggable="isDragEnabled({{ $bookmark->id }}) ? 'true' : 'false'"
+                draggable="true"
                 @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
-                @dragend="draggingBookmarkId = null; dragEnabledId = null"
-                @touchstart="handleTouchStart($event, {{ $bookmark->id }})"
-                @touchmove="handleTouchMove($event)"
-                @touchend="handleTouchEnd()"
+                @dragend="draggingBookmarkId = null"
                 @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
-                class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
-                :class="isDragEnabled({{ $bookmark->id }}) ? 'cursor-grabbing scale-[1.02] shadow-lg' : 'sm:cursor-grab'"
+                class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 sm:cursor-grab {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
             >
                 {{-- Top row: Checkbox + Domain --}}
                 <div class="flex items-center gap-2 p-4 pb-0">
