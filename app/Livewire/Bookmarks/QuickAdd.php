@@ -5,6 +5,7 @@ namespace App\Livewire\Bookmarks;
 use App\Models\Bookmark;
 use App\Models\BookmarkFolder;
 use App\Models\User;
+use App\Services\BookmarkCacheService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,13 @@ use Livewire\Component;
 #[Layout('components.layouts.guest', ['manifest' => '/manifests/bokmerker.json'])]
 class QuickAdd extends Component
 {
+    private BookmarkCacheService $cacheService;
+
+    public function boot(BookmarkCacheService $cacheService): void
+    {
+        $this->cacheService = $cacheService;
+    }
+
     public ?User $user = null;
 
     public string $url = '';
@@ -307,6 +315,9 @@ class QuickAdd extends Component
 
         $this->showFolderModal = false;
         $this->reset(['editingFolderId', 'folderName', 'folderParentId', 'folderIsDefault']);
+
+        // Clear server-side cache so Index component sees the new folder
+        $this->cacheService->clearAll();
 
         // Reset computed properties to refresh folder list
         unset($this->folders, $this->folderTree);
