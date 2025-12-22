@@ -1,6 +1,9 @@
 <x-page-container class="space-y-6" x-data="{
     draggingBookmarkId: null,
     contextMenu: { show: false, x: 0, y: 0, bookmarkId: null, isDeadBookmark: false },
+    longPressTimer: null,
+    dragEnabledId: null,
+    touchStartPos: { x: 0, y: 0 },
 
     openContextMenu(event, bookmarkId, isDead) {
         this.contextMenu.x = event.clientX;
@@ -11,6 +14,56 @@
     },
     closeContextMenu() {
         this.contextMenu.show = false;
+    },
+
+    handleTouchStart(event, bookmarkId) {
+        // Store initial touch position
+        this.touchStartPos.x = event.touches[0].clientX;
+        this.touchStartPos.y = event.touches[0].clientY;
+
+        // Set timer for long-press (600ms)
+        this.longPressTimer = setTimeout(() => {
+            // Enable drag for this bookmark
+            this.dragEnabledId = bookmarkId;
+
+            // Haptic feedback (vibration)
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            // Add visual feedback
+            event.currentTarget.style.transform = 'scale(1.02)';
+            event.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.15)';
+        }, 600);
+    },
+
+    handleTouchMove(event) {
+        // If user moves finger more than 10px, cancel long-press and allow scroll
+        const deltaX = Math.abs(event.touches[0].clientX - this.touchStartPos.x);
+        const deltaY = Math.abs(event.touches[0].clientY - this.touchStartPos.y);
+
+        if (deltaX > 10 || deltaY > 10) {
+            this.cancelLongPress();
+        }
+    },
+
+    handleTouchEnd(event) {
+        // Reset visual feedback
+        event.currentTarget.style.transform = '';
+        event.currentTarget.style.boxShadow = '';
+
+        this.cancelLongPress();
+    },
+
+    cancelLongPress() {
+        if (this.longPressTimer) {
+            clearTimeout(this.longPressTimer);
+            this.longPressTimer = null;
+        }
+    },
+
+    isDragEnabled(bookmarkId) {
+        return this.dragEnabledId === bookmarkId;
     }
 }">
     <div class="flex gap-6">
@@ -531,11 +584,15 @@
                     <div
                         wire:key="pinned-{{ $bookmark->id }}"
                         x-sort:item="'pinned-{{ $bookmark->id }}'"
-                        draggable="true"
+                        :draggable="isDragEnabled({{ $bookmark->id }}) ? 'true' : 'false'"
                         @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
-                        @dragend="draggingBookmarkId = null"
+                        @dragend="draggingBookmarkId = null; dragEnabledId = null"
+                        @touchstart="handleTouchStart($event, {{ $bookmark->id }})"
+                        @touchmove="handleTouchMove($event)"
+                        @touchend="handleTouchEnd($event)"
                         @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
-                        class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors cursor-grab active:cursor-grabbing {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }} ring-2 ring-accent/20"
+                        class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }} ring-2 ring-accent/20"
+                        :class="isDragEnabled({{ $bookmark->id }}) ? 'cursor-grabbing' : 'sm:cursor-grab'"
                     >
                         {{-- Top row: Checkbox + Domain --}}
                         <div class="flex items-center gap-2 p-4 pb-0">
@@ -801,11 +858,15 @@
         @forelse($this->bookmarks as $bookmark)
             <div
                 wire:key="bookmark-{{ $bookmark->id }}"
-                draggable="true"
+                :draggable="isDragEnabled({{ $bookmark->id }}) ? 'true' : 'false'"
                 @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
-                @dragend="draggingBookmarkId = null"
+                @dragend="draggingBookmarkId = null; dragEnabledId = null"
+                @touchstart="handleTouchStart($event, {{ $bookmark->id }})"
+                @touchmove="handleTouchMove($event)"
+                @touchend="handleTouchEnd($event)"
                 @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
-                class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors cursor-grab active:cursor-grabbing {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
+                class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
+                :class="isDragEnabled({{ $bookmark->id }}) ? 'cursor-grabbing' : 'sm:cursor-grab'"
             >
                 {{-- Top row: Checkbox + Domain --}}
                 <div class="flex items-center gap-2 p-4 pb-0">
