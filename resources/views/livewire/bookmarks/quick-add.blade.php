@@ -113,7 +113,7 @@
                         <div class="flex gap-2 mb-2">
                             <input
                                 type="text"
-                                wire:model.live="searchFolder"
+                                wire:model.live.debounce.300ms="searchFolder"
                                 placeholder="Søk i mapper..."
                                 class="flex-1 px-3 py-2 bg-surface-alt border border-border rounded-lg text-foreground placeholder:text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                             />
@@ -136,11 +136,11 @@
                             class="w-full px-3 py-2 bg-surface-alt border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary cursor-pointer"
                         >
                             <option value="">Ingen mappe</option>
-                            @foreach($this->folderTree as $folder)
-                                <option value="{{ $folder->id }}">
-                                    {{ $folder->name }}@if($folder->is_default) (standard)@endif
+                            @foreach($this->folderTree as $item)
+                                <option value="{{ $item['folder']->id }}">
+                                    {{ $item['folder']->name }}@if($item['folder']->is_default) (standard)@endif
                                 </option>
-                                @foreach($folder->children as $child)
+                                @foreach($item['children'] as $child)
                                     <option value="{{ $child->id }}">
                                         &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ $child->name }}@if($child->is_default) (standard)@endif
                                     </option>
@@ -210,7 +210,7 @@
                     </div>
 
                     {{-- Parent folder --}}
-                    @if($this->folderTree->count() > 0)
+                    @if(count($this->folderTree) > 0)
                         <div>
                             <label class="block text-sm font-medium text-foreground mb-1">Overordnet mappe</label>
                             <select
@@ -218,9 +218,9 @@
                                 class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary cursor-pointer"
                             >
                                 <option value="">Ingen (hovedmappe)</option>
-                                @foreach($this->folderTree as $rootFolder)
-                                    @if($rootFolder->id !== $editingFolderId)
-                                        <option value="{{ $rootFolder->id }}">{{ $rootFolder->name }}</option>
+                                @foreach($this->folderTree as $item)
+                                    @if($item['folder']->id !== $editingFolderId)
+                                        <option value="{{ $item['folder']->id }}">{{ $item['folder']->name }}</option>
                                     @endif
                                 @endforeach
                             </select>
@@ -258,9 +258,11 @@
                     </button>
                     <button
                         wire:click="saveFolder"
-                        class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+                        wire:loading.attr="disabled"
+                        class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors cursor-pointer disabled:opacity-50"
                     >
-                        {{ $editingFolderId ? 'Lagre' : 'Opprett' }}
+                        <span wire:loading.remove wire:target="saveFolder">{{ $editingFolderId ? 'Lagre' : 'Opprett' }}</span>
+                        <span wire:loading wire:target="saveFolder">{{ $editingFolderId ? 'Lagrer...' : 'Oppretter...' }}</span>
                     </button>
                 </div>
             </div>

@@ -119,22 +119,29 @@ class QuickAdd extends Component
     /**
      * Get folder tree with parent-child relationships
      *
-     * @return Collection<int, BookmarkFolder>
+     * @return array<int, array{folder: BookmarkFolder, children: Collection<int, BookmarkFolder>}>
      */
     #[Computed]
-    public function folderTree(): Collection
+    public function folderTree(): array
     {
         $allFolders = $this->folders();
 
         // Get only root folders (no parent)
         $rootFolders = $allFolders->whereNull('parent_id')->values();
 
-        // Attach children to each root folder
-        foreach ($rootFolders as $folder) {
-            $folder->children = $allFolders->where('parent_id', $folder->id)->values();
-        }
+        // Build tree structure using arrays instead of dynamic properties
+        return $rootFolders->map(fn (BookmarkFolder $folder) => [
+            'folder' => $folder,
+            'children' => $allFolders->where('parent_id', $folder->id)->values(),
+        ])->all();
+    }
 
-        return $rootFolders;
+    /**
+     * Reset computed properties when search changes
+     */
+    public function updatedSearchFolder(): void
+    {
+        unset($this->folders, $this->folderTree);
     }
 
     public function fetchMetadata(): void
@@ -300,6 +307,9 @@ class QuickAdd extends Component
 
         $this->showFolderModal = false;
         $this->reset(['editingFolderId', 'folderName', 'folderParentId', 'folderIsDefault']);
+
+        // Reset computed properties to refresh folder list
+        unset($this->folders, $this->folderTree);
     }
 
     public function render(): View
