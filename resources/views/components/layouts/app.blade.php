@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png">
 
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="{{ $manifest ?? '/manifest.json' }}">
     <meta name="theme-color" content="#1a1a1a">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 

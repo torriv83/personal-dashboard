@@ -22,7 +22,7 @@ use Livewire\Component;
  * @property-read Collection<int, BookmarkTag> $tags
  * @property-read int $totalBookmarksCount
  */
-#[Layout('components.layouts.app')]
+#[Layout('components.layouts.app', ['manifest' => '/manifests/bokmerker.json'])]
 class Index extends Component
 {
     private const PER_PAGE = 24;

@@ -12,7 +12,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.guest')]
+#[Layout('components.layouts.guest', ['manifest' => '/manifests/bokmerker.json'])]
 class QuickAdd extends Component
 {
     public ?User $user = null;

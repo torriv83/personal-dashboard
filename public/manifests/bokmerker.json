@@ -1,0 +1,35 @@
+{
+    "id": "bokmerker-app",
+    "name": "Bokmerker",
+    "short_name": "Bokmerker",
+    "description": "Lagre og organiser bokmerker",
+    "start_url": "/verktoy/bokmerker",
+    "scope": "/verktoy/bokmerker",
+    "display": "standalone",
+    "background_color": "#1a1a1a",
+    "theme_color": "#1a1a1a",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "share_target": {
+        "action": "/verktoy/bokmerker/legg-til",
+        "method": "GET",
+        "params": {
+            "url": "url",
+            "title": "title",
+            "text": "text"
+        }
+    }
+}
