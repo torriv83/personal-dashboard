@@ -24,6 +24,8 @@ class BookmarkFactory extends Factory
             'favicon_path' => null,
             'is_read' => false,
             'is_dead' => false,
+            'is_pinned' => false,
+            'pinned_order' => null,
             'sort_order' => fake()->numberBetween(0, 100),
         ];
     }
@@ -75,6 +77,17 @@ class BookmarkFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'is_dead' => true,
+        ]);
+    }
+
+    /**
+     * Indicate that the bookmark is pinned.
+     */
+    public function pinned(int $order = 0): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_pinned' => true,
+            'pinned_order' => $order,
         ]);
     }
 }

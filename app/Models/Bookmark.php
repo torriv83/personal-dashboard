@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property string|null $favicon_path
  * @property bool $is_read
  * @property bool $is_dead
+ * @property bool $is_pinned
+ * @property int|null $pinned_order
  * @property int $sort_order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -35,6 +37,8 @@ class Bookmark extends Model
         'favicon_path',
         'is_read',
         'is_dead',
+        'is_pinned',
+        'pinned_order',
         'sort_order',
     ];
 
@@ -44,6 +48,8 @@ class Bookmark extends Model
             'folder_id' => 'integer',
             'is_read' => 'boolean',
             'is_dead' => 'boolean',
+            'is_pinned' => 'boolean',
+            'pinned_order' => 'integer',
             'sort_order' => 'integer',
         ];
     }
@@ -88,5 +94,16 @@ class Bookmark extends Model
         $parsed = parse_url($this->url);
 
         return $parsed['host'] ?? $this->url;
+    }
+
+    /**
+     * Scope to get only pinned bookmarks.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<static>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<static>
+     */
+    public function scopePinned(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('is_pinned', true)->orderBy('pinned_order');
     }
 }

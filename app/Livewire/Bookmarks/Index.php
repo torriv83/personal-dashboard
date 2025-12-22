@@ -16,6 +16,7 @@ use Livewire\Component;
 
 /**
  * @property-read Collection<int, Bookmark> $bookmarks
+ * @property-read Collection<int, Bookmark> $pinnedBookmarks
  * @property-read Collection<int, BookmarkFolder> $folders
  * @property-read Collection<int, BookmarkFolder> $folderTree
  * @property-read Collection<int, BookmarkFolder> $rootFolders
@@ -177,6 +178,21 @@ class Index extends Component
     public function totalBookmarksCount(): int
     {
         return $this->bookmarksQuery()->count();
+    }
+
+    /**
+     * Get pinned bookmarks (only shown on main view, i.e. when no folder is selected).
+     *
+     * @return Collection<int, Bookmark>
+     */
+    #[Computed]
+    public function pinnedBookmarks(): Collection
+    {
+        return Bookmark::query()
+            ->with(['folder', 'tags'])
+            ->where('is_pinned', true)
+            ->orderBy('pinned_order')
+            ->get();
     }
 
     /**
@@ -510,6 +526,33 @@ class Index extends Component
         $bookmark->update(['is_read' => ! $bookmark->is_read]);
         $this->cacheService->clearBookmarks();
         unset($this->bookmarks);
+    }
+
+    /**
+     * Toggle pin status for a bookmark.
+     */
+    public function togglePin(int $id): void
+    {
+        $bookmark = Bookmark::findOrFail($id);
+
+        if ($bookmark->is_pinned) {
+            // Unpin: clear pinned_order and is_pinned
+            $bookmark->update([
+                'is_pinned' => false,
+                'pinned_order' => null,
+            ]);
+        } else {
+            // Pin: set is_pinned and assign next pinned_order
+            $maxPinnedOrder = Bookmark::where('is_pinned', true)->max('pinned_order') ?? -1;
+            $bookmark->update([
+                'is_pinned' => true,
+                'pinned_order' => $maxPinnedOrder + 1,
+            ]);
+        }
+
+        $this->cacheService->clearBookmarks();
+        unset($this->bookmarks);
+        unset($this->pinnedBookmarks);
     }
 
     public function moveToFolder(int $bookmarkId, ?int $folderId): void
@@ -1020,6 +1063,41 @@ class Index extends Component
         unset($this->folders);
         unset($this->folderTree);
         unset($this->rootFolders);
+    }
+
+    /**
+     * Update pinned bookmark order (drag and drop in pinned section).
+     */
+    public function updatePinnedOrder(string $item, int $position): void
+    {
+        // Format: "pinned-{id}"
+        if (! str_starts_with($item, 'pinned-')) {
+            return;
+        }
+
+        $id = (int) str_replace('pinned-', '', $item);
+
+        $pinnedBookmarks = Bookmark::query()
+            ->where('is_pinned', true)
+            ->orderBy('pinned_order')
+            ->get();
+
+        $movedBookmark = $pinnedBookmarks->firstWhere('id', $id);
+        if ($movedBookmark === null) {
+            return;
+        }
+
+        $filtered = $pinnedBookmarks->filter(fn ($b) => $b->id !== $id)->values();
+        $filtered->splice($position, 0, [$movedBookmark]);
+
+        foreach ($filtered as $index => $bookmark) {
+            if ($bookmark->pinned_order !== $index) {
+                $bookmark->update(['pinned_order' => $index]);
+            }
+        }
+
+        $this->cacheService->clearBookmarks();
+        unset($this->pinnedBookmarks);
     }
 
     /**

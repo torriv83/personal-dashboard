@@ -513,6 +513,265 @@
         </div>
     @endif
 
+    {{-- Pinned Bookmarks Section (only on main view) --}}
+    @if($folderId === null && $search === '' && $tagId === null && $this->pinnedBookmarks->count() > 0)
+        <div class="space-y-3">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-accent" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                <h2 class="text-sm font-medium text-foreground">Festede</h2>
+                <span class="text-xs text-muted-foreground">({{ $this->pinnedBookmarks->count() }})</span>
+            </div>
+            <div
+                class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                x-sort="$wire.updatePinnedOrder($item, $position)"
+            >
+                @foreach($this->pinnedBookmarks as $bookmark)
+                    <div
+                        wire:key="pinned-{{ $bookmark->id }}"
+                        x-sort:item="'pinned-{{ $bookmark->id }}'"
+                        draggable="true"
+                        @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
+                        @dragend="draggingBookmarkId = null"
+                        @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
+                        class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors cursor-grab active:cursor-grabbing {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }} ring-2 ring-accent/20"
+                    >
+                        {{-- Top row: Checkbox + Domain --}}
+                        <div class="flex items-center gap-2 p-4 pb-0">
+                            <input
+                                type="checkbox"
+                                wire:model.live="selectedIds"
+                                value="{{ $bookmark->id }}"
+                                class="w-4 h-4 rounded border-border bg-input text-accent focus:ring-accent cursor-pointer shrink-0"
+                            >
+                            <img
+                                src="https://www.google.com/s2/favicons?domain={{ $bookmark->getDomain() }}&sz=32"
+                                alt=""
+                                class="w-4 h-4 shrink-0"
+                                loading="lazy"
+                            >
+                            <span class="text-xs text-muted-foreground truncate">{{ $bookmark->getDomain() }}</span>
+                            @if($bookmark->is_dead)
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-destructive bg-destructive/10 rounded shrink-0" title="Død lenke">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    Død
+                                </span>
+                            @endif
+                        </div>
+
+                        {{-- Card content (clickable to open bookmark) --}}
+                        <a
+                            href="{{ $bookmark->url }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="block p-4 pt-2 cursor-pointer"
+                        >
+                            {{-- Title --}}
+                            <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-1">
+                                {{ $bookmark->title }}
+                            </h3>
+
+                            {{-- Description --}}
+                            @if($bookmark->description)
+                                <p class="text-xs text-muted-foreground line-clamp-2 mb-2">
+                                    {{ $bookmark->description }}
+                                </p>
+                            @endif
+
+                            {{-- Tags --}}
+                            @if($bookmark->tags->count() > 0)
+                                <div class="flex flex-wrap gap-1 mt-2">
+                                    @foreach($bookmark->tags as $tag)
+                                        <span
+                                            class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs rounded"
+                                            style="background-color: {{ $tag->color }}20; color: {{ $tag->color }}"
+                                        >
+                                            <span class="w-1.5 h-1.5 rounded-full" style="background-color: {{ $tag->color }}"></span>
+                                            {{ $tag->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            {{-- Folder indicator --}}
+                            @if($bookmark->folder)
+                                <div class="flex items-center gap-1 mt-2">
+                                    <svg class="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                    </svg>
+                                    <span class="text-xs text-muted-foreground">{{ $bookmark->folder->name }}</span>
+                                </div>
+                            @endif
+                        </a>
+
+                        {{-- Action buttons (visible on hover) --}}
+                        <div class="absolute top-2 right-2 flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            {{-- Quick tag dropdown --}}
+                            @if($this->tags->count() > 0)
+                                <div class="relative" x-data="{ open: false }">
+                                    <button
+                                        @click="open = !open"
+                                        class="p-1.5 text-muted-foreground hover:text-foreground bg-card/80 backdrop-blur rounded transition-colors cursor-pointer {{ $bookmark->tags->count() > 0 ? 'text-accent' : '' }}"
+                                        title="Tags"
+                                    >
+                                        <svg class="w-4 h-4" fill="{{ $bookmark->tags->count() > 0 ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                        </svg>
+                                    </button>
+                                    <div
+                                        x-show="open"
+                                        @click.away="open = false"
+                                        x-transition
+                                        class="absolute right-0 mt-1 w-48 bg-card border border-border rounded-lg shadow-lg z-50 py-1"
+                                    >
+                                        @foreach($this->tags as $tag)
+                                            @php $hasTag = $bookmark->tags->contains('id', $tag->id); @endphp
+                                            <button
+                                                wire:click="toggleBookmarkTag({{ $bookmark->id }}, {{ $tag->id }})"
+                                                class="w-full px-3 py-1.5 text-left text-sm hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                                            >
+                                                <span class="w-3 h-3 rounded-full shrink-0 border-2" style="background-color: {{ $hasTag ? $tag->color : 'transparent' }}; border-color: {{ $tag->color }}"></span>
+                                                <span class="text-foreground flex-1">{{ $tag->name }}</span>
+                                                @if($hasTag)
+                                                    <svg class="w-4 h-4 text-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                @endif
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Toggle read --}}
+                            <button
+                                wire:click="toggleRead({{ $bookmark->id }})"
+                                class="p-1.5 text-muted-foreground hover:text-foreground bg-card/80 backdrop-blur rounded transition-colors cursor-pointer"
+                                title="{{ $bookmark->is_read ? 'Marker som ulest' : 'Marker som lest' }}"
+                            >
+                                <svg class="w-4 h-4" fill="{{ $bookmark->is_read ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </button>
+
+                            {{-- Toggle pin (always pinned in this section) --}}
+                            <button
+                                wire:click="togglePin({{ $bookmark->id }})"
+                                class="p-1.5 text-accent bg-card/80 backdrop-blur rounded transition-colors cursor-pointer"
+                                title="Fjern fra festede"
+                            >
+                                <svg class="w-4 h-4" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                </svg>
+                            </button>
+
+                            {{-- Preview --}}
+                            <button
+                                wire:click="openPreview({{ $bookmark->id }})"
+                                class="p-1.5 text-muted-foreground hover:text-foreground bg-card/80 backdrop-blur rounded transition-colors cursor-pointer"
+                                title="Forhåndsvisning"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                            </button>
+
+                            {{-- Edit --}}
+                            <button
+                                wire:click="openBookmarkModal({{ $bookmark->id }})"
+                                class="p-1.5 text-muted-foreground hover:text-foreground bg-card/80 backdrop-blur rounded transition-colors cursor-pointer"
+                                title="Rediger"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+
+                            {{-- More actions dropdown --}}
+                            <div class="relative" x-data="{ open: false }">
+                                <button
+                                    @click="open = !open"
+                                    class="p-1.5 text-muted-foreground hover:text-foreground bg-card/80 backdrop-blur rounded transition-colors cursor-pointer"
+                                    title="Flere valg"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                    </svg>
+                                </button>
+                                <div
+                                    x-show="open"
+                                    @click.away="open = false"
+                                    x-transition
+                                    class="absolute right-0 mt-1 w-48 bg-card border border-border rounded-lg shadow-lg z-50"
+                                >
+                                    {{-- Move to wishlist --}}
+                                    <button
+                                        wire:click="moveToWishlist({{ $bookmark->id }})"
+                                        @click="open = false"
+                                        class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                                    >
+                                        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                        Flytt til ønskeliste
+                                    </button>
+
+                                    {{-- Check dead link --}}
+                                    <button
+                                        wire:click="checkSingleDeadLink({{ $bookmark->id }})"
+                                        @click="open = false"
+                                        class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        Sjekk lenke
+                                    </button>
+
+                                    @if($bookmark->is_dead)
+                                        {{-- Clear dead status --}}
+                                        <button
+                                            wire:click="clearDeadStatus({{ $bookmark->id }})"
+                                            @click="open = false"
+                                            class="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                                        >
+                                            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            Fjern død-status
+                                        </button>
+                                    @endif
+
+                                    <div class="border-t border-border"></div>
+
+                                    {{-- Delete --}}
+                                    <button
+                                        wire:click="deleteBookmark({{ $bookmark->id }})"
+                                        wire:confirm="Er du sikker på at du vil slette dette bokmerket?"
+                                        @click="open = false"
+                                        class="w-full px-3 py-2 text-left text-sm text-destructive hover:bg-destructive hover:text-white transition-colors cursor-pointer flex items-center gap-2"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Slett
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Divider between pinned and regular bookmarks --}}
+        <div class="border-t border-border"></div>
+    @endif
+
     {{-- Bookmarks Grid --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {{-- Child folders (shown first when inside a parent folder) --}}
@@ -666,6 +925,17 @@
                     >
                         <svg class="w-4 h-4" fill="{{ $bookmark->is_read ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </button>
+
+                    {{-- Toggle pin --}}
+                    <button
+                        wire:click="togglePin({{ $bookmark->id }})"
+                        class="p-1.5 text-muted-foreground hover:text-foreground bg-card/80 backdrop-blur rounded transition-colors cursor-pointer {{ $bookmark->is_pinned ? 'text-accent' : '' }}"
+                        title="{{ $bookmark->is_pinned ? 'Fjern fra festede' : 'Fest bokmerke' }}"
+                    >
+                        <svg class="w-4 h-4" fill="{{ $bookmark->is_pinned ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                         </svg>
                     </button>
 

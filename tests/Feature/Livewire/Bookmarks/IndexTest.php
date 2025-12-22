@@ -857,3 +857,129 @@ test('opening folder closes mobile sidebar', function () {
         ->assertSet('showMobileFolderSidebar', false)
         ->assertSet('folderId', $folder->id);
 });
+
+// ====================
+// Pinned Bookmarks
+// ====================
+
+test('can toggle pin status on bookmark', function () {
+    $bookmark = Bookmark::factory()->create(['is_pinned' => false]);
+
+    Livewire::test(Index::class)
+        ->call('togglePin', $bookmark->id);
+
+    expect($bookmark->fresh()->is_pinned)->toBeTrue();
+    expect($bookmark->fresh()->pinned_order)->toBe(0);
+
+    Livewire::test(Index::class)
+        ->call('togglePin', $bookmark->id);
+
+    expect($bookmark->fresh()->is_pinned)->toBeFalse();
+    expect($bookmark->fresh()->pinned_order)->toBeNull();
+});
+
+test('pinned bookmarks get sequential order', function () {
+    $bookmark1 = Bookmark::factory()->create();
+    $bookmark2 = Bookmark::factory()->create();
+    $bookmark3 = Bookmark::factory()->create();
+
+    Livewire::test(Index::class)->call('togglePin', $bookmark1->id);
+    Livewire::test(Index::class)->call('togglePin', $bookmark2->id);
+    Livewire::test(Index::class)->call('togglePin', $bookmark3->id);
+
+    expect($bookmark1->fresh()->pinned_order)->toBe(0);
+    expect($bookmark2->fresh()->pinned_order)->toBe(1);
+    expect($bookmark3->fresh()->pinned_order)->toBe(2);
+});
+
+test('pinned bookmarks shown on main view', function () {
+    $pinnedBookmark = Bookmark::factory()->pinned(0)->create(['title' => 'Pinned Bookmark']);
+    $regularBookmark = Bookmark::factory()->create(['title' => 'Regular Bookmark']);
+
+    $component = Livewire::test(Index::class);
+
+    // Both should be visible on main view
+    assertBookmarkCardVisible($component, 'Pinned Bookmark');
+    assertBookmarkCardVisible($component, 'Regular Bookmark');
+
+    // Pinned section header should be visible
+    $component->assertSee('Festede');
+});
+
+test('pinned section not shown when in folder', function () {
+    $folder = BookmarkFolder::factory()->create();
+    $pinnedBookmark = Bookmark::factory()->pinned(0)->create(['folder_id' => $folder->id, 'title' => 'Pinned In Folder']);
+
+    $component = Livewire::test(Index::class)
+        ->call('openFolder', $folder->id);
+
+    // Should see the bookmark but not the pinned section header
+    $component->assertDontSee('Festede');
+});
+
+test('pinned section not shown when searching', function () {
+    $pinnedBookmark = Bookmark::factory()->pinned(0)->create(['title' => 'Pinned Bookmark']);
+
+    $component = Livewire::test(Index::class)
+        ->set('search', 'Pinned');
+
+    // Should find the bookmark but not show pinned section
+    assertBookmarkCardVisible($component, 'Pinned Bookmark');
+    $component->assertDontSee('Festede');
+});
+
+test('pinned section not shown when filtering by tag', function () {
+    $tag = BookmarkTag::factory()->create();
+    $pinnedBookmark = Bookmark::factory()->pinned(0)->create(['title' => 'Pinned Tagged']);
+    $pinnedBookmark->tags()->attach($tag->id);
+
+    $component = Livewire::test(Index::class)
+        ->call('setTagFilter', $tag->id);
+
+    // Should find the bookmark but not show pinned section
+    assertBookmarkCardVisible($component, 'Pinned Tagged');
+    $component->assertDontSee('Festede');
+});
+
+test('can reorder pinned bookmarks', function () {
+    $bookmark1 = Bookmark::factory()->pinned(0)->create(['title' => 'First']);
+    $bookmark2 = Bookmark::factory()->pinned(1)->create(['title' => 'Second']);
+    $bookmark3 = Bookmark::factory()->pinned(2)->create(['title' => 'Third']);
+
+    // Move bookmark3 to position 0 (first)
+    Livewire::test(Index::class)
+        ->call('updatePinnedOrder', "pinned-{$bookmark3->id}", 0);
+
+    expect($bookmark3->fresh()->pinned_order)->toBe(0);
+    expect($bookmark1->fresh()->pinned_order)->toBe(1);
+    expect($bookmark2->fresh()->pinned_order)->toBe(2);
+});
+
+test('pinned bookmarks from any folder shown on main view', function () {
+    $folder = BookmarkFolder::factory()->create(['name' => 'Test Folder']);
+    $pinnedStandalone = Bookmark::factory()->pinned(0)->create(['title' => 'Pinned Standalone']);
+    $pinnedInFolder = Bookmark::factory()->pinned(1)->inFolder($folder->id)->create(['title' => 'Pinned In Folder']);
+
+    $component = Livewire::test(Index::class);
+
+    // Both pinned bookmarks should be visible in pinned section
+    assertBookmarkCardVisible($component, 'Pinned Standalone');
+    assertBookmarkCardVisible($component, 'Pinned In Folder');
+    $component->assertSee('Festede');
+    // The folder indicator should be visible for the pinned bookmark in folder
+    $component->assertSee('Test Folder');
+});
+
+test('pinned bookmarks are returned in correct order', function () {
+    $bookmark3 = Bookmark::factory()->pinned(2)->create(['title' => 'Third']);
+    $bookmark1 = Bookmark::factory()->pinned(0)->create(['title' => 'First']);
+    $bookmark2 = Bookmark::factory()->pinned(1)->create(['title' => 'Second']);
+
+    // Verify order using the model scope
+    $pinnedBookmarks = Bookmark::pinned()->get();
+
+    expect($pinnedBookmarks)->toHaveCount(3);
+    expect($pinnedBookmarks[0]->title)->toBe('First');
+    expect($pinnedBookmarks[1]->title)->toBe('Second');
+    expect($pinnedBookmarks[2]->title)->toBe('Third');
+});
