@@ -31,6 +31,20 @@ class QuickAdd extends Component
 
     public ?string $duplicateUrl = null;
 
+    // Folder search
+    public string $searchFolder = '';
+
+    // Folder modal
+    public bool $showFolderModal = false;
+
+    public ?int $editingFolderId = null;
+
+    public string $folderName = '';
+
+    public ?int $folderParentId = null;
+
+    public bool $folderIsDefault = false;
+
     public function mount(): void
     {
         // Get parameters from request query string
@@ -92,7 +106,35 @@ class QuickAdd extends Component
     #[Computed]
     public function folders(): Collection
     {
-        return BookmarkFolder::orderBy('sort_order')->orderBy('name')->get();
+        $query = BookmarkFolder::orderBy('sort_order')->orderBy('name');
+
+        // Filter by search term
+        if ($this->searchFolder) {
+            $query->where('name', 'like', '%'.$this->searchFolder.'%');
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * Get folder tree with parent-child relationships
+     *
+     * @return Collection<int, BookmarkFolder>
+     */
+    #[Computed]
+    public function folderTree(): Collection
+    {
+        $allFolders = $this->folders();
+
+        // Get only root folders (no parent)
+        $rootFolders = $allFolders->whereNull('parent_id')->values();
+
+        // Attach children to each root folder
+        foreach ($rootFolders as $folder) {
+            $folder->children = $allFolders->where('parent_id', $folder->id)->values();
+        }
+
+        return $rootFolders;
     }
 
     public function fetchMetadata(): void
@@ -181,6 +223,83 @@ class QuickAdd extends Component
     public function addAnother(): void
     {
         $this->reset(['url', 'title', 'description', 'isSaved', 'duplicateUrl']);
+    }
+
+    public function openFolderModal(?int $id = null, ?int $parentId = null): void
+    {
+        $this->editingFolderId = $id;
+        $this->folderParentId = $parentId;
+
+        if ($id) {
+            // Edit existing folder
+            $folder = BookmarkFolder::find($id);
+            if ($folder) {
+                $this->folderName = $folder->name;
+                $this->folderParentId = $folder->parent_id;
+                $this->folderIsDefault = $folder->is_default;
+            }
+        } else {
+            // Create new folder
+            $this->folderName = '';
+            $this->folderIsDefault = false;
+        }
+
+        $this->showFolderModal = true;
+    }
+
+    public function saveFolder(): void
+    {
+        $this->validate([
+            'folderName' => ['required', 'string', 'max:255'],
+            'folderParentId' => ['nullable', 'exists:bookmark_folders,id'],
+        ]);
+
+        // Validate max 2 levels (no subfolder under subfolder)
+        if ($this->folderParentId !== null) {
+            $parent = BookmarkFolder::find($this->folderParentId);
+            if ($parent !== null && $parent->parent_id !== null) {
+                $this->addError('folderParentId', 'Kan ikke opprette mappe under en undermappe. Maksimum 2 nivåer.');
+
+                return;
+            }
+        }
+
+        if ($this->editingFolderId) {
+            // Update existing folder
+            $folder = BookmarkFolder::find($this->editingFolderId);
+            if ($folder) {
+                $folder->update([
+                    'name' => $this->folderName,
+                    'parent_id' => $this->folderParentId,
+                ]);
+
+                if ($this->folderIsDefault) {
+                    $folder->setAsDefault();
+                }
+            }
+        } else {
+            // Create new folder
+            $maxSortOrder = BookmarkFolder::query()
+                ->when($this->folderParentId, fn ($q) => $q->where('parent_id', $this->folderParentId))
+                ->when(! $this->folderParentId, fn ($q) => $q->whereNull('parent_id'))
+                ->max('sort_order') ?? -1;
+
+            $folder = BookmarkFolder::create([
+                'name' => $this->folderName,
+                'parent_id' => $this->folderParentId,
+                'sort_order' => $maxSortOrder + 1,
+            ]);
+
+            if ($this->folderIsDefault) {
+                $folder->setAsDefault();
+            }
+
+            // Auto-select the newly created folder
+            $this->folderId = $folder->id;
+        }
+
+        $this->showFolderModal = false;
+        $this->reset(['editingFolderId', 'folderName', 'folderParentId', 'folderIsDefault']);
     }
 
     public function render(): View

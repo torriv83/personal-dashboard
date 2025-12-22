@@ -108,19 +108,43 @@
                     {{-- Folder --}}
                     <div>
                         <label for="folder" class="block text-sm font-medium text-muted mb-1.5">Mappe (valgfritt)</label>
+
+                        {{-- Search and New Folder Button --}}
+                        <div class="flex gap-2 mb-2">
+                            <input
+                                type="text"
+                                wire:model.live="searchFolder"
+                                placeholder="Søk i mapper..."
+                                class="flex-1 px-3 py-2 bg-surface-alt border border-border rounded-lg text-foreground placeholder:text-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            />
+                            <button
+                                type="button"
+                                wire:click="openFolderModal"
+                                class="px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors cursor-pointer text-sm whitespace-nowrap"
+                                title="Ny mappe"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {{-- Folder Dropdown --}}
                         <select
                             id="folder"
                             wire:model="folderId"
                             class="w-full px-3 py-2 bg-surface-alt border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary cursor-pointer"
                         >
                             <option value="">Ingen mappe</option>
-                            @foreach($this->folders as $folder)
+                            @foreach($this->folderTree as $folder)
                                 <option value="{{ $folder->id }}">
-                                    {{ $folder->name }}
-                                    @if($folder->is_default)
-                                        (standard)
-                                    @endif
+                                    {{ $folder->name }}@if($folder->is_default) (standard)@endif
                                 </option>
+                                @foreach($folder->children as $child)
+                                    <option value="{{ $child->id }}">
+                                        &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ $child->name }}@if($child->is_default) (standard)@endif
+                                    </option>
+                                @endforeach
                             @endforeach
                         </select>
                     </div>
@@ -138,4 +162,108 @@
             </div>
         @endif
     </x-card>
+
+    {{-- Folder Modal --}}
+    @if($showFolderModal)
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-data
+            x-on:keydown.escape.window="$wire.showFolderModal = false"
+        >
+            {{-- Backdrop --}}
+            <div
+                class="absolute inset-0 bg-black/50"
+                wire:click="showFolderModal = false"
+            ></div>
+
+            {{-- Modal --}}
+            <div class="relative bg-card border border-border rounded-lg shadow-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+                {{-- Header --}}
+                <div class="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-foreground">
+                        {{ $editingFolderId ? 'Rediger mappe' : 'Ny mappe' }}
+                    </h2>
+                    <button
+                        wire:click="showFolderModal = false"
+                        class="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Body --}}
+                <div class="px-4 sm:px-6 py-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-foreground mb-1">Mappenavn *</label>
+                        <input
+                            type="text"
+                            wire:model="folderName"
+                            class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            placeholder="F.eks. TV-research, Jobbrelatert..."
+                            autofocus
+                        >
+                        @error('folderName')
+                            <p class="text-xs text-error mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    {{-- Parent folder --}}
+                    @if($this->folderTree->count() > 0)
+                        <div>
+                            <label class="block text-sm font-medium text-foreground mb-1">Overordnet mappe</label>
+                            <select
+                                wire:model="folderParentId"
+                                class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary cursor-pointer"
+                            >
+                                <option value="">Ingen (hovedmappe)</option>
+                                @foreach($this->folderTree as $rootFolder)
+                                    @if($rootFolder->id !== $editingFolderId)
+                                        <option value="{{ $rootFolder->id }}">{{ $rootFolder->name }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                            @error('folderParentId')
+                                <p class="text-xs text-error mt-1">{{ $message }}</p>
+                            @enderror
+                            <p class="text-xs text-muted mt-1">Velg en mappe for å opprette en undermappe.</p>
+                        </div>
+                    @endif
+
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            wire:model="folderIsDefault"
+                            id="folderIsDefault"
+                            class="w-4 h-4 rounded border-border bg-input text-primary focus:ring-primary cursor-pointer"
+                        >
+                        <label for="folderIsDefault" class="text-sm text-foreground cursor-pointer">
+                            Bruk som standard-mappe for nye bokmerker
+                        </label>
+                    </div>
+
+                    <p class="text-xs text-muted">
+                        Mapper lar deg organisere bokmerker i kategorier. Standard-mappen velges automatisk når du legger til nye bokmerker.
+                    </p>
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end gap-3">
+                    <button
+                        wire:click="showFolderModal = false"
+                        class="px-4 py-2 bg-surface-alt text-foreground rounded-lg hover:bg-surface-alt/80 transition-colors cursor-pointer"
+                    >
+                        Avbryt
+                    </button>
+                    <button
+                        wire:click="saveFolder"
+                        class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+                    >
+                        {{ $editingFolderId ? 'Lagre' : 'Opprett' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
