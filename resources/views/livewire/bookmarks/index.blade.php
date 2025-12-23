@@ -526,20 +526,22 @@
             <div
                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
                 x-sort="$wire.updatePinnedOrder($item, $position)"
-                x-sort:config="{ delay: 400, delayOnTouchOnly: true, touchStartThreshold: 5 }"
+                wire:ignore.self
             >
                 @foreach($this->pinnedBookmarks as $bookmark)
                     <div
                         wire:key="pinned-{{ $bookmark->id }}"
                         x-sort:item="'pinned-{{ $bookmark->id }}'"
-                        draggable="true"
-                        @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
-                        @dragend="draggingBookmarkId = null"
                         @contextmenu.prevent="if (!$event.sourceCapabilities?.firesTouchEvents) openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
-                        class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 sm:cursor-grab {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }} ring-2 ring-accent/20"
+                        class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }} ring-2 ring-accent/20"
                     >
-                        {{-- Top row: Checkbox + Domain --}}
+                        {{-- Top row: Drag handle + Checkbox + Domain --}}
                         <div class="flex items-center gap-2 p-4 pb-0">
+                            <svg x-sort:handle class="w-4 h-4 text-muted-foreground cursor-grab shrink-0 touch-none" fill="currentColor" viewBox="0 0 24 24" @click.stop>
+                                <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
+                                <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+                                <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
+                            </svg>
                             <input
                                 type="checkbox"
                                 wire:model.live="selectedIds"
