@@ -5,6 +5,7 @@ namespace App\Livewire\User;
 use App\Models\Setting;
 use App\Services\WeatherService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -234,15 +235,43 @@ class Settings extends Component
 
     public function savePushSubscription(string $endpoint, ?string $publicKey, ?string $authToken): void
     {
+        $existingCount = Auth::user()->pushSubscriptions()->count();
+
+        Log::info('Push subscription: Creating/updating', [
+            'user_id' => Auth::id(),
+            'endpoint_prefix' => substr($endpoint, 0, 50).'...',
+            'existing_subscriptions' => $existingCount,
+        ]);
+
         Auth::user()->updatePushSubscription($endpoint, $publicKey, $authToken);
+
+        $newCount = Auth::user()->pushSubscriptions()->count();
+
+        Log::info('Push subscription: Saved successfully', [
+            'user_id' => Auth::id(),
+            'subscriptions_before' => $existingCount,
+            'subscriptions_after' => $newCount,
+        ]);
+
         $this->pushSubscribed = true;
         $this->dispatch('push-subscribed');
     }
 
     public function removePushSubscription(string $endpoint): void
     {
+        Log::warning('Push subscription: Manual removal requested', [
+            'user_id' => Auth::id(),
+            'endpoint_prefix' => substr($endpoint, 0, 50).'...',
+        ]);
+
         Auth::user()->deletePushSubscription($endpoint);
         $this->pushSubscribed = Auth::user()->pushSubscriptions()->exists();
+
+        Log::warning('Push subscription: Removed', [
+            'user_id' => Auth::id(),
+            'remaining_subscriptions' => Auth::user()->pushSubscriptions()->count(),
+        ]);
+
         $this->dispatch('push-unsubscribed');
     }
 

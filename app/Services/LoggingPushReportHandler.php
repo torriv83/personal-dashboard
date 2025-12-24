@@ -17,28 +17,38 @@ class LoggingPushReportHandler implements ReportHandlerInterface
 
     public function handleReport(MessageSentReport $report, PushSubscription $subscription, WebPushMessageInterface $message): void
     {
+        $statusCode = $report->getResponse()?->getStatusCode();
+
         if ($report->isSuccess()) {
+            Log::info('Push notification: Sent successfully', [
+                'status_code' => $statusCode,
+                'endpoint_prefix' => substr($subscription->endpoint, 0, 50).'...',
+                'user_id' => $subscription->subscribable_id,
+            ]);
+
             $this->events->dispatch(new NotificationSent($report, $subscription, $message));
 
             return;
         }
 
-        // Log failures
-        $statusCode = $report->getResponse()?->getStatusCode();
-
+        // Log failures with full details
         if ($report->isSubscriptionExpired()) {
-            Log::error('Push subscription deleted (expired)', [
+            Log::error('Push subscription: AUTO-DELETED (expired/invalid)', [
                 'status_code' => $statusCode,
-                'endpoint' => $subscription->endpoint,
+                'reason' => $report->getReason(),
+                'endpoint_prefix' => substr($subscription->endpoint, 0, 50).'...',
                 'user_id' => $subscription->subscribable_id,
-                'created_at' => $subscription->getAttribute('created_at')?->toDateTimeString(),
+                'subscription_created_at' => $subscription->getAttribute('created_at')?->toDateTimeString(),
+                'action' => 'SUBSCRIPTION_DELETED',
             ]);
 
             $subscription->delete();
         } else {
-            Log::warning('Push notification failed', [
+            Log::warning('Push notification: Failed to send', [
                 'status_code' => $statusCode,
                 'reason' => $report->getReason(),
+                'endpoint_prefix' => substr($subscription->endpoint, 0, 50).'...',
+                'user_id' => $subscription->subscribable_id,
             ]);
         }
 

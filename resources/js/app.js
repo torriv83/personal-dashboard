@@ -14,7 +14,7 @@ window.ApexCharts = ApexCharts;
 window.monthlyHoursChart = monthlyHoursChart;
 window.percentageChart = percentageChart;
 
-// Register Alpine sort plugin
+// Register Alpine sort plugin (required when manually bundling via ESM)
 Alpine.plugin(sort);
 
 // Register Alpine store for swipe loading state (persists across Livewire re-renders)

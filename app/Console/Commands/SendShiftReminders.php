@@ -7,6 +7,7 @@ use App\Models\Shift;
 use App\Models\User;
 use App\Notifications\ShiftReminder;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class SendShiftReminders extends Command
 {
@@ -23,11 +24,22 @@ class SendShiftReminders extends Command
         }
 
         $user = User::first();
-        if (! $user || ! $user->pushSubscriptions()->exists()) {
+        $subscriptionCount = $user?->pushSubscriptions()->count() ?? 0;
+
+        if (! $user || $subscriptionCount === 0) {
+            Log::warning('Push shift reminders: No active subscriptions', [
+                'user_exists' => (bool) $user,
+                'subscription_count' => $subscriptionCount,
+            ]);
             $this->info('Ingen aktive push-abonnementer.');
 
             return self::SUCCESS;
         }
+
+        Log::info('Push shift reminders: Starting', [
+            'user_id' => $user->id,
+            'subscription_count' => $subscriptionCount,
+        ]);
 
         $sentCount = 0;
 
@@ -41,6 +53,11 @@ class SendShiftReminders extends Command
         if ($hoursBefore) {
             $sentCount += $this->sendHoursBeforeReminders($user, (int) $hoursBefore);
         }
+
+        Log::info('Push shift reminders: Completed', [
+            'user_id' => $user->id,
+            'notifications_sent' => $sentCount,
+        ]);
 
         $this->info("Ferdig. Sendte {$sentCount} varsler.");
 

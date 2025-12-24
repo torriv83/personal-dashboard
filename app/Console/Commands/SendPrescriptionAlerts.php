@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\PrescriptionExpiryAlert;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class SendPrescriptionAlerts extends Command
 {
@@ -34,11 +35,22 @@ class SendPrescriptionAlerts extends Command
         }
 
         $user = User::first();
-        if (! $user || ! $user->pushSubscriptions()->exists()) {
+        $subscriptionCount = $user?->pushSubscriptions()->count() ?? 0;
+
+        if (! $user || $subscriptionCount === 0) {
+            Log::warning('Push prescription alerts: No active subscriptions', [
+                'user_exists' => (bool) $user,
+                'subscription_count' => $subscriptionCount,
+            ]);
             $this->info('Ingen aktive push-abonnementer.');
 
             return self::SUCCESS;
         }
+
+        Log::info('Push prescription alerts: Starting', [
+            'user_id' => $user->id,
+            'subscription_count' => $subscriptionCount,
+        ]);
 
         $alertDays = [14, 7, 3];
         $sentCount = 0;
@@ -64,6 +76,11 @@ class SendPrescriptionAlerts extends Command
             $sentCount++;
             $this->info("Sendt varsel for utgått resept: {$prescription->name}");
         }
+
+        Log::info('Push prescription alerts: Completed', [
+            'user_id' => $user->id,
+            'notifications_sent' => $sentCount,
+        ]);
 
         $this->info("Ferdig. Sendte {$sentCount} varsler.");
 
