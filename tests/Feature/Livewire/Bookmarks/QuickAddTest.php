@@ -373,20 +373,17 @@ test('folder tree returns hierarchical structure', function () {
         ->and($folderTree[0]['children'][0]->id)->toBe($childFolder->id);
 });
 
-test('folder search filters folders', function () {
+test('folder search auto-selects matching folder', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
-    BookmarkFolder::factory()->create(['name' => 'Work Projects']);
+    $workFolder = BookmarkFolder::factory()->create(['name' => 'Work Projects']);
     BookmarkFolder::factory()->create(['name' => 'Personal']);
 
-    $component = Livewire\Livewire::withQueryParams([])
+    Livewire\Livewire::withQueryParams([])
         ->test(QuickAdd::class)
-        ->set('searchFolder', 'Work');
-
-    $folders = $component->get('folders');
-    expect($folders)->toHaveCount(1)
-        ->and($folders->first()->name)->toBe('Work Projects');
+        ->set('searchFolder', 'Work')
+        ->assertSet('folderId', $workFolder->id);
 });
 
 // ====================

@@ -114,18 +114,7 @@ class QuickAdd extends Component
     #[Computed]
     public function folders(): Collection
     {
-        $query = BookmarkFolder::orderBy('sort_order')->orderBy('name');
-
-        // Filter by search term - also include parent folders when subfolders match
-        if ($this->searchFolder) {
-            $matchingFolders = BookmarkFolder::where('name', 'like', '%'.$this->searchFolder.'%')->get();
-            $parentIds = $matchingFolders->pluck('parent_id')->filter()->unique();
-            $allIds = $matchingFolders->pluck('id')->merge($parentIds)->unique();
-
-            $query->whereIn('id', $allIds);
-        }
-
-        return $query->get();
+        return BookmarkFolder::orderBy('sort_order')->orderBy('name')->get();
     }
 
     /**
@@ -153,9 +142,6 @@ class QuickAdd extends Component
      */
     public function updatedSearchFolder(): void
     {
-        unset($this->folders, $this->folderTree);
-
-        // Auto-select first matching folder
         if ($this->searchFolder) {
             $match = BookmarkFolder::where('name', 'like', '%'.$this->searchFolder.'%')->first();
             if ($match) {
