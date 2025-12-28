@@ -132,7 +132,7 @@
                         {{-- Folder Dropdown --}}
                         <select
                             id="folder"
-                            wire:model="folderId"
+                            wire:model.live="folderId"
                             class="w-full px-3 py-2 bg-surface-alt border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary cursor-pointer"
                         >
                             <option value="">Ingen mappe</option>
