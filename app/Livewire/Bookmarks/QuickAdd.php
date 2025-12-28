@@ -149,11 +149,19 @@ class QuickAdd extends Component
     }
 
     /**
-     * Reset computed properties when search changes
+     * Auto-select matching folder when search changes
      */
     public function updatedSearchFolder(): void
     {
         unset($this->folders, $this->folderTree);
+
+        // Auto-select first matching folder
+        if ($this->searchFolder) {
+            $match = BookmarkFolder::where('name', 'like', '%'.$this->searchFolder.'%')->first();
+            if ($match) {
+                $this->folderId = $match->id;
+            }
+        }
     }
 
     public function fetchMetadata(): void
