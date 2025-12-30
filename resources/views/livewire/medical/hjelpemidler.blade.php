@@ -110,7 +110,7 @@
                         <button
                             wire:click="deleteKategori({{ $kategori->id }})"
                             wire:confirm="Er du sikker på at du vil slette denne kategorien og alle hjelpemidler i den?"
-                            class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                            class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
                             title="Slett kategori"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +188,7 @@
                             placeholder="F.eks. Panthera X"
                             autofocus
                         >
-                        @error('itemName') <span class="text-xs text-red-400 mt-1">{{ $message }}</span> @enderror
+                        @error('itemName') <span class="text-xs text-destructive mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
@@ -199,7 +199,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             placeholder="https://..."
                         >
-                        @error('itemUrl') <span class="text-xs text-red-400 mt-1">{{ $message }}</span> @enderror
+                        @error('itemUrl') <span class="text-xs text-destructive mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     {{-- Custom Fields --}}
@@ -237,7 +237,7 @@
                                         <button
                                             type="button"
                                             wire:click="removeCustomField({{ $index }})"
-                                            class="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer shrink-0"
+                                            class="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer shrink-0"
                                         >
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -300,7 +300,7 @@
                             placeholder="F.eks. Rullestol, Kjelker, Tilbehør..."
                             autofocus
                         >
-                        @error('kategoriName') <span class="text-xs text-red-400 mt-1">{{ $message }}</span> @enderror
+                        @error('kategoriName') <span class="text-xs text-destructive mt-1">{{ $message }}</span> @enderror
                     </div>
                 </div>
 

@@ -37,14 +37,14 @@
     {{-- Alert Card - Next Expiry --}}
     @if($this->nextExpiry)
         <div class="bg-card border rounded-lg p-4 sm:p-5
-            @if($this->nextExpiry->status === 'danger') border-red-500/50 bg-red-500/5
+            @if($this->nextExpiry->status === 'danger') border-destructive/50 bg-destructive/5
             @elseif($this->nextExpiry->status === 'warning') border-yellow-500/50 bg-yellow-500/5
             @else border-border @endif">
             <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                 {{-- Ikon og tekst --}}
                 <div class="flex items-center gap-3 sm:gap-4 flex-1">
                     <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0
-                        @if($this->nextExpiry->status === 'danger') bg-red-500/20 text-red-400
+                        @if($this->nextExpiry->status === 'danger') bg-destructive/20 text-destructive
                         @elseif($this->nextExpiry->status === 'warning') bg-yellow-500/20 text-yellow-400
                         @else bg-accent/20 text-accent @endif">
                         <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +59,7 @@
                 {{-- Dager igjen - "0 dager igjen" på samme linje --}}
                 <div class="flex items-baseline justify-center sm:justify-end gap-1.5">
                     <span class="text-xl sm:text-2xl font-bold
-                        @if($this->nextExpiry->status === 'danger') text-red-400
+                        @if($this->nextExpiry->status === 'danger') text-destructive
                         @elseif($this->nextExpiry->status === 'warning') text-yellow-400
                         @else text-accent @endif">
                         {{ $this->nextExpiry->daysLeft }}
@@ -109,18 +109,18 @@
                                 {{ $prescription->valid_to->format('d.m.Y') }}
                             </td>
                             <td class="px-4 sm:px-5 py-3 text-sm text-right whitespace-nowrap
-                                @if($prescription->status === 'danger') text-red-400
+                                @if($prescription->status === 'danger') text-destructive
                                 @elseif($prescription->status === 'warning') text-yellow-400
                                 @else text-foreground @endif">
                                 {{ $prescription->daysLeft }}
                             </td>
                             <td class="px-4 sm:px-5 py-3 text-center whitespace-nowrap">
                                 @if($prescription->status === 'expired')
-                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-500/20 text-red-400 rounded">
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-destructive/20 text-destructive rounded">
                                         Utløpt
                                     </span>
                                 @elseif($prescription->status === 'danger')
-                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-500/20 text-red-400 rounded">
+                                    <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-destructive/20 text-destructive rounded">
                                         Utløper
                                     </span>
                                 @elseif($prescription->status === 'warning')

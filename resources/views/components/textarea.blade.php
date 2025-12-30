@@ -29,7 +29,7 @@ $textareaClasses = 'w-full bg-input border rounded-lg px-3 py-2 text-foreground 
     >{{ $slot }}</textarea>
 
     @if($hasError && $errorMessage)
-        <p class="mt-1 text-xs text-red-400">
+        <p class="mt-1 text-xs text-destructive">
             {{ $errorMessage }}
         </p>
     @endif

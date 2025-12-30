@@ -238,7 +238,7 @@
                             @if ($this->expiredPrescriptionsCount > 0 || $this->expiringPrescriptionsCount > 0)
                                 <p class="text-muted text-sm">
                                     @if ($this->expiredPrescriptionsCount > 0)
-                                        <span class="text-red-400">{{ $this->expiredPrescriptionsCount }} utgått</span>
+                                        <span class="text-destructive">{{ $this->expiredPrescriptionsCount }} utgått</span>
                                     @endif
                                     @if ($this->expiredPrescriptionsCount > 0 && $this->expiringPrescriptionsCount > 0)
                                         <span class="text-muted-foreground">,</span>

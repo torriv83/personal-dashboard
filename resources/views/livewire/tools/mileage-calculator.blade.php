@@ -124,7 +124,7 @@
                                         <button
                                             wire:click="deleteDestination({{ $destination->id }})"
                                             wire:confirm="Er du sikker på at du vil slette denne destinasjonen?"
-                                            class="p-1.5 text-red-500 hover:bg-input rounded-lg transition-colors cursor-pointer"
+                                            class="p-1.5 text-destructive hover:bg-input rounded-lg transition-colors cursor-pointer"
                                             title="Slett destinasjon"
                                         >
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,7 +178,7 @@
                                                 wire:click="deleteDestination({{ $destination->id }})"
                                                 wire:confirm="Er du sikker på at du vil slette denne destinasjonen?"
                                                 @click="open = false"
-                                                class="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                                                class="w-full px-3 py-2 text-left text-sm text-destructive hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
                                             >
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -214,7 +214,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                         />
                         @error('newDestinationName')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                         @enderror
                     </div>
                     <div>
@@ -227,7 +227,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                         />
                         @error('newDestinationAddress')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>

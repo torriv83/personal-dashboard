@@ -88,7 +88,7 @@
                 <button
                     wire:click="deleteItem({{ $item->id }})"
                     wire:confirm="Er du sikker på at du vil slette dette hjelpemiddelet{{ $hasChildren ? ' og alle under-elementer' : '' }}?"
-                    class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                    class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
                     title="Slett"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

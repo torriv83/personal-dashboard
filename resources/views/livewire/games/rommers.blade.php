@@ -49,7 +49,7 @@
                                 <button
                                     wire:click="deleteGame({{ $game->id }})"
                                     wire:confirm="Er du sikker på at du vil slette dette spillet?"
-                                    class="p-3 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                    class="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                                     title="Slett spill"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,7 +252,7 @@
                                 <button
                                     wire:click="deleteGame({{ $game->id }})"
                                     wire:confirm="Er du sikker på at du vil slette dette spillet?"
-                                    class="p-3 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                                    class="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                                     title="Slett spill"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,7 +400,7 @@
                     <p class="text-sm text-muted-foreground">Legg til spillere (minst 2):</p>
 
                     @error('playerNames')
-                        <p class="text-sm text-red-400">{{ $message }}</p>
+                        <p class="text-sm text-destructive">{{ $message }}</p>
                     @enderror
 
                     <div class="space-y-3">
@@ -415,7 +415,7 @@
                                 @if(count($playerNames) > 2)
                                     <button
                                         wire:click="removePlayerField({{ $index }})"
-                                        class="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                                        class="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
                                     >
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

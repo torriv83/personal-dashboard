@@ -145,14 +145,14 @@
                     <input
                         type="password"
                         wire:model="password"
-                        class="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground text-center placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent {{ $hasError ? 'border-red-500 animate-shake' : '' }}"
+                        class="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground text-center placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent {{ $hasError ? 'border-destructive animate-shake' : '' }}"
                         placeholder="Passord"
                         autofocus
                     >
                 </div>
 
                 @if($errorMessage)
-                    <p class="text-sm text-red-400">{{ $errorMessage }}</p>
+                    <p class="text-sm text-destructive">{{ $errorMessage }}</p>
                 @endif
 
                 <button
@@ -179,7 +179,7 @@
                         :class="{
                             'bg-accent scale-110': i <= pin.length && !hasError,
                             'bg-border': i > pin.length && !hasError,
-                            'bg-red-500': hasError
+                            'bg-destructive': hasError
                         }"
                     ></div>
                 </template>
@@ -192,7 +192,7 @@
                 x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 -translate-y-2"
                 x-transition:enter-end="opacity-100 translate-y-0"
-                class="text-sm text-red-400 mb-4 animate-shake"
+                class="text-sm text-destructive mb-4 animate-shake"
             ></p>
 
             {{-- PIN Pad --}}

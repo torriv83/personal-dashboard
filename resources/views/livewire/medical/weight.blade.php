@@ -75,7 +75,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
                         </svg>
                     @elseif($this->stats['change'] !== null && $this->stats['change'] > 0)
-                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                     @else
@@ -86,7 +86,7 @@
                     <span class="text-sm font-medium">Endring</span>
                 </div>
                 @if($this->stats['change'] !== null)
-                    <p class="text-2xl font-bold {{ $this->stats['change'] < 0 ? 'text-green-400' : ($this->stats['change'] > 0 ? 'text-red-400' : 'text-foreground') }}">
+                    <p class="text-2xl font-bold {{ $this->stats['change'] < 0 ? 'text-green-400' : ($this->stats['change'] > 0 ? 'text-destructive' : 'text-foreground') }}">
                         {{ $this->stats['change'] > 0 ? '+' : '' }}{{ number_format($this->stats['change'], 1, ',', ' ') }} kg
                     </p>
                     <p class="text-sm text-muted-foreground mt-1">
@@ -141,13 +141,13 @@
                         </div>
                         @if($this->stats['weekChange'] !== null)
                             <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                                {{ $this->stats['weekChange'] < 0 ? 'bg-green-500/10' : ($this->stats['weekChange'] > 0 ? 'bg-red-500/10' : 'bg-card-hover') }}">
+                                {{ $this->stats['weekChange'] < 0 ? 'bg-green-500/10' : ($this->stats['weekChange'] > 0 ? 'bg-destructive/10' : 'bg-card-hover') }}">
                                 @if($this->stats['weekChange'] < 0)
                                     <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                                     </svg>
                                 @elseif($this->stats['weekChange'] > 0)
-                                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                                     </svg>
                                 @else
@@ -155,7 +155,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14" />
                                     </svg>
                                 @endif
-                                <span class="text-sm font-medium {{ $this->stats['weekChange'] < 0 ? 'text-green-400' : ($this->stats['weekChange'] > 0 ? 'text-red-400' : 'text-foreground') }}">
+                                <span class="text-sm font-medium {{ $this->stats['weekChange'] < 0 ? 'text-green-400' : ($this->stats['weekChange'] > 0 ? 'text-destructive' : 'text-foreground') }}">
                                     {{ $this->stats['weekChange'] > 0 ? '+' : '' }}{{ number_format($this->stats['weekChange'], 1, ',', ' ') }}
                                 </span>
                             </div>
@@ -182,13 +182,13 @@
                         </div>
                         @if($this->stats['monthChange'] !== null)
                             <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                                {{ $this->stats['monthChange'] < 0 ? 'bg-green-500/10' : ($this->stats['monthChange'] > 0 ? 'bg-red-500/10' : 'bg-card-hover') }}">
+                                {{ $this->stats['monthChange'] < 0 ? 'bg-green-500/10' : ($this->stats['monthChange'] > 0 ? 'bg-destructive/10' : 'bg-card-hover') }}">
                                 @if($this->stats['monthChange'] < 0)
                                     <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                                     </svg>
                                 @elseif($this->stats['monthChange'] > 0)
-                                    <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                                     </svg>
                                 @else
@@ -196,7 +196,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14" />
                                     </svg>
                                 @endif
-                                <span class="text-sm font-medium {{ $this->stats['monthChange'] < 0 ? 'text-green-400' : ($this->stats['monthChange'] > 0 ? 'text-red-400' : 'text-foreground') }}">
+                                <span class="text-sm font-medium {{ $this->stats['monthChange'] < 0 ? 'text-green-400' : ($this->stats['monthChange'] > 0 ? 'text-destructive' : 'text-foreground') }}">
                                     {{ $this->stats['monthChange'] > 0 ? '+' : '' }}{{ number_format($this->stats['monthChange'], 1, ',', ' ') }}
                                 </span>
                             </div>
@@ -382,7 +382,7 @@
                         {{-- Trend indicator --}}
                         <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0
                             @if($diff !== null && $diff < 0) bg-green-500/10
-                            @elseif($diff !== null && $diff > 0) bg-red-500/10
+                            @elseif($diff !== null && $diff > 0) bg-destructive/10
                             @else bg-card-hover @endif
                         ">
                             @if($diff !== null && $diff < 0)
@@ -390,7 +390,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                                 </svg>
                             @elseif($diff !== null && $diff > 0)
-                                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
                                 </svg>
                             @else
@@ -406,7 +406,7 @@
                                 <span class="text-xl font-semibold text-foreground">{{ number_format($entry->weight, 1, ',', ' ') }}</span>
                                 <span class="text-sm text-muted-foreground">kg</span>
                                 @if($diff !== null)
-                                    <span class="text-sm {{ $diff < 0 ? 'text-green-400' : ($diff > 0 ? 'text-red-400' : 'text-muted-foreground') }}">
+                                    <span class="text-sm {{ $diff < 0 ? 'text-green-400' : ($diff > 0 ? 'text-destructive' : 'text-muted-foreground') }}">
                                         ({{ $diff > 0 ? '+' : '' }}{{ number_format($diff, 1, ',', ' ') }})
                                     </span>
                                 @endif
@@ -430,7 +430,7 @@
                             <button
                                 wire:click="delete({{ $entry->id }})"
                                 wire:confirm="Er du sikker på at du vil slette denne registreringen?"
-                                class="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                                class="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors cursor-pointer"
                                 title="Slett"
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -503,7 +503,7 @@
                                 class="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
                             >
                             @error('date')
-                                <p class="text-red-400 text-sm mt-2">{{ $message }}</p>
+                                <p class="text-destructive text-sm mt-2">{{ $message }}</p>
                             @enderror
                         </div>
                         <div>
@@ -514,7 +514,7 @@
                                 class="w-full bg-input border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent cursor-pointer"
                             >
                             @error('time')
-                                <p class="text-red-400 text-sm mt-2">{{ $message }}</p>
+                                <p class="text-destructive text-sm mt-2">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
@@ -533,7 +533,7 @@
                             <span class="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">kg</span>
                         </div>
                         @error('weight')
-                            <p class="text-red-400 text-sm mt-2">{{ $message }}</p>
+                            <p class="text-destructive text-sm mt-2">{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -546,7 +546,7 @@
                             placeholder="F.eks. etter trening, fastende..."
                         ></textarea>
                         @error('note')
-                            <p class="text-red-400 text-sm mt-2">{{ $message }}</p>
+                            <p class="text-destructive text-sm mt-2">{{ $message }}</p>
                         @enderror
                     </div>
                 </div>

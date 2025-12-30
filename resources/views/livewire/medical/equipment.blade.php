@@ -172,7 +172,7 @@
                         <button
                             wire:click="deleteEquipment({{ $item->id }})"
                             wire:confirm="Er du sikker på at du vil slette dette utstyret?"
-                            class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                            class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
                             title="Slett"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -336,7 +336,7 @@
                                     <button
                                         wire:click="deleteEquipment({{ $item->id }})"
                                         wire:confirm="Er du sikker på at du vil slette dette utstyret?"
-                                        class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                                        class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
                                         title="Slett"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,7 +530,7 @@
                                     <button
                                         wire:click="deleteCategory({{ $category->id }})"
                                         wire:confirm="Er du sikker på at du vil slette denne kategorien?"
-                                        class="p-1 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
+                                        class="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
                                     >
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -658,7 +658,7 @@
                         {{-- Remove button --}}
                         <button
                             x-on:click="removeFromOrder(item.id)"
-                            class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer shrink-0"
+                            class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer shrink-0"
                             title="Fjern"
                         >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

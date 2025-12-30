@@ -26,7 +26,7 @@
                                 wire:click="deleteUnavailable({{ $unavailable['id'] }})"
                                 wire:confirm="Er du sikker på at du vil slette dette fraværet?"
                                 type="button"
-                                class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-400/10 rounded transition-colors sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
+                                class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
                                 title="Slett"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -54,7 +54,7 @@
                                                 @endforeach
                                             </select>
                                             @error('quickAddAssistantId')
-                                                <span class="text-xs text-red-400">{{ $message }}</span>
+                                                <span class="text-xs text-destructive">{{ $message }}</span>
                                             @enderror
                                         </div>
                                         <div>
@@ -65,7 +65,7 @@
                                                 class="w-full bg-input border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent cursor-pointer"
                                             >
                                             @error('quickAddFromDate')
-                                                <span class="text-xs text-red-400">{{ $message }}</span>
+                                                <span class="text-xs text-destructive">{{ $message }}</span>
                                             @enderror
                                         </div>
                                         <div>
@@ -76,7 +76,7 @@
                                                 class="w-full bg-input border border-border rounded px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent cursor-pointer"
                                             >
                                             @error('quickAddToDate')
-                                                <span class="text-xs text-red-400">{{ $message }}</span>
+                                                <span class="text-xs text-destructive">{{ $message }}</span>
                                             @enderror
                                         </div>
                                     </div>

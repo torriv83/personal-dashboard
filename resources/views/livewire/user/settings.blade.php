@@ -140,7 +140,7 @@
                                 </button>
                             </form>
                             @error('weatherLocationSearch')
-                                <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                                <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                             @enderror
                             <p class="mt-2 text-xs text-muted">
                                 Nåværende sted: <span class="text-foreground">{{ $weatherLocationName }}</span>
@@ -199,7 +199,7 @@
                                     Endre PIN
                                 </button>
                                 <button type="button" wire:click="openRemovePinModal"
-                                    class="px-4 py-2 text-sm font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors cursor-pointer">
+                                    class="px-4 py-2 text-sm font-medium text-destructive bg-destructive/10 border border-destructive/30 rounded-lg hover:bg-destructive/20 transition-colors cursor-pointer">
                                     Fjern PIN
                                 </button>
                                 <button type="button" x-data x-on:click="Livewire.dispatch('lock')"
@@ -264,7 +264,7 @@
                     <div class="flex items-center gap-2 text-xs text-muted">
                         <template x-if="!supported">
                             <span class="flex items-center gap-1.5">
-                                <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                <span class="w-2 h-2 bg-destructive rounded-full"></span>
                                 Ikke støttet i denne nettleseren
                             </span>
                         </template>
@@ -412,7 +412,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             placeholder="7" />
                         @error('bpaHoursPerWeek')
-                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                         @enderror
                         <p class="mt-1 text-xs text-muted">Antall BPA-timer du har per uke</p>
                     </div>
@@ -428,7 +428,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             placeholder="225.40" />
                         @error('bpaHourlyRate')
-                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                         @enderror
                         <p class="mt-1 text-xs text-muted">Grunnlønn per time for BPA-assistenter</p>
                     </div>
@@ -464,7 +464,7 @@
                         placeholder="F.eks. Storgata 1, 0001 Oslo"
                     />
                     @error('mileageHomeAddress')
-                        <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                        <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                     @enderror
                     <p class="mt-1 text-xs text-muted">Startpunkt for alle avstandsberegninger</p>
                 </div>
@@ -534,7 +534,7 @@
                         <button
                             wire:click="regenerateBookmarkToken"
                             wire:confirm="Er du sikker? Eksisterende bookmarklet vil slutte å virke og må oppdateres."
-                            class="px-3 py-2 text-xs font-medium text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg hover:bg-red-500/20 transition-colors cursor-pointer"
+                            class="px-3 py-2 text-xs font-medium text-destructive bg-destructive/10 border border-destructive/30 rounded-lg hover:bg-destructive/20 transition-colors cursor-pointer"
                         >
                             Regenerer token
                         </button>
@@ -604,7 +604,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground text-center tracking-[0.5em] font-mono placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             placeholder="••••" autofocus>
                         @error('newPin')
-                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -614,7 +614,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground text-center tracking-[0.5em] font-mono placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             placeholder="••••">
                         @error('confirmPin')
-                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -624,7 +624,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             placeholder="Ditt passord">
                         @error('currentPassword')
-                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                         @enderror
                     </div>
 
@@ -650,7 +650,7 @@
                 {{-- Header --}}
                 <div class="px-6 py-4 border-b border-border flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
@@ -677,7 +677,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             placeholder="Ditt passord" autofocus>
                         @error('currentPassword')
-                            <p class="mt-1 text-xs text-red-400">{{ $message }}</p>
+                            <p class="mt-1 text-xs text-destructive">{{ $message }}</p>
                         @enderror
                     </div>
 

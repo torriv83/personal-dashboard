@@ -229,7 +229,7 @@
             @php $remainingData = $this->remainingHoursData; @endphp
             <div class="hidden md:flex items-center gap-2 text-sm absolute left-1/2 -translate-x-1/2">
                 <span class="text-muted">Timer igjen:</span>
-                <span class="{{ $remainingData['remaining_minutes'] < 0 ? 'text-red-400 font-semibold' : 'text-accent font-medium' }}">
+                <span class="{{ $remainingData['remaining_minutes'] < 0 ? 'text-destructive font-semibold' : 'text-accent font-medium' }}">
                     {{ $remainingData['remaining_formatted'] }}
                 </span>
             </div>

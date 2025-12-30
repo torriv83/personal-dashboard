@@ -44,10 +44,10 @@
                     </div>
                     <div class="text-right shrink-0">
                         @if($prescription['status'] === 'expired')
-                            <span class="text-xs font-medium px-2 py-1 bg-red-500/20 text-red-400 rounded">Utløpt</span>
+                            <span class="text-xs font-medium px-2 py-1 bg-destructive/20 text-destructive rounded">Utløpt</span>
                         @else
                             <p class="text-lg font-bold
-                                @if($prescription['status'] === 'danger') text-red-400
+                                @if($prescription['status'] === 'danger') text-destructive
                                 @elseif($prescription['status'] === 'warning') text-yellow-400
                                 @else text-accent @endif">
                                 {{ $prescription['daysLeft'] }}
@@ -71,7 +71,7 @@
                     <button
                         wire:click="delete({{ $prescription['id'] }})"
                         wire:confirm="Er du sikker på at du vil slette denne resepten?"
-                        class="flex-1 px-2 py-1 text-xs text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer flex items-center justify-center gap-1"
+                        class="flex-1 px-2 py-1 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer flex items-center justify-center gap-1"
                     >
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -112,7 +112,7 @@
             <span>Snart (8-30 dager)</span>
         </div>
         <div class="flex items-center gap-1.5">
-            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+            <div class="w-2 h-2 rounded-full bg-destructive"></div>
             <span>Kritisk (≤7 dager)</span>
         </div>
     </div>

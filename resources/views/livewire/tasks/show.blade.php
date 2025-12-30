@@ -197,7 +197,7 @@
                                 wire:click="deleteTask({{ $task->id }})"
                                 wire:confirm="Er du sikker på at du vil slette denne skillelinjen?"
                                 @click.stop
-                                class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer shrink-0"
+                                class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer shrink-0"
                                 title="Slett skillelinje"
                             >
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -319,7 +319,7 @@
                                 <button
                                     wire:click="deleteTask({{ $task->id }})"
                                     wire:confirm="Er du sikker på at du vil slette denne oppgaven?"
-                                    class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                                    class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
                                     title="Slett"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -415,7 +415,7 @@
                                 <button
                                     wire:click="deleteTask({{ $task->id }})"
                                     wire:confirm="Er du sikker på at du vil slette denne oppgaven?"
-                                    class="p-1.5 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                                    class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
                                     title="Slett"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -58,7 +58,7 @@
                             placeholder="Hva ønsker du deg?"
                             autofocus
                         >
-                        @error('itemNavn') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                        @error('itemNavn') <span class="text-destructive text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
@@ -69,7 +69,7 @@
                             class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             placeholder="https://..."
                         >
-                        @error('itemUrl') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                        @error('itemUrl') <span class="text-destructive text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
 
                     <div>
@@ -111,7 +111,7 @@
                                 placeholder="0"
                                 min="0"
                             >
-                            @error('itemPris') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            @error('itemPris') <span class="text-destructive text-xs mt-1">{{ $message }}</span> @enderror
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-foreground mb-1">Antall *</label>
@@ -122,7 +122,7 @@
                                 placeholder="1"
                                 min="1"
                             >
-                            @error('itemAntall') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
+                            @error('itemAntall') <span class="text-destructive text-xs mt-1">{{ $message }}</span> @enderror
                         </div>
                     </div>
 

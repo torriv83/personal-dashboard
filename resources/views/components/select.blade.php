@@ -72,7 +72,7 @@ $selectClasses = $widthClass . ' bg-input border rounded-lg text-foreground focu
         </div>
 
         @if($hasError && $errorMessage)
-            <p class="mt-1 text-xs text-red-400">
+            <p class="mt-1 text-xs text-destructive">
                 {{ $errorMessage }}
             </p>
         @endif

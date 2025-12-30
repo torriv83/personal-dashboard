@@ -199,7 +199,7 @@
                             </div>
 
                             @error('weightInput')
-                                <p class="text-red-400 text-sm mt-2">{{ $message }}</p>
+                                <p class="text-destructive text-sm mt-2">{{ $message }}</p>
                             @enderror
 
                             <p class="text-xs text-muted-foreground mt-3">

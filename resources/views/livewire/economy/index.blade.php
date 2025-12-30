@@ -39,21 +39,21 @@
 
     {{-- YNAB Errors --}}
     @if(!empty($ynabErrors))
-        <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+        <div class="bg-destructive/10 border border-destructive/30 rounded-lg p-4">
             <div class="flex items-start gap-3">
-                <svg class="w-5 h-5 text-red-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 text-destructive shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div class="flex-1">
-                    <p class="text-sm font-medium text-red-400">Kunne ikke hente all data fra YNAB</p>
-                    <ul class="mt-1 text-sm text-red-400/80 list-disc list-inside">
+                    <p class="text-sm font-medium text-destructive">Kunne ikke hente all data fra YNAB</p>
+                    <ul class="mt-1 text-sm text-destructive/80 list-disc list-inside">
                         @foreach($ynabErrors as $source => $error)
                             <li>{{ ucfirst($source) }}: {{ $error }}</li>
                         @endforeach
                     </ul>
                     <p class="mt-2 text-xs text-muted-foreground">Prøv å synkronisere på nytt, eller sjekk YNAB API-innstillingene.</p>
                 </div>
-                <button wire:click="$set('ynabErrors', [])" class="text-red-400 hover:text-red-300 cursor-pointer">
+                <button wire:click="$set('ynabErrors', [])" class="text-destructive hover:text-destructive/90 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -174,7 +174,7 @@
                                 </div>
                                 <div class="flex-1">
                                     <p class="text-sm text-muted-foreground">{{ $account['name'] }}</p>
-                                    <p class="text-lg font-semibold {{ $account['balance'] < 0 ? 'text-red-400' : 'text-foreground' }}">
+                                    <p class="text-lg font-semibold {{ $account['balance'] < 0 ? 'text-destructive' : 'text-foreground' }}">
                                         kr {{ number_format($account['balance'], 0, ',', ' ') }}
                                     </p>
                                     @if($daysAgo !== null)
@@ -202,14 +202,14 @@
                             @endphp
                             <div class="bg-background border border-border rounded-lg p-4">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
-                                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                         </svg>
                                     </div>
                                     <div class="flex-1">
                                         <p class="text-sm text-muted-foreground">{{ $account['name'] }}</p>
-                                        <p class="text-lg font-semibold text-red-400">
+                                        <p class="text-lg font-semibold text-destructive">
                                             kr {{ number_format($account['balance'], 0, ',', ' ') }}
                                         </p>
                                         @if($daysAgo !== null)
@@ -239,7 +239,7 @@
         @if(!$isLoadingYnab)
             <div class="mt-4 pt-4 border-t border-border flex items-center justify-between">
                 <span class="text-sm text-muted-foreground">Total saldo</span>
-                <span class="text-xl font-bold {{ $this->totalBalance < 0 ? 'text-red-400' : 'text-accent' }}">
+                <span class="text-xl font-bold {{ $this->totalBalance < 0 ? 'text-destructive' : 'text-accent' }}">
                     kr {{ number_format($this->totalBalance, 0, ',', ' ') }}
                 </span>
             </div>
@@ -441,13 +441,13 @@
                                 <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap text-right">
                                     kr {{ number_format($month['income'], 2, ',', ' ') }}
                                 </td>
-                                <td class="px-4 sm:px-5 py-3 text-sm text-red-400 whitespace-nowrap text-right">
+                                <td class="px-4 sm:px-5 py-3 text-sm text-destructive whitespace-nowrap text-right">
                                     kr {{ number_format($month['activity'], 2, ',', ' ') }}
                                 </td>
                                 <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap text-right">
                                     kr {{ number_format($month['budgeted'], 2, ',', ' ') }}
                                 </td>
-                                <td class="px-4 sm:px-5 py-3 text-sm whitespace-nowrap text-right {{ $net >= 0 ? 'text-accent' : 'text-red-400' }}">
+                                <td class="px-4 sm:px-5 py-3 text-sm whitespace-nowrap text-right {{ $net >= 0 ? 'text-accent' : 'text-destructive' }}">
                                     kr {{ number_format($net, 2, ',', ' ') }}
                                 </td>
                                 <td class="px-4 sm:px-5 py-3 text-sm text-foreground whitespace-nowrap text-right">

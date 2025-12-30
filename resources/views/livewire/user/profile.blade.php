@@ -40,7 +40,7 @@
                                     placeholder="Ditt navn"
                                 />
                                 @error('name')
-                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                    <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                                 @enderror
                             </div>
 
@@ -53,7 +53,7 @@
                                     placeholder="din@epost.no"
                                 />
                                 @error('email')
-                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                    <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                                 @enderror
                             </div>
                         </div>
@@ -85,7 +85,7 @@
                                     placeholder="Nåværende passord"
                                 />
                                 @error('current_password')
-                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                    <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                                 @enderror
                             </div>
 
@@ -98,7 +98,7 @@
                                     placeholder="Nytt passord"
                                 />
                                 @error('password')
-                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                    <p class="mt-1 text-sm text-destructive">{{ $message }}</p>
                                 @enderror
                             </div>
 
