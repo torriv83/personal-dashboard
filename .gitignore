@@ -28,3 +28,6 @@ Thumbs.db
 .vscode/
 .junie/
 .mcp.json
+
+# Auto Claude data directory
+.auto-claude/

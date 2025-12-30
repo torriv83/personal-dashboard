@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\CalendarYearService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -63,6 +64,23 @@ class Shift extends Model
             } elseif ($shift->starts_at && $shift->ends_at) {
                 $shift->duration_minutes = (int) $shift->starts_at->diffInMinutes($shift->ends_at);
             }
+        });
+
+        // Invalidate calendar year cache when shifts are created or deleted
+        static::created(function (Shift $shift) {
+            app(CalendarYearService::class)->invalidateYearCache();
+        });
+
+        static::deleted(function (Shift $shift) {
+            app(CalendarYearService::class)->invalidateYearCache();
+        });
+
+        static::forceDeleted(function (Shift $shift) {
+            app(CalendarYearService::class)->invalidateYearCache();
+        });
+
+        static::restored(function (Shift $shift) {
+            app(CalendarYearService::class)->invalidateYearCache();
         });
     }
 

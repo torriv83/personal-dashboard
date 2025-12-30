@@ -14,6 +14,7 @@ use App\Models\Assistant;
 use App\Models\Setting;
 use App\Models\Shift;
 use App\Services\CalendarEvent;
+use App\Services\CalendarYearService;
 use App\Services\GoogleCalendarService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -369,30 +370,20 @@ class Calendar extends Component
     }
 
     /**
-     * Get available years from actual shift data.
+     * Get available years from shift data with intelligent caching.
+     *
+     * Uses CalendarYearService for:
+     * - Forever-caching historical years (< currentYear)
+     * - 24h caching current year
+     * - Automatic cache invalidation on shift create/delete
+     * - whereBetween queries for index optimization
      *
      * @return array<int>
      */
     #[Computed]
     public function availableYears(): array
     {
-        $years = Shift::query()
-            ->withTrashed()
-            ->pluck('starts_at')
-            ->map(fn ($date) => Carbon::parse($date)->year)
-            ->unique()
-            ->sort()
-            ->values()
-            ->toArray();
-
-        // Always include current year
-        $currentYear = Carbon::now('Europe/Oslo')->year;
-        if (! in_array($currentYear, $years)) {
-            $years[] = $currentYear;
-            sort($years);
-        }
-
-        return $years;
+        return app(CalendarYearService::class)->getAvailableYears();
     }
 
     /**
