@@ -294,49 +294,35 @@
                                 stroke-linejoin="round"
                             />
 
-                            {{-- Data points (generated with Blade to avoid x-for in SVG) --}}
-                            @foreach($this->chartData as $i => $point)
-                                <g>
-                                    {{-- Hover area --}}
-                                    <circle
-                                        x-bind:cx="getX({{ $i }})"
-                                        x-bind:cy="getY({{ $point['weight'] }})"
-                                        r="10"
-                                        fill="transparent"
-                                        class="cursor-pointer"
-                                        vector-effect="non-scaling-stroke"
-                                        @mouseenter="hoveredIndex = {{ $i }}"
-                                        @mouseleave="hoveredIndex = null"
-                                    />
-                                    {{-- Visible point --}}
-                                    <circle
-                                        x-bind:cx="getX({{ $i }})"
-                                        x-bind:cy="getY({{ $point['weight'] }})"
-                                        x-bind:r="hoveredIndex === {{ $i }} ? 5 : 3"
-                                        fill="var(--color-accent)"
-                                        vector-effect="non-scaling-stroke"
-                                        class="transition-all duration-150"
-                                    />
-                                    {{-- Outer ring on hover --}}
-                                    <circle
-                                        x-show="hoveredIndex === {{ $i }}"
-                                        x-bind:cx="getX({{ $i }})"
-                                        x-bind:cy="getY({{ $point['weight'] }})"
-                                        r="8"
-                                        fill="none"
-                                        stroke="var(--color-accent)"
-                                        stroke-width="2"
-                                        stroke-opacity="0.3"
-                                        vector-effect="non-scaling-stroke"
-                                    />
-                                </g>
-                            @endforeach
                         </svg>
+
+                        {{-- Data points as HTML (not affected by SVG scaling) --}}
+                        @foreach($this->chartData as $i => $point)
+                            <div
+                                class="absolute cursor-pointer"
+                                x-bind:style="`left: ${getX({{ $i }})}%; top: ${getY({{ $point['weight'] }})}%; transform: translate(-50%, -50%)`"
+                                @mouseenter="hoveredIndex = {{ $i }}"
+                                @mouseleave="hoveredIndex = null"
+                            >
+                                {{-- Hover area --}}
+                                <div class="w-6 h-6 -m-3"></div>
+                                {{-- Visible point --}}
+                                <div
+                                    class="rounded-full bg-accent transition-all duration-150 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                                    x-bind:class="hoveredIndex === {{ $i }} ? 'w-3 h-3' : 'w-2 h-2'"
+                                ></div>
+                                {{-- Outer ring on hover --}}
+                                <div
+                                    x-show="hoveredIndex === {{ $i }}"
+                                    class="w-4 h-4 rounded-full border-2 border-accent/30 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                                ></div>
+                            </div>
+                        @endforeach
 
                         {{-- Tooltip --}}
                         <template x-if="hoveredIndex !== null">
                             <div
-                                class="absolute pointer-events-none z-10 bg-card border border-border rounded-lg shadow-lg px-3 py-2 text-sm transform -translate-x-1/2"
+                                class="absolute pointer-events-none z-10 bg-card border border-border rounded-lg shadow-lg px-3 py-2 text-sm transform -translate-x-1/2 whitespace-nowrap"
                                 x-bind:style="`left: ${getX(hoveredIndex)}%; top: ${getY(data[hoveredIndex].weight) - 15}%; transform: translate(-50%, -100%)`"
                             >
                                 <p class="font-semibold text-foreground" x-text="data[hoveredIndex].weight.toFixed(1) + ' kg'"></p>
@@ -347,9 +333,9 @@
 
                     {{-- X-axis labels --}}
                     <div class="absolute left-14 right-0 bottom-0 h-6 flex justify-between items-center text-xs text-muted-foreground">
-                        <span x-text="data[0]?.date"></span>
-                        <span x-text="data[Math.floor(data.length / 2)]?.date"></span>
-                        <span x-text="data[data.length - 1]?.date"></span>
+                        <template x-for="(point, i) in data" :key="i">
+                            <span x-text="point.date"></span>
+                        </template>
                     </div>
                 </div>
             </div>

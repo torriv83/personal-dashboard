@@ -12,8 +12,6 @@ class CalendarYearService
 
     private const CURRENT_YEAR_CACHE_KEY = 'calendar.years.current';
 
-    private const CACHE_TTL_HOURS = 24;
-
     /**
      * Get all available years from shifts, with intelligent caching.
      *
@@ -35,7 +33,7 @@ class CalendarYearService
         $allYears = array_unique(array_merge($historicalYears, [$currentYear]));
         sort($allYears);
 
-        return array_values($allYears);
+        return $allYears;
     }
 
     /**
