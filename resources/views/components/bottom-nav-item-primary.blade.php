@@ -1,6 +1,7 @@
 @props([
     'href' => null,
     'label' => '',
+    'prefetch' => false,
 ])
 
 @php
@@ -9,7 +10,7 @@
 @endphp
 
 <{{ $tag }}
-    @if($href) href="{{ $href }}" @else type="button" @endif
+    @if($href) href="{{ $href }}" @php echo $prefetch ? 'wire:navigate.hover' : 'wire:navigate'; @endphp @else type="button" @endif
     {{ $attributes->class([$baseClasses]) }}
 >
     <span class="flex items-center justify-center w-14 h-14 -mt-6 bg-accent text-background rounded-full shadow-lg shadow-accent/30 hover:bg-accent-hover transition-colors">

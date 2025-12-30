@@ -37,7 +37,7 @@
             <x-sidebar-sublink href="{{ route('bpa.dashboard') }}" :active="request()->routeIs('bpa.dashboard')">
                 Dashbord
             </x-sidebar-sublink>
-            <x-sidebar-sublink href="{{ route('bpa.calendar') }}" :active="request()->routeIs('bpa.calendar')">
+            <x-sidebar-sublink href="{{ route('bpa.calendar') }}" :active="request()->routeIs('bpa.calendar')" :prefetch="true">
                 Kalender
             </x-sidebar-sublink>
             <x-sidebar-sublink href="{{ route('bpa.timesheets') }}" :active="request()->routeIs('bpa.timesheets')">
