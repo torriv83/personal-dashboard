@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Livewire;
 
 use App\Models\Assistant;
+use App\Models\Bookmark;
 use App\Models\Equipment;
 use App\Models\Prescription;
+use App\Models\Task;
+use App\Models\TaskList;
 use App\Models\WeightEntry;
 use App\Models\WishlistItem;
 use Illuminate\Support\Collection;
@@ -54,6 +57,8 @@ class CommandPalette extends Component
             ['name' => 'Gå til Utstyr', 'url' => route('medical.equipment'), 'icon' => 'package', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Resepter', 'url' => route('medical.prescriptions'), 'icon' => 'file-plus', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Vekt', 'url' => route('medical.weight'), 'icon' => 'activity', 'category' => 'Navigasjon'],
+            ['name' => 'Gå til Bokmerker', 'url' => route('tools.bookmarks'), 'icon' => 'bookmark', 'category' => 'Navigasjon'],
+            ['name' => 'Gå til Oppgaver', 'url' => route('bpa.tasks.index'), 'icon' => 'check-square', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Økonomi', 'url' => route('economy'), 'icon' => 'dollar-sign', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Ønskeliste', 'url' => route('wishlist'), 'icon' => 'gift', 'category' => 'Navigasjon'],
             ['name' => 'Gå til Innstillinger', 'url' => route('settings'), 'icon' => 'settings', 'category' => 'Navigasjon'],
@@ -142,6 +147,36 @@ class CommandPalette extends Component
                 'subtitle' => number_format($item->price, 0, ',', ' ') . ' kr',
             ]);
         $results = $results->merge($wishlistItems);
+
+        // Search Bookmarks
+        $bookmarks = Bookmark::query()
+            ->whereRaw('LOWER(title) LIKE ?', [$searchTerm])
+            ->orWhereRaw('LOWER(url) LIKE ?', [$searchTerm])
+            ->limit(5)
+            ->get()
+            ->map(fn (Bookmark $bookmark) => [
+                'name' => $bookmark->title,
+                'url' => $bookmark->url,
+                'icon' => 'bookmark',
+                'category' => 'Bokmerker',
+                'subtitle' => $bookmark->getDomain(),
+            ]);
+        $results = $results->merge($bookmarks);
+
+        // Search Task Lists
+        $taskLists = TaskList::query()
+            ->with('assistant')
+            ->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+            ->limit(5)
+            ->get()
+            ->map(fn (TaskList $taskList) => [
+                'name' => $taskList->name,
+                'url' => route('bpa.tasks.show', $taskList),
+                'icon' => 'check-square',
+                'category' => 'Oppgaver',
+                'subtitle' => $taskList->isAssignedToAssistant() ? $taskList->assistant->name : 'Ingen assistent',
+            ]);
+        $results = $results->merge($taskLists);
 
         return $results->take(15);
     }

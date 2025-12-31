@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Livewire\CommandPalette;
 use App\Models\Assistant;
+use App\Models\Bookmark;
 use App\Models\Category;
 use App\Models\Equipment;
 use App\Models\Prescription;
+use App\Models\TaskList;
 use App\Models\User;
 use App\Models\WishlistItem;
 use Livewire\Livewire;
@@ -126,6 +128,42 @@ it('searches wishlist items by name', function () {
         ->assertDontSee('Xbox');
 });
 
+it('searches bookmarks by title', function () {
+    Bookmark::factory()->create(['title' => 'Laravel Documentation']);
+    Bookmark::factory()->create(['title' => 'Vue.js Guide']);
+
+    Livewire::test(CommandPalette::class)
+        ->set('search', 'Laravel')
+        ->assertSee('Laravel Documentation')
+        ->assertDontSee('Vue.js Guide');
+});
+
+it('searches bookmarks by url', function () {
+    Bookmark::factory()->create([
+        'title' => 'My GitHub Profile',
+        'url' => 'https://github.com/myusername',
+    ]);
+    Bookmark::factory()->create([
+        'title' => 'Some Website',
+        'url' => 'https://example.com',
+    ]);
+
+    Livewire::test(CommandPalette::class)
+        ->set('search', 'github')
+        ->assertSee('My GitHub Profile')
+        ->assertDontSee('Some Website');
+});
+
+it('searches task lists by name', function () {
+    TaskList::factory()->create(['name' => 'Grocery Shopping']);
+    TaskList::factory()->create(['name' => 'House Cleaning']);
+
+    Livewire::test(CommandPalette::class)
+        ->set('search', 'Grocery')
+        ->assertSee('Grocery Shopping')
+        ->assertDontSee('House Cleaning');
+});
+
 it('limits results to 15 items total', function () {
     // Each model search is limited to 5, total capped at 15
     // Create enough items to exceed the limit
@@ -145,6 +183,8 @@ it('limits results to 15 items total', function () {
 it('includes results from multiple categories', function () {
     Assistant::factory()->create(['name' => 'Test Assistent']);
     Prescription::factory()->create(['name' => 'Test Medisin']);
+    Bookmark::factory()->create(['title' => 'Test Bookmark']);
+    TaskList::factory()->create(['name' => 'Test List']);
 
     $component = Livewire::test(CommandPalette::class)
         ->set('search', 'Test');
@@ -152,7 +192,7 @@ it('includes results from multiple categories', function () {
     $results = $component->get('results');
     $categories = $results->pluck('category')->unique();
 
-    expect($categories)->toContain('Assistenter', 'Resepter');
+    expect($categories)->toContain('Assistenter', 'Resepter', 'Bokmerker', 'Oppgaver');
 });
 
 it('has correct quick action categories', function () {
@@ -221,4 +261,22 @@ it('has weight action in quick actions', function () {
     expect($weightAction)
         ->toHaveKey('action', 'weight')
         ->not->toHaveKey('url');
+});
+
+it('has bookmark and task navigation quick actions', function () {
+    $component = Livewire::test(CommandPalette::class);
+
+    $quickActions = $component->get('quickActions');
+    $bookmarkAction = collect($quickActions)->firstWhere('name', 'Gå til Bokmerker');
+    $taskAction = collect($quickActions)->firstWhere('name', 'Gå til Oppgaver');
+
+    expect($bookmarkAction)
+        ->toHaveKey('url')
+        ->toHaveKey('icon', 'bookmark')
+        ->toHaveKey('category', 'Navigasjon');
+
+    expect($taskAction)
+        ->toHaveKey('url')
+        ->toHaveKey('icon', 'check-square')
+        ->toHaveKey('category', 'Navigasjon');
 });
