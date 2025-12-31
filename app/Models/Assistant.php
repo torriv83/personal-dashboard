@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Carbon\Carbon;
@@ -131,7 +133,7 @@ class Assistant extends Model
     protected function formattedNumber(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => '#'.str_pad((string) $this->employee_number, 3, '0', STR_PAD_LEFT)
+            get: fn (): string => '#' . str_pad((string) $this->employee_number, 3, '0', STR_PAD_LEFT)
         );
     }
 

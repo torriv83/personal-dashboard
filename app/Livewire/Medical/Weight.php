@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Medical;
 
 use App\Models\WeightEntry;
@@ -175,7 +177,7 @@ class Weight extends Component
             'note' => 'nullable|string|max:500',
         ]);
 
-        $recordedAt = $validated['date'].' '.$validated['time'].':00';
+        $recordedAt = $validated['date'] . ' ' . $validated['time'] . ':00';
 
         $data = [
             'recorded_at' => $recordedAt,

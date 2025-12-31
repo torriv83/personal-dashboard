@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -149,14 +151,14 @@ class OpenGraphService
             $extension = self::ALLOWED_MIME_TYPES[$mimeType];
 
             // Generate unique filename based on URL hash
-            $filename = Str::slug(md5($imageUrl)).'-'.time().'.'.$extension;
-            $filePath = self::STORAGE_PATH.'/'.$filename;
+            $filename = Str::slug(md5($imageUrl)) . '-' . time() . '.' . $extension;
+            $filePath = self::STORAGE_PATH . '/' . $filename;
 
             // Store the image
             Storage::disk('public')->put($filePath, $imageData);
 
             // Return public URL path
-            return '/storage/'.$filePath;
+            return '/storage/' . $filePath;
         } catch (\Exception $e) {
             Log::warning('OpenGraphService: Error downloading image', [
                 'url' => $imageUrl,
@@ -173,25 +175,25 @@ class OpenGraphService
     private function extractMetaTag(string $html, string $property): ?string
     {
         // Try property attribute first (for og:image)
-        $pattern = '/<meta[^>]+property=["\']'.preg_quote($property, '/').'["\'][^>]+content=["\'](.*?)["\']/i';
+        $pattern = '/<meta[^>]+property=["\']' . preg_quote($property, '/') . '["\'][^>]+content=["\'](.*?)["\']/i';
         if (preg_match($pattern, $html, $matches)) {
             return trim($matches[1]);
         }
 
         // Try reversed order (content before property)
-        $pattern = '/<meta[^>]+content=["\'](.*?)["\'][^>]+property=["\']'.preg_quote($property, '/').'["\']/i';
+        $pattern = '/<meta[^>]+content=["\'](.*?)["\'][^>]+property=["\']' . preg_quote($property, '/') . '["\']/i';
         if (preg_match($pattern, $html, $matches)) {
             return trim($matches[1]);
         }
 
         // Try name attribute (for twitter:image)
-        $pattern = '/<meta[^>]+name=["\']'.preg_quote($property, '/').'["\'][^>]+content=["\'](.*?)["\']/i';
+        $pattern = '/<meta[^>]+name=["\']' . preg_quote($property, '/') . '["\'][^>]+content=["\'](.*?)["\']/i';
         if (preg_match($pattern, $html, $matches)) {
             return trim($matches[1]);
         }
 
         // Try reversed order (content before name)
-        $pattern = '/<meta[^>]+content=["\'](.*?)["\'][^>]+name=["\']'.preg_quote($property, '/').'["\']/i';
+        $pattern = '/<meta[^>]+content=["\'](.*?)["\'][^>]+name=["\']' . preg_quote($property, '/') . '["\']/i';
         if (preg_match($pattern, $html, $matches)) {
             return trim($matches[1]);
         }
@@ -213,7 +215,7 @@ class OpenGraphService
         if (str_starts_with($imageUrl, '//')) {
             $parsedBase = parse_url($baseUrl);
 
-            return ($parsedBase['scheme'] ?? 'https').':'.$imageUrl;
+            return ($parsedBase['scheme'] ?? 'https') . ':' . $imageUrl;
         }
 
         $parsedBase = parse_url($baseUrl);
@@ -222,13 +224,13 @@ class OpenGraphService
 
         // Root-relative URL (/image.jpg)
         if (str_starts_with($imageUrl, '/')) {
-            return "{$scheme}://{$host}".$imageUrl;
+            return "{$scheme}://{$host}" . $imageUrl;
         }
 
         // Relative URL (image.jpg or ../image.jpg)
         $basePath = $parsedBase['path'] ?? '/';
         $basePath = rtrim(dirname($basePath), '/');
 
-        return "{$scheme}://{$host}{$basePath}/".ltrim($imageUrl, '/');
+        return "{$scheme}://{$host}{$basePath}/" . ltrim($imageUrl, '/');
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa;
 
 use App\Livewire\Bpa\Calendar\Concerns\HandlesCalendarNavigation;
@@ -226,11 +228,11 @@ class Calendar extends Component
 
         $startsAt = $this->isAllDay
             ? Carbon::parse($this->fromDate)->startOfDay()
-            : Carbon::parse($this->fromDate.' '.($this->fromTime ?: '08:00'));
+            : Carbon::parse($this->fromDate . ' ' . ($this->fromTime ?: '08:00'));
 
         $endsAt = $this->isAllDay
             ? Carbon::parse($this->toDate)->endOfDay()
-            : Carbon::parse($this->toDate.' '.($this->toTime ?: '11:00'));
+            : Carbon::parse($this->toDate . ' ' . ($this->toTime ?: '11:00'));
 
         return Shift::query()
             ->where('is_unavailable', true)

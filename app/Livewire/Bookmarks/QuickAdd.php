@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bookmarks;
 
 use App\Models\Bookmark;
@@ -143,7 +145,7 @@ class QuickAdd extends Component
     public function updatedSearchFolder(): void
     {
         if ($this->searchFolder) {
-            $match = BookmarkFolder::where('name', 'like', '%'.$this->searchFolder.'%')->first();
+            $match = BookmarkFolder::where('name', 'like', '%' . $this->searchFolder . '%')->first();
             if ($match) {
                 $this->folderId = $match->id;
             }

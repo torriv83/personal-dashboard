@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Economy\Index;
 use App\Models\IncomeSetting;
 use App\Models\User;

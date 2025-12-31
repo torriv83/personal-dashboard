@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Livewire\Tasks\Show;

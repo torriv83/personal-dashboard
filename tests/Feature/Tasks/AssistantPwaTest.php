@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Assistant;
 
 use function Pest\Laravel\get;
@@ -15,8 +17,8 @@ it('returns manifest.json with correct content', function () {
         ->assertOk()
         ->assertHeader('Content-Type', 'application/manifest+json')
         ->assertJson([
-            'name' => $firstName.' - Oppgaver',
-            'short_name' => $firstName.' - Oppgaver',
+            'name' => $firstName . ' - Oppgaver',
+            'short_name' => $firstName . ' - Oppgaver',
             'display' => 'standalone',
             'background_color' => '#1a1a1a',
             'theme_color' => '#1a1a1a',
@@ -32,7 +34,7 @@ it('returns manifest with correct start_url for assistant', function () {
     $manifest = $response->json();
 
     expect($manifest['start_url'])->toContain($this->assistant->token);
-    expect($manifest['scope'])->toBe('/oppgaver/'.$this->assistant->token);
+    expect($manifest['scope'])->toBe('/oppgaver/' . $this->assistant->token);
 });
 
 it('returns service worker with correct content type', function () {
@@ -45,7 +47,7 @@ it('returns service worker with correct scope header', function () {
     $response = get(route('tasks.assistant.sw', $this->assistant))
         ->assertOk();
 
-    $expectedScope = '/oppgaver/'.$this->assistant->token;
+    $expectedScope = '/oppgaver/' . $this->assistant->token;
     expect($response->headers->get('Service-Worker-Allowed'))->toBe($expectedScope);
 });
 

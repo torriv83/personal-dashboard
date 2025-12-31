@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa\Calendar\Concerns;
 
 use App\Models\Shift;
@@ -105,11 +107,11 @@ trait HandlesRecurringShifts
         foreach ($dates as $date) {
             $startsAt = $this->isAllDay
                 ? Carbon::parse($date)->startOfDay()
-                : Carbon::parse($date.' '.$startTime);
+                : Carbon::parse($date . ' ' . $startTime);
 
             $endsAt = $this->isAllDay
                 ? Carbon::parse($date)->endOfDay()
-                : Carbon::parse($date.' '.$endTime);
+                : Carbon::parse($date . ' ' . $endTime);
 
             Shift::create([
                 ...$baseData,
@@ -162,11 +164,11 @@ trait HandlesRecurringShifts
 
         $startsAt = $this->isAllDay
             ? Carbon::parse($this->fromDate)->startOfDay()
-            : Carbon::parse($this->fromDate.' '.$this->fromTime);
+            : Carbon::parse($this->fromDate . ' ' . $this->fromTime);
 
         $endsAt = $this->isAllDay
             ? Carbon::parse($this->toDate)->endOfDay()
-            : Carbon::parse($this->toDate.' '.$this->toTime);
+            : Carbon::parse($this->toDate . ' ' . $this->toTime);
 
         $data = [
             'assistant_id' => $this->assistantId,
@@ -230,11 +232,11 @@ trait HandlesRecurringShifts
         foreach ($futureShifts as $futureShift) {
             $shiftStartsAt = $this->isAllDay
                 ? Carbon::parse($futureShift->starts_at->format('Y-m-d'))->startOfDay()
-                : Carbon::parse($futureShift->starts_at->format('Y-m-d').' '.$newStartTime);
+                : Carbon::parse($futureShift->starts_at->format('Y-m-d') . ' ' . $newStartTime);
 
             $shiftEndsAt = $this->isAllDay
                 ? Carbon::parse($futureShift->ends_at->format('Y-m-d'))->endOfDay()
-                : Carbon::parse($futureShift->ends_at->format('Y-m-d').' '.$newEndTime);
+                : Carbon::parse($futureShift->ends_at->format('Y-m-d') . ' ' . $newEndTime);
 
             $futureShift->update([
                 ...$data,
@@ -264,11 +266,11 @@ trait HandlesRecurringShifts
         foreach ($allShifts as $groupShift) {
             $shiftStartsAt = $this->isAllDay
                 ? Carbon::parse($groupShift->starts_at->format('Y-m-d'))->startOfDay()
-                : Carbon::parse($groupShift->starts_at->format('Y-m-d').' '.$newStartTime);
+                : Carbon::parse($groupShift->starts_at->format('Y-m-d') . ' ' . $newStartTime);
 
             $shiftEndsAt = $this->isAllDay
                 ? Carbon::parse($groupShift->ends_at->format('Y-m-d'))->endOfDay()
-                : Carbon::parse($groupShift->ends_at->format('Y-m-d').' '.$newEndTime);
+                : Carbon::parse($groupShift->ends_at->format('Y-m-d') . ' ' . $newEndTime);
 
             $groupShift->update([
                 ...$data,

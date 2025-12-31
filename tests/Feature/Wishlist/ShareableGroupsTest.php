@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Wishlist\Index;
 use App\Livewire\Wishlist\SharedView;
 use App\Models\User;
@@ -123,7 +125,7 @@ test('public view returns 404 when sharing is disabled', function () {
         'share_token' => 'token-for-disabled-group-123456',
     ]);
 
-    $this->get('/delt/'.$group->share_token)
+    $this->get('/delt/' . $group->share_token)
         ->assertStatus(404);
 });
 

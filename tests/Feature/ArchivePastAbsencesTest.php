@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Models\Shift;
 
 it('archives past absence entries by soft deleting them', function () {

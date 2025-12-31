@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa\Calendar\Concerns;
 
 use Carbon\Carbon;
@@ -60,7 +62,7 @@ trait HandlesCalendarViews
         $date = $this->getCurrentDateProperty();
         $dayName = $this->norwegianDaysFull[$date->dayOfWeekIso - 1];
 
-        return $dayName.', '.$date->day.'. '.$this->norwegianMonths[$date->month].' '.$date->year;
+        return $dayName . ', ' . $date->day . '. ' . $this->norwegianMonths[$date->month] . ' ' . $date->year;
     }
 
     public function getTimeSlotsProperty(): array
@@ -137,10 +139,10 @@ trait HandlesCalendarViews
         $endOfWeek = $currentDate->copy()->endOfWeek(Carbon::SUNDAY);
 
         if ($startOfWeek->month === $endOfWeek->month) {
-            return $startOfWeek->day.' - '.$endOfWeek->day.'. '.$this->norwegianMonths[$startOfWeek->month].' '.$startOfWeek->year;
+            return $startOfWeek->day . ' - ' . $endOfWeek->day . '. ' . $this->norwegianMonths[$startOfWeek->month] . ' ' . $startOfWeek->year;
         }
 
-        return $startOfWeek->day.'. '.$this->norwegianMonths[$startOfWeek->month].' - '.$endOfWeek->day.'. '.$this->norwegianMonths[$endOfWeek->month].' '.$endOfWeek->year;
+        return $startOfWeek->day . '. ' . $this->norwegianMonths[$startOfWeek->month] . ' - ' . $endOfWeek->day . '. ' . $this->norwegianMonths[$endOfWeek->month] . ' ' . $endOfWeek->year;
     }
 
     public function getWeekRangeShortProperty(): string
@@ -156,10 +158,10 @@ trait HandlesCalendarViews
         ];
 
         if ($startOfWeek->month === $endOfWeek->month) {
-            return $startOfWeek->day.'-'.$endOfWeek->day.'. '.$shortMonths[$startOfWeek->month];
+            return $startOfWeek->day . '-' . $endOfWeek->day . '. ' . $shortMonths[$startOfWeek->month];
         }
 
-        return $startOfWeek->day.'. '.$shortMonths[$startOfWeek->month].' - '.$endOfWeek->day.'. '.$shortMonths[$endOfWeek->month];
+        return $startOfWeek->day . '. ' . $shortMonths[$startOfWeek->month] . ' - ' . $endOfWeek->day . '. ' . $shortMonths[$endOfWeek->month];
     }
 
     public function getCurrentWeekNumberProperty(): int
@@ -187,14 +189,14 @@ trait HandlesCalendarViews
             $weekNumber = $currentWeek->isoWeek();
 
             if ($currentWeek->month === $endOfWeek->month) {
-                $label = $currentWeek->day.'-'.$endOfWeek->day.'. '.$shortMonths[$currentWeek->month];
+                $label = $currentWeek->day . '-' . $endOfWeek->day . '. ' . $shortMonths[$currentWeek->month];
             } else {
-                $label = $currentWeek->day.'. '.$shortMonths[$currentWeek->month].' - '.$endOfWeek->day.'. '.$shortMonths[$endOfWeek->month];
+                $label = $currentWeek->day . '. ' . $shortMonths[$currentWeek->month] . ' - ' . $endOfWeek->day . '. ' . $shortMonths[$endOfWeek->month];
             }
 
             $weeks[] = [
                 'weekNumber' => $weekNumber,
-                'label' => 'Uke '.$weekNumber.': '.$label,
+                'label' => 'Uke ' . $weekNumber . ': ' . $label,
                 'labelShort' => $label,
                 'date' => $currentWeek->format('Y-m-d'),
                 'isSelected' => $weekNumber === $selectedWeekNumber,

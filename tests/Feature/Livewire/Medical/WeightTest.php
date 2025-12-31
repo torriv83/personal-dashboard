@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Medical\Weight;
 use App\Models\User;
 use App\Models\WeightEntry;

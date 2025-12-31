@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Services\OpenGraphService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -21,7 +23,7 @@ test('fetches og:image from HTML and stores it locally', function () {
     HTML;
 
     // Create a fake image data
-    $fakeImageData = file_get_contents(__DIR__.'/../fixtures/test-image.jpg');
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
 
     Http::fake([
         'https://example.com' => Http::response($html, 200),
@@ -37,7 +39,7 @@ test('fetches og:image from HTML and stores it locally', function () {
 
     // Verify file was stored
     $filename = basename($result);
-    Storage::disk('public')->assertExists('wishlist-images/'.$filename);
+    Storage::disk('public')->assertExists('wishlist-images/' . $filename);
 });
 
 test('falls back to twitter:image when og:image is not found', function () {
@@ -51,7 +53,7 @@ test('falls back to twitter:image when og:image is not found', function () {
     </html>
     HTML;
 
-    $fakeImageData = file_get_contents(__DIR__.'/../fixtures/test-image.jpg');
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
 
     Http::fake([
         'https://example.com' => Http::response($html, 200),
@@ -77,7 +79,7 @@ test('converts relative image URLs to absolute', function () {
     </html>
     HTML;
 
-    $fakeImageData = file_get_contents(__DIR__.'/../fixtures/test-image.jpg');
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
 
     Http::fake([
         'https://example.com/page' => Http::response($html, 200),
@@ -103,7 +105,7 @@ test('handles protocol-relative URLs', function () {
     </html>
     HTML;
 
-    $fakeImageData = file_get_contents(__DIR__.'/../fixtures/test-image.jpg');
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
 
     Http::fake([
         'https://example.com' => Http::response($html, 200),
@@ -165,7 +167,7 @@ test('handles meta tags with content before property', function () {
     </html>
     HTML;
 
-    $fakeImageData = file_get_contents(__DIR__.'/../fixtures/test-image.jpg');
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
 
     Http::fake([
         'https://example.com' => Http::response($html, 200),
@@ -268,7 +270,7 @@ test('handles different image formats', function ($mimeType, $extension) {
     </html>
     HTML;
 
-    $fakeImageData = file_get_contents(__DIR__.'/../fixtures/test-image.jpg');
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
 
     Http::fake([
         'https://example.com' => Http::response($html, 200),
@@ -280,7 +282,7 @@ test('handles different image formats', function ($mimeType, $extension) {
     $result = $this->service->fetchImage('https://example.com');
 
     expect($result)->toStartWith('/storage/wishlist-images/')
-        ->and($result)->toEndWith('.'.$extension);
+        ->and($result)->toEndWith('.' . $extension);
 })->with([
     ['image/jpeg', 'jpg'],
     ['image/png', 'png'],
@@ -322,7 +324,7 @@ test('detects MIME type from image content when header is missing', function () 
     </html>
     HTML;
 
-    $fakeImageData = file_get_contents(__DIR__.'/../fixtures/test-image.jpg');
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
 
     Http::fake([
         'https://example.com' => Http::response($html, 200),

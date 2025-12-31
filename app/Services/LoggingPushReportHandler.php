@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Contracts\Events\Dispatcher;
@@ -22,7 +24,7 @@ class LoggingPushReportHandler implements ReportHandlerInterface
         if ($report->isSuccess()) {
             Log::info('Push notification: Sent successfully', [
                 'status_code' => $statusCode,
-                'endpoint_prefix' => substr($subscription->endpoint, 0, 50).'...',
+                'endpoint_prefix' => substr($subscription->endpoint, 0, 50) . '...',
                 'user_id' => $subscription->subscribable_id,
             ]);
 
@@ -36,7 +38,7 @@ class LoggingPushReportHandler implements ReportHandlerInterface
             Log::error('Push subscription: AUTO-DELETED (expired/invalid)', [
                 'status_code' => $statusCode,
                 'reason' => $report->getReason(),
-                'endpoint_prefix' => substr($subscription->endpoint, 0, 50).'...',
+                'endpoint_prefix' => substr($subscription->endpoint, 0, 50) . '...',
                 'user_id' => $subscription->subscribable_id,
                 'subscription_created_at' => $subscription->getAttribute('created_at')?->toDateTimeString(),
                 'action' => 'SUBSCRIPTION_DELETED',
@@ -47,7 +49,7 @@ class LoggingPushReportHandler implements ReportHandlerInterface
             Log::warning('Push notification: Failed to send', [
                 'status_code' => $statusCode,
                 'reason' => $report->getReason(),
-                'endpoint_prefix' => substr($subscription->endpoint, 0, 50).'...',
+                'endpoint_prefix' => substr($subscription->endpoint, 0, 50) . '...',
                 'user_id' => $subscription->subscribable_id,
             ]);
         }

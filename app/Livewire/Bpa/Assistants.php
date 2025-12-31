@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa;
 
 use App\Models\Assistant;
@@ -136,8 +138,8 @@ class Assistants extends Component
     {
         $this->validate([
             'editName' => 'required|string|max:255',
-            'editEmployeeNumber' => 'required|integer|unique:assistants,employee_number,'.$this->editingId,
-            'editEmail' => 'required|email|unique:assistants,email,'.$this->editingId,
+            'editEmployeeNumber' => 'required|integer|unique:assistants,employee_number,' . $this->editingId,
+            'editEmail' => 'required|email|unique:assistants,email,' . $this->editingId,
             'editPhone' => 'nullable|string|max:20',
             'editType' => 'required|in:primary,substitute,oncall',
             'editHiredAt' => 'required|date',

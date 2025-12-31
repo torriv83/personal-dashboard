@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\User;
 
 use App\Models\Setting;
@@ -239,7 +241,7 @@ class Settings extends Component
 
         Log::info('Push subscription: Creating/updating', [
             'user_id' => Auth::id(),
-            'endpoint_prefix' => substr($endpoint, 0, 50).'...',
+            'endpoint_prefix' => substr($endpoint, 0, 50) . '...',
             'existing_subscriptions' => $existingCount,
         ]);
 
@@ -261,7 +263,7 @@ class Settings extends Component
     {
         Log::warning('Push subscription: Manual removal requested', [
             'user_id' => Auth::id(),
-            'endpoint_prefix' => substr($endpoint, 0, 50).'...',
+            'endpoint_prefix' => substr($endpoint, 0, 50) . '...',
         ]);
 
         Auth::user()->deletePushSubscription($endpoint);

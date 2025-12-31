@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -53,7 +55,7 @@ class TaskList extends Model
                 $count = 1;
 
                 while (static::where('slug', $slug)->exists()) {
-                    $slug = $baseSlug.'-'.$count++;
+                    $slug = $baseSlug . '-' . $count++;
                 }
 
                 $taskList->slug = $slug;

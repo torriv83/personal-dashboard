@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Jobs\FetchWishlistImagesJob;
 use App\Models\WishlistItem;
 use App\Services\OpenGraphService;

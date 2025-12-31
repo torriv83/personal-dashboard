@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Assistant;
@@ -14,14 +16,14 @@ class AssistantPwaController extends Controller
     public function manifest(Assistant $assistant): JsonResponse
     {
         $startUrl = route('tasks.assistant', $assistant);
-        $scope = '/oppgaver/'.$assistant->token;
+        $scope = '/oppgaver/' . $assistant->token;
 
         $firstName = explode(' ', $assistant->name)[0];
 
         $manifest = [
-            'id' => 'tor-oppgaver-'.$assistant->token,
-            'name' => $firstName.' - Oppgaver',
-            'short_name' => $firstName.' - Oppgaver',
+            'id' => 'tor-oppgaver-' . $assistant->token,
+            'name' => $firstName . ' - Oppgaver',
+            'short_name' => $firstName . ' - Oppgaver',
             'description' => 'Oppgaveliste for assistenter',
             'start_url' => $startUrl,
             'scope' => $scope,
@@ -54,7 +56,7 @@ class AssistantPwaController extends Controller
      */
     public function serviceWorker(Assistant $assistant): Response
     {
-        $scope = '/oppgaver/'.$assistant->token;
+        $scope = '/oppgaver/' . $assistant->token;
 
         $swContent = <<<'JS'
 const CACHE_NAME = 'tasks-assistant-v1';

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Tools;
 
 use App\Models\MileageDestination;
@@ -67,7 +69,7 @@ class MileageCalculator extends Component
 
             $this->dispatch('toast', message: 'Destinasjon lagt til', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Kunne ikke beregne avstand: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Kunne ikke beregne avstand: ' . $e->getMessage(), type: 'error');
         }
     }
 
@@ -100,7 +102,7 @@ class MileageCalculator extends Component
 
             $this->dispatch('toast', message: 'Avstand oppdatert', type: 'success');
         } catch (\Exception $e) {
-            $this->dispatch('toast', message: 'Kunne ikke beregne avstand: '.$e->getMessage(), type: 'error');
+            $this->dispatch('toast', message: 'Kunne ikke beregne avstand: ' . $e->getMessage(), type: 'error');
         }
     }
 

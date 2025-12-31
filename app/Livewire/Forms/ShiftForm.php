@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Forms;
 
 use App\Models\Shift;
@@ -81,7 +83,7 @@ class ShiftForm extends Form
     {
         return $this->isAllDay
             ? Carbon::parse($this->fromDate)->startOfDay()
-            : Carbon::parse($this->fromDate.' '.$this->fromTime);
+            : Carbon::parse($this->fromDate . ' ' . $this->fromTime);
     }
 
     /**
@@ -91,7 +93,7 @@ class ShiftForm extends Form
     {
         return $this->isAllDay
             ? Carbon::parse($this->toDate)->endOfDay()
-            : Carbon::parse($this->toDate.' '.$this->toTime);
+            : Carbon::parse($this->toDate . ' ' . $this->toTime);
     }
 
     /**

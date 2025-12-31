@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Economy;
 
 use App\Models\IncomeSetting;
@@ -67,10 +69,10 @@ class Index extends Component
 
     public function fillForm(): void
     {
-        $this->monthly_gross = number_format($this->incomeSetting->monthly_gross, 0, '', '');
-        $this->monthly_net = number_format($this->incomeSetting->monthly_net, 0, '', '');
+        $this->monthly_gross = number_format((float) $this->incomeSetting->monthly_gross, 0, '', '');
+        $this->monthly_net = number_format((float) $this->incomeSetting->monthly_net, 0, '', '');
         $this->tax_table = $this->incomeSetting->tax_table ?? '';
-        $this->base_support = number_format($this->incomeSetting->base_support, 0, '', '');
+        $this->base_support = number_format((float) $this->incomeSetting->base_support, 0, '', '');
     }
 
     public function saveIncomeSettings(): void

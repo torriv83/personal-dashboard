@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\TaskStatus;
 use App\Livewire\Tasks\AssistantTasks;
 use App\Models\Assistant;

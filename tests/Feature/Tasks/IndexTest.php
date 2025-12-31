@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Tasks\Index;
 use App\Models\Assistant;
 use App\Models\Task;

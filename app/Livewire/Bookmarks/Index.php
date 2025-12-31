@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bookmarks;
 
 use App\Jobs\CheckDeadBookmarksJob;
@@ -130,9 +132,9 @@ class Index extends Component
         // Search
         if ($this->search !== '') {
             $query->where(function ($q) {
-                $q->where('title', 'like', '%'.$this->search.'%')
-                    ->orWhere('description', 'like', '%'.$this->search.'%')
-                    ->orWhere('url', 'like', '%'.$this->search.'%');
+                $q->where('title', 'like', '%' . $this->search . '%')
+                    ->orWhere('description', 'like', '%' . $this->search . '%')
+                    ->orWhere('url', 'like', '%' . $this->search . '%');
             });
         }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Bookmarks\QuickAdd;
 use App\Models\Bookmark;
 use App\Models\BookmarkFolder;

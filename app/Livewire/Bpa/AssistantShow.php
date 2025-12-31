@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa;
 
 use App\Models\Assistant;
@@ -179,15 +181,15 @@ class AssistantShow extends Component
         $parts = [];
 
         if ($diff->y > 0) {
-            $parts[] = $diff->y.' '.($diff->y === 1 ? 'år' : 'år');
+            $parts[] = $diff->y . ' ' . ($diff->y === 1 ? 'år' : 'år');
         }
 
         if ($diff->m > 0) {
-            $parts[] = $diff->m.' '.($diff->m === 1 ? 'måned' : 'måneder');
+            $parts[] = $diff->m . ' ' . ($diff->m === 1 ? 'måned' : 'måneder');
         }
 
         if (empty($parts)) {
-            return $diff->d.' '.($diff->d === 1 ? 'dag' : 'dager');
+            return $diff->d . ' ' . ($diff->d === 1 ? 'dag' : 'dager');
         }
 
         return implode(' og ', $parts);
@@ -200,7 +202,7 @@ class AssistantShow extends Component
             return '';
         }
 
-        return url('/oppgaver/'.$this->assistant->token);
+        return url('/oppgaver/' . $this->assistant->token);
     }
 
     public function regenerateToken(): void
@@ -236,8 +238,8 @@ class AssistantShow extends Component
     {
         $this->validate([
             'editName' => 'required|string|max:255',
-            'editEmployeeNumber' => 'required|integer|unique:assistants,employee_number,'.$this->assistant->id,
-            'editEmail' => 'required|email|unique:assistants,email,'.$this->assistant->id,
+            'editEmployeeNumber' => 'required|integer|unique:assistants,employee_number,' . $this->assistant->id,
+            'editEmail' => 'required|email|unique:assistants,email,' . $this->assistant->id,
             'editPhone' => 'nullable|string|max:20',
             'editType' => 'required|in:primary,substitute,oncall',
             'editHiredAt' => 'required|date',
@@ -296,8 +298,8 @@ class AssistantShow extends Component
             return;
         }
 
-        $startsAt = $this->shiftDate.' '.($this->shiftIsAllDay ? '00:00' : $this->shiftStartTime);
-        $endsAt = $this->shiftDate.' '.($this->shiftIsAllDay ? '23:59' : $this->shiftEndTime);
+        $startsAt = $this->shiftDate . ' ' . ($this->shiftIsAllDay ? '00:00' : $this->shiftStartTime);
+        $endsAt = $this->shiftDate . ' ' . ($this->shiftIsAllDay ? '23:59' : $this->shiftEndTime);
 
         $shift->update([
             'starts_at' => $startsAt,

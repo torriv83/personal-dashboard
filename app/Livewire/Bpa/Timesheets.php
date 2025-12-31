@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa;
 
 use App\Models\Assistant;
@@ -149,8 +151,8 @@ class Timesheets extends Component
     {
         $this->validate();
 
-        $startsAt = Carbon::parse($this->date.' '.($this->is_all_day ? '00:00' : $this->start_time));
-        $endsAt = Carbon::parse($this->date.' '.($this->is_all_day ? '23:59' : $this->end_time));
+        $startsAt = Carbon::parse($this->date . ' ' . ($this->is_all_day ? '00:00' : $this->start_time));
+        $endsAt = Carbon::parse($this->date . ' ' . ($this->is_all_day ? '23:59' : $this->end_time));
 
         // Check if there are enough remaining hours (only for work shifts, not unavailable entries)
         if (! $this->is_unavailable && ! $this->is_all_day) {

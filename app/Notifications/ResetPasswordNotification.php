@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
@@ -28,7 +30,7 @@ class ResetPasswordNotification extends Notification
 
         return (new MailMessage)
             ->subject('Tilbakestill passord - Personal Dashboard')
-            ->greeting('Hei '.$notifiable->name.'!')
+            ->greeting('Hei ' . $notifiable->name . '!')
             ->line('Du mottar denne e-posten fordi vi mottok en forespørsel om å tilbakestille passordet for kontoen din.')
             ->action('Tilbakestill passord', $url)
             ->line('Denne lenken utløper om 60 minutter.')

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa\Calendar\Concerns;
 
 use App\Models\Assistant;
@@ -54,10 +56,10 @@ trait ShiftDragDropOperations
         $duration = $oldStart->diffInMinutes($oldEnd);
 
         if ($newTime) {
-            $newStart = Carbon::parse($newDate.' '.$newTime);
+            $newStart = Carbon::parse($newDate . ' ' . $newTime);
         } else {
             // Keep same time, just change date
-            $newStart = Carbon::parse($newDate.' '.$oldStart->format('H:i'));
+            $newStart = Carbon::parse($newDate . ' ' . $oldStart->format('H:i'));
         }
 
         $newEnd = $newStart->copy()->addMinutes($duration);
@@ -73,8 +75,8 @@ trait ShiftDragDropOperations
 
             if ($conflict) {
                 $conflictTime = $conflict->is_all_day
-                    ? $conflict->starts_at->format('d.m.Y').' (hele dagen)'
-                    : $conflict->starts_at->format('d.m.Y H:i').' - '.$conflict->ends_at->format('H:i');
+                    ? $conflict->starts_at->format('d.m.Y') . ' (hele dagen)'
+                    : $conflict->starts_at->format('d.m.Y H:i') . ' - ' . $conflict->ends_at->format('H:i');
 
                 $this->dispatch('toast', type: 'error', message: "{$shift->assistant->name} er borte: {$conflictTime}");
 
@@ -94,7 +96,7 @@ trait ShiftDragDropOperations
     public function createShiftFromDrag(int $assistantId, string $date, ?string $time = null): void
     {
         $startsAt = $time
-            ? Carbon::parse($date.' '.$time)
+            ? Carbon::parse($date . ' ' . $time)
             : Carbon::parse($date)->setTime(8, 0);
 
         $endsAt = $startsAt->copy()->addHours(3); // Default 3 hour shift
@@ -105,8 +107,8 @@ trait ShiftDragDropOperations
         if ($conflict) {
             $assistant = Assistant::find($assistantId);
             $conflictTime = $conflict->is_all_day
-                ? $conflict->starts_at->format('d.m.Y').' (hele dagen)'
-                : $conflict->starts_at->format('d.m.Y H:i').' - '.$conflict->ends_at->format('H:i');
+                ? $conflict->starts_at->format('d.m.Y') . ' (hele dagen)'
+                : $conflict->starts_at->format('d.m.Y H:i') . ' - ' . $conflict->ends_at->format('H:i');
 
             $this->dispatch('toast', type: 'error', message: "{$assistant->name} er borte: {$conflictTime}");
 
@@ -148,8 +150,8 @@ trait ShiftDragDropOperations
 
             if ($conflict) {
                 $conflictTime = $conflict->is_all_day
-                    ? $conflict->starts_at->format('d.m.Y').' (hele dagen)'
-                    : $conflict->starts_at->format('d.m.Y H:i').' - '.$conflict->ends_at->format('H:i');
+                    ? $conflict->starts_at->format('d.m.Y') . ' (hele dagen)'
+                    : $conflict->starts_at->format('d.m.Y H:i') . ' - ' . $conflict->ends_at->format('H:i');
 
                 $this->dispatch('toast', type: 'error', message: "{$shift->assistant->name} er borte: {$conflictTime}");
 

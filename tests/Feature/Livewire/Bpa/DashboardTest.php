@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Bpa\Dashboard;
 use App\Models\Assistant;
 use App\Models\Setting;

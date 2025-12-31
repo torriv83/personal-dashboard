@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Wishlist;
 
 use App\Enums\WishlistStatus;
@@ -301,14 +303,14 @@ class Index extends Component
             }
 
             // Generate unique filename
-            $filename = md5(uniqid()).'-'.time().'.'.$extension;
-            $filePath = 'wishlist-images/'.$filename;
+            $filename = md5(uniqid()) . '-' . time() . '.' . $extension;
+            $filePath = 'wishlist-images/' . $filename;
 
             // Store the image
             \Illuminate\Support\Facades\Storage::disk('public')->put($filePath, $imageData);
 
             // Set the image URL
-            $this->itemImageUrl = '/storage/'.$filePath;
+            $this->itemImageUrl = '/storage/' . $filePath;
             $this->dispatch('toast', type: 'success', message: 'Bilde limt inn');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::warning('handlePastedImage error', ['error' => $e->getMessage()]);

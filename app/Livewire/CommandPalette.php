@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire;
 
 use App\Models\Assistant;
@@ -75,7 +77,7 @@ class CommandPalette extends Component
             return collect($this->quickActions);
         }
 
-        $searchTerm = '%'.strtolower($this->search).'%';
+        $searchTerm = '%' . strtolower($this->search) . '%';
         $results = collect();
 
         // Filter quick actions
@@ -94,7 +96,7 @@ class CommandPalette extends Component
                 'url' => route('bpa.assistants.show', $assistant),
                 'icon' => 'user',
                 'category' => 'Assistenter',
-                'subtitle' => $assistant->formatted_number.' · '.$assistant->type_label,
+                'subtitle' => $assistant->formatted_number . ' · ' . $assistant->type_label,
             ]);
         $results = $results->merge($assistants);
 
@@ -123,7 +125,7 @@ class CommandPalette extends Component
                 'url' => route('medical.prescriptions'),
                 'icon' => 'file-plus',
                 'category' => 'Resepter',
-                'subtitle' => 'Gyldig til '.$prescription->valid_to->format('d.m.Y'),
+                'subtitle' => 'Gyldig til ' . $prescription->valid_to->format('d.m.Y'),
             ]);
         $results = $results->merge($prescriptions);
 
@@ -137,7 +139,7 @@ class CommandPalette extends Component
                 'url' => route('wishlist'),
                 'icon' => 'gift',
                 'category' => 'Ønskeliste',
-                'subtitle' => number_format($item->price, 0, ',', ' ').' kr',
+                'subtitle' => number_format($item->price, 0, ',', ' ') . ' kr',
             ]);
         $results = $results->merge($wishlistItems);
 
@@ -186,7 +188,7 @@ class CommandPalette extends Component
             'recorded_at' => now(),
         ]);
 
-        $this->dispatch('toast', type: 'success', message: 'Vekt registrert: '.$this->weightInput.' kg');
+        $this->dispatch('toast', type: 'success', message: 'Vekt registrert: ' . $this->weightInput . ' kg');
         $this->close();
     }
 

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa\Calendar\Concerns;
 
 use Carbon\Carbon;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa;
 
 use App\Livewire\Concerns\FormatsMinutes;
@@ -194,8 +196,8 @@ class Dashboard extends Component
 
         Shift::create([
             'assistant_id' => $this->quickAddAssistantId,
-            'starts_at' => $this->quickAddFromDate.' 00:00:00',
-            'ends_at' => $this->quickAddToDate.' 23:59:59',
+            'starts_at' => $this->quickAddFromDate . ' 00:00:00',
+            'ends_at' => $this->quickAddToDate . ' 23:59:59',
             'is_unavailable' => true,
             'is_all_day' => true,
         ]);
@@ -302,22 +304,22 @@ class Dashboard extends Component
                 'id' => 'stat_hours_used',
                 'label' => 'Timer brukt i år',
                 'value' => $this->formatMinutesForDisplay($usedThisYearMinutes),
-                'valueSuffix' => '('.$this->formatMinutesForDisplay($usedThisYearMinutes + $plannedMinutes).' med planlagt)',
-                'description' => $this->formatMinutesForDisplay($usedThisMonthMinutes).' brukt av '.$this->formatMinutesForDisplay((int) $monthlyQuotaMinutes).' denne måneden | '.$this->formatMinutesForDisplay($plannedMinutes).' planlagt ut året',
+                'valueSuffix' => '(' . $this->formatMinutesForDisplay($usedThisYearMinutes + $plannedMinutes) . ' med planlagt)',
+                'description' => $this->formatMinutesForDisplay($usedThisMonthMinutes) . ' brukt av ' . $this->formatMinutesForDisplay((int) $monthlyQuotaMinutes) . ' denne måneden | ' . $this->formatMinutesForDisplay($plannedMinutes) . ' planlagt ut året',
             ],
             'stat_hours_remaining' => [
                 'id' => 'stat_hours_remaining',
                 'label' => 'Timer igjen',
                 'value' => $this->formatMinutesForDisplay($remainingMinutes),
-                'valueSuffix' => '('.$this->formatMinutesForDisplay($remainingWithPlannedMinutes).' med planlagt)',
-                'description' => $this->formatMinutesForDisplay($averageRemainingPerWeekMinutes).' snitt/uke ut året | '.$this->formatMinutesForDisplay($averageRemainingWithPlannedPerWeekMinutes).' snitt/uke med planlagt',
+                'valueSuffix' => '(' . $this->formatMinutesForDisplay($remainingWithPlannedMinutes) . ' med planlagt)',
+                'description' => $this->formatMinutesForDisplay($averageRemainingPerWeekMinutes) . ' snitt/uke ut året | ' . $this->formatMinutesForDisplay($averageRemainingWithPlannedPerWeekMinutes) . ' snitt/uke med planlagt',
             ],
             'stat_hours_week' => [
                 'id' => 'stat_hours_week',
                 'label' => 'Timer brukt denne uka',
                 'value' => $this->formatMinutesForDisplay($usedThisWeekMinutes),
-                'valueSuffix' => '('.$this->formatMinutesForDisplay($usedThisWeekMinutes + $plannedThisWeekMinutes).' med planlagt)',
-                'description' => $this->formatMinutesForDisplay($plannedThisWeekMinutes).' planlagt denne uka',
+                'valueSuffix' => '(' . $this->formatMinutesForDisplay($usedThisWeekMinutes + $plannedThisWeekMinutes) . ' med planlagt)',
+                'description' => $this->formatMinutesForDisplay($plannedThisWeekMinutes) . ' planlagt denne uka',
             ],
         ];
     }
@@ -556,8 +558,8 @@ class Dashboard extends Component
 
             return [
                 'month' => $monthNames[$month],
-                'y'.($currentYear - 1) => $previousUsedPercent,
-                'y'.$currentYear => $currentUsedPercent,
+                'y' . ($currentYear - 1) => $previousUsedPercent,
+                'y' . $currentYear => $currentUsedPercent,
                 'remaining' => $remainingPercent,
             ];
         })->toArray();
@@ -615,7 +617,7 @@ class Dashboard extends Component
             return $email;
         }
 
-        return substr($email, 0, 10).'...';
+        return substr($email, 0, 10) . '...';
     }
 
     public function render()

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\Setting;
@@ -77,7 +79,7 @@ class WeatherService
         $lat = $this->getLatitude();
         $lon = $this->getLongitude();
 
-        return Cache::remember(self::CACHE_KEY.".$lat.$lon", self::CACHE_TTL, function () use ($lat, $lon) {
+        return Cache::remember(self::CACHE_KEY . ".$lat.$lon", self::CACHE_TTL, function () use ($lat, $lon) {
             return $this->fetchWeather($lat, $lon);
         });
     }
@@ -137,9 +139,9 @@ class WeatherService
     {
         $lat = $this->getLatitude();
         $lon = $this->getLongitude();
-        Cache::forget(self::CACHE_KEY.".$lat.$lon");
-        Cache::forget(self::CACHE_KEY.".forecast.$lat.$lon");
-        Cache::forget(self::CACHE_KEY.".hourly.$lat.$lon");
+        Cache::forget(self::CACHE_KEY . ".$lat.$lon");
+        Cache::forget(self::CACHE_KEY . ".forecast.$lat.$lon");
+        Cache::forget(self::CACHE_KEY . ".hourly.$lat.$lon");
     }
 
     /**
@@ -164,7 +166,7 @@ class WeatherService
         $lat = $this->getLatitude();
         $lon = $this->getLongitude();
 
-        return Cache::remember(self::CACHE_KEY.".hourly.$lat.$lon", self::CACHE_TTL, function () use ($lat, $lon) {
+        return Cache::remember(self::CACHE_KEY . ".hourly.$lat.$lon", self::CACHE_TTL, function () use ($lat, $lon) {
             return $this->fetchHourlyForecast($lat, $lon);
         });
     }
@@ -261,7 +263,7 @@ class WeatherService
         $lat = $this->getLatitude();
         $lon = $this->getLongitude();
 
-        return Cache::remember(self::CACHE_KEY.".forecast.$lat.$lon", self::CACHE_TTL, function () use ($lat, $lon) {
+        return Cache::remember(self::CACHE_KEY . ".forecast.$lat.$lon", self::CACHE_TTL, function () use ($lat, $lon) {
             return $this->fetchWeeklyForecast($lat, $lon);
         });
     }

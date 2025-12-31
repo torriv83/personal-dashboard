@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Jobs\CheckDeadBookmarksJob;
 use App\Livewire\Bookmarks\Index;
 use App\Models\Bookmark;

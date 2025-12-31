@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Medical\Equipment;
 use App\Models\Category;
 use App\Models\Equipment as EquipmentModel;

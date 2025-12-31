@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Carbon\Carbon;
@@ -39,7 +41,7 @@ readonly class CalendarEvent
             return 'Hele dagen';
         }
 
-        return $this->starts_at->format('H:i').' - '.$this->ends_at->format('H:i');
+        return $this->starts_at->format('H:i') . ' - ' . $this->ends_at->format('H:i');
     }
 
     /**

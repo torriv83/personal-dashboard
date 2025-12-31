@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
@@ -255,7 +257,7 @@ class YnabService
             $response = Http::withToken($this->token)
                 ->accept('application/json')
                 ->timeout(30)
-                ->get($this->baseUrl.$endpoint);
+                ->get($this->baseUrl . $endpoint);
 
             if ($response->successful()) {
                 return $response->json();

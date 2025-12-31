@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Auth\ForgotPassword;
 use App\Models\User;
 use Illuminate\Support\Facades\Notification;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Medical\Dashboard;
 use App\Models\Category;
 use App\Models\Equipment;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Tasks;
 
 use App\Enums\TaskStatus;
@@ -369,8 +371,8 @@ class AssistantTasks extends Component
             $startsAt = Carbon::parse($this->absenceStartDate)->startOfDay();
             $endsAt = Carbon::parse($this->absenceEndDate)->endOfDay();
         } else {
-            $startsAt = Carbon::parse($this->absenceStartDate.' '.$this->absenceStartTime);
-            $endsAt = Carbon::parse($this->absenceEndDate.' '.$this->absenceEndTime);
+            $startsAt = Carbon::parse($this->absenceStartDate . ' ' . $this->absenceStartTime);
+            $endsAt = Carbon::parse($this->absenceEndDate . ' ' . $this->absenceEndTime);
 
             if ($endsAt->lte($startsAt)) {
                 $this->addError('absenceEndTime', 'Slutt-tid må være etter start-tid.');

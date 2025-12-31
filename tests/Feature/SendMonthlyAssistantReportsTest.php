@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Mail\MonthlyAssistantReport;
 use App\Models\Assistant;
 use App\Models\Setting;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Bpa\AssistantShow;
 use App\Models\Assistant;
 use App\Models\User;
@@ -15,7 +17,7 @@ beforeEach(function () {
 it('generates task url when assistant has token', function () {
     $this->assistant->update(['token' => 'test-token-123']);
 
-    $taskUrl = url('/oppgaver/'.$this->assistant->token);
+    $taskUrl = url('/oppgaver/' . $this->assistant->token);
 
     expect($taskUrl)->toContain('/oppgaver/test-token-123');
 });
@@ -78,5 +80,5 @@ it('taskUrl returns correct url when assistant has token', function () {
     $component = new AssistantShow;
     $component->assistant = $this->assistant;
 
-    expect($component->taskUrl())->toContain('/oppgaver/'.$this->assistant->token);
+    expect($component->taskUrl())->toContain('/oppgaver/' . $this->assistant->token);
 });

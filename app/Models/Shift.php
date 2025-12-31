@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use App\Services\CalendarYearService;
@@ -129,7 +131,7 @@ class Shift extends Model
         return Attribute::make(
             get: fn (): string => $this->is_all_day
                 ? 'Hele dagen'
-                : $this->starts_at->format('H:i').' - '.$this->ends_at->format('H:i')
+                : $this->starts_at->format('H:i') . ' - ' . $this->ends_at->format('H:i')
         );
     }
 
@@ -141,7 +143,7 @@ class Shift extends Model
         return Attribute::make(
             get: fn (): string => $this->is_all_day
                 ? 'Hele dagen'
-                : $this->starts_at->format('Hi').'-'.$this->ends_at->format('Hi')
+                : $this->starts_at->format('Hi') . '-' . $this->ends_at->format('Hi')
         );
     }
 

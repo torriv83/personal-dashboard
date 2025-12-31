@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Bpa\Calendar\Concerns;
 
 use App\Models\Assistant;
@@ -73,11 +75,11 @@ trait ShiftCrudOperations
 
         $startsAt = $this->isAllDay
             ? Carbon::parse($this->fromDate)->startOfDay()
-            : Carbon::parse($this->fromDate.' '.$this->fromTime);
+            : Carbon::parse($this->fromDate . ' ' . $this->fromTime);
 
         $endsAt = $this->isAllDay
             ? Carbon::parse($this->toDate)->endOfDay()
-            : Carbon::parse($this->toDate.' '.$this->toTime);
+            : Carbon::parse($this->toDate . ' ' . $this->toTime);
 
         // Check for overlapping unavailability (only for work shifts, not unavailable entries)
         if (! $this->isUnavailable) {
@@ -91,8 +93,8 @@ trait ShiftCrudOperations
             if ($conflict) {
                 $assistant = Assistant::find($this->assistantId);
                 $conflictTime = $conflict->is_all_day
-                    ? $conflict->starts_at->format('d.m.Y').' (hele dagen)'
-                    : $conflict->starts_at->format('d.m.Y H:i').' - '.$conflict->ends_at->format('H:i');
+                    ? $conflict->starts_at->format('d.m.Y') . ' (hele dagen)'
+                    : $conflict->starts_at->format('d.m.Y H:i') . ' - ' . $conflict->ends_at->format('H:i');
 
                 $this->dispatch('toast', type: 'error', message: "{$assistant->name} er borte: {$conflictTime}");
 
@@ -207,11 +209,11 @@ trait ShiftCrudOperations
      */
     public function quickCreateShift(int $assistantId): void
     {
-        $startsAt = Carbon::parse($this->quickCreateDate.' '.$this->quickCreateTime);
+        $startsAt = Carbon::parse($this->quickCreateDate . ' ' . $this->quickCreateTime);
 
         // Use custom end time if provided (from drag-to-create), otherwise default to 3 hours
         if ($this->quickCreateEndTime) {
-            $endsAt = Carbon::parse($this->quickCreateDate.' '.$this->quickCreateEndTime);
+            $endsAt = Carbon::parse($this->quickCreateDate . ' ' . $this->quickCreateEndTime);
         } else {
             $endsAt = $startsAt->copy()->addHours(3);
         }

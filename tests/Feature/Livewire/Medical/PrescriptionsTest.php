@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Livewire\Medical\Prescriptions;
 use App\Models\Prescription;
 use App\Models\User;
