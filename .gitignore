@@ -31,3 +31,6 @@ Thumbs.db
 
 # Auto Claude data directory
 .auto-claude/
+.auto-claude-security.json
+.worktrees/
+.claude_settings.json
