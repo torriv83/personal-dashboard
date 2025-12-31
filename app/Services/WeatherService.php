@@ -30,7 +30,7 @@ class WeatherService
      */
     public function isConfigured(): bool
     {
-        return Setting::get('weather_enabled', true);
+        return (bool) Setting::get('weather_enabled', true);
     }
 
     /**
@@ -54,7 +54,7 @@ class WeatherService
      */
     public function getLocationName(): string
     {
-        return Setting::get('weather_location_name', self::DEFAULT_LOCATION_NAME);
+        return (string) Setting::get('weather_location_name', self::DEFAULT_LOCATION_NAME);
     }
 
     /**
