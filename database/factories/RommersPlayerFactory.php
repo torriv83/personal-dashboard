@@ -19,7 +19,11 @@ class RommersPlayerFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'game_id' => \App\Models\RommersGame::factory(),
+            'name' => fake()->name(),
+            'current_level' => fake()->numberBetween(1, 11),
+            'total_score' => fake()->numberBetween(0, 1000),
+            'sort_order' => fake()->numberBetween(0, 10),
         ];
     }
 }

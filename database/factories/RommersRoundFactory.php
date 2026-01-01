@@ -19,7 +19,11 @@ class RommersRoundFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'player_id' => \App\Models\RommersPlayer::factory(),
+            'round_number' => fake()->numberBetween(1, 50),
+            'level' => fake()->numberBetween(1, 11),
+            'score' => fake()->numberBetween(-100, 200),
+            'completed_level' => fake()->boolean(),
         ];
     }
 }

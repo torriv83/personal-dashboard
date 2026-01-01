@@ -19,7 +19,38 @@ class RommersGameFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'started_at' => fake()->dateTimeBetween('-30 days', 'now'),
+            'finished_at' => null,
+            'winner_id' => null,
         ];
+    }
+
+    /**
+     * Indicate that the game is active (in progress).
+     *
+     * @return static
+     */
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'finished_at' => null,
+            'winner_id' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the game is finished.
+     *
+     * @return static
+     */
+    public function finished(): static
+    {
+        return $this->state(function (array $attributes) {
+            $finishedAt = fake()->dateTimeBetween($attributes['started_at'], 'now');
+
+            return [
+                'finished_at' => $finishedAt,
+            ];
+        });
     }
 }
