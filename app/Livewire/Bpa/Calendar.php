@@ -404,7 +404,7 @@ class Calendar extends Component
         $yearlyQuotaMinutes = $hoursPerWeek * 52 * 60;
 
         // Calculate all hours used/planned this year (both past and future shifts)
-        $usedMinutes = Shift::query()
+        $usedMinutes = (int) Shift::query()
             ->worked()
             ->forYear($currentYear)
             ->sum('duration_minutes');

@@ -377,7 +377,7 @@ class Timesheets extends Component
     #[Computed]
     public function totalSum(): string
     {
-        $totalMinutes = $this->allShiftsForYear->sum('duration_minutes');
+        $totalMinutes = (int) $this->allShiftsForYear->sum('duration_minutes');
 
         $hours = intdiv($totalMinutes, 60);
         $minutes = $totalMinutes % 60;
@@ -393,7 +393,7 @@ class Timesheets extends Component
             return '00:00';
         }
 
-        $avgMinutes = $this->allShiftsForYear->sum('duration_minutes') / $count;
+        $avgMinutes = (int) $this->allShiftsForYear->sum('duration_minutes') / $count;
         $hours = intdiv((int) $avgMinutes, 60);
         $minutes = (int) round($avgMinutes % 60);
 

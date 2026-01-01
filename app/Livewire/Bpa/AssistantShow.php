@@ -93,12 +93,12 @@ class AssistantShow extends Component
         $currentYear = now()->year;
         $currentMonth = now()->month;
 
-        $hoursThisYear = $this->assistant->shifts()
+        $hoursThisYear = (int) $this->assistant->shifts()
             ->worked()
             ->forYear($currentYear)
             ->sum('duration_minutes');
 
-        $hoursThisMonth = $this->assistant->shifts()
+        $hoursThisMonth = (int) $this->assistant->shifts()
             ->worked()
             ->forMonth($currentYear, $currentMonth)
             ->sum('duration_minutes');
