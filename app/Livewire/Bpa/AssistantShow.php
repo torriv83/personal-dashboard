@@ -146,12 +146,22 @@ class AssistantShow extends Component
     #[Computed]
     public function availableYears(): array
     {
+        // Database-agnostic year extraction
+        $driver = config('database.default');
+        $connection = config("database.connections.{$driver}.driver");
+
+        $yearExpression = match ($connection) {
+            'sqlite' => "strftime('%Y', starts_at)",
+            default => 'YEAR(starts_at)',  // MySQL, PostgreSQL, etc.
+        };
+
         $years = Shift::query()
             ->where('assistant_id', $this->assistant->id)
-            ->selectRaw('YEAR(starts_at) as year')
+            ->selectRaw("{$yearExpression} as year")
             ->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
+            ->map(fn ($year) => (int) $year)  // Ensure integer type
             ->toArray();
 
         // Ensure current year is always in the list
