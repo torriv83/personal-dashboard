@@ -185,20 +185,8 @@
 
                 {{-- Footer --}}
                 <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end gap-3">
-                    <button
-                        wire:click="closeListModal"
-                        class="px-4 py-2 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
-                    >
-                        Avbryt
-                    </button>
-                    <button
-                        wire:click="saveList"
-                        wire:loading.attr="disabled"
-                        class="px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <span wire:loading.remove wire:target="saveList">{{ $editingListId ? 'Lagre' : 'Opprett' }}</span>
-                        <span wire:loading wire:target="saveList">Lagrer...</span>
-                    </button>
+                    <x-button variant="secondary" wire:click="closeListModal">Avbryt</x-button>
+                    <x-button wire:click="saveList" wire:loading.attr="disabled">{{ $editingListId ? 'Lagre' : 'Opprett' }}</x-button>
                 </div>
             </div>
         </div>
