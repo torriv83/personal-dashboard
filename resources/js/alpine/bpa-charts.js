@@ -155,6 +155,7 @@ export function expandableChart(chartConfig) {
         chartConfig,
 
         async renderChart() {
+            if (this.loading) return; // Prevent concurrent calls
             if (this.chart) this.chart.destroy();
             this.loading = true;
             try {
@@ -205,7 +206,7 @@ export function expandableChart(chartConfig) {
         },
 
         init() {
-            this.$nextTick(() => this.renderChart());
+            this.$nextTick(async () => await this.renderChart());
         }
     };
 }
