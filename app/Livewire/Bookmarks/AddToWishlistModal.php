@@ -10,8 +10,6 @@ use App\Models\WishlistItem;
 use App\Services\OpenGraphService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -104,51 +102,21 @@ class AddToWishlistModal extends Component
 
     public function handlePastedImage(string $base64Data): void
     {
-        try {
-            // Extract mime type and data from base64 string
-            if (! preg_match('/^data:image\/(jpeg|jpg|png|gif|webp);base64,/', $base64Data, $matches)) {
-                $this->dispatch('toast', type: 'error', message: 'Ugyldig bildeformat');
+        $openGraphService = app(OpenGraphService::class);
+        $result = $openGraphService->storeBase64Image($base64Data);
 
-                return;
-            }
-
-            $extension = $matches[1] === 'jpeg' ? 'jpg' : $matches[1];
-            $base64String = preg_replace('/^data:image\/\w+;base64,/', '', $base64Data);
-
-            if ($base64String === null) {
-                $this->dispatch('toast', type: 'error', message: 'Kunne ikke dekode bildet');
-
-                return;
-            }
-
-            $imageData = base64_decode($base64String, true);
-
-            if ($imageData === false) {
-                $this->dispatch('toast', type: 'error', message: 'Kunne ikke dekode bildet');
-
-                return;
-            }
-
-            // Check file size (max 5MB)
-            if (strlen($imageData) > 5 * 1024 * 1024) {
-                $this->dispatch('toast', type: 'error', message: 'Bildet er for stort (maks 5MB)');
-
-                return;
-            }
-
-            // Generate unique filename
-            $filename = md5(uniqid()) . '-' . time() . '.' . $extension;
-            $filePath = 'wishlist-images/' . $filename;
-
-            // Store the image
-            Storage::disk('public')->put($filePath, $imageData);
-
-            // Set the image URL
-            $this->itemImageUrl = '/storage/' . $filePath;
+        if ($result['success']) {
+            $this->itemImageUrl = $result['path'];
             $this->dispatch('toast', type: 'success', message: 'Bilde limt inn');
-        } catch (\Exception $e) {
-            Log::warning('handlePastedImage error', ['error' => $e->getMessage()]);
-            $this->dispatch('toast', type: 'error', message: 'Kunne ikke lagre bildet');
+        } else {
+            // Map English error messages to Norwegian
+            $errorMessage = match ($result['error']) {
+                'Invalid image format' => 'Ugyldig bildeformat',
+                'Could not decode image' => 'Kunne ikke dekode bildet',
+                'Image too large (max 5MB)' => 'Bildet er for stort (maks 5MB)',
+                default => 'Kunne ikke lagre bildet',
+            };
+            $this->dispatch('toast', type: 'error', message: $errorMessage);
         }
     }
 

@@ -170,6 +170,75 @@ class OpenGraphService
     }
 
     /**
+     * Store a base64-encoded image.
+     */
+    public function storeBase64Image(string $base64Data): array
+    {
+        try {
+            // Extract mime type and data from base64 string
+            if (! preg_match('/^data:image\/(jpeg|jpg|png|gif|webp);base64,/', $base64Data, $matches)) {
+                return [
+                    'success' => false,
+                    'error' => 'Invalid image format',
+                ];
+            }
+
+            $extension = $matches[1] === 'jpeg' ? 'jpg' : $matches[1];
+            $base64String = preg_replace('/^data:image\/\w+;base64,/', '', $base64Data);
+
+            if ($base64String === null) {
+                return [
+                    'success' => false,
+                    'error' => 'Could not decode image',
+                ];
+            }
+
+            $imageData = base64_decode($base64String, true);
+
+            if ($imageData === false) {
+                return [
+                    'success' => false,
+                    'error' => 'Could not decode image',
+                ];
+            }
+
+            // Check file size
+            if (strlen($imageData) > self::MAX_FILE_SIZE) {
+                Log::debug('OpenGraphService: Base64 image too large', [
+                    'size' => strlen($imageData),
+                ]);
+
+                return [
+                    'success' => false,
+                    'error' => 'Image too large (max 5MB)',
+                ];
+            }
+
+            // Generate unique filename
+            $filename = md5(uniqid()) . '-' . time() . '.' . $extension;
+            $filePath = self::STORAGE_PATH . '/' . $filename;
+
+            // Store the image
+            Storage::disk('public')->put($filePath, $imageData);
+
+            // Return public URL path
+            return [
+                'success' => true,
+                'path' => '/storage/' . $filePath,
+            ];
+        } catch (\Exception $e) {
+            Log::warning('OpenGraphService: Error storing base64 image', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Could not store image',
+            ];
+        }
+    }
+
+    /**
      * Extract meta tag content from HTML.
      */
     private function extractMetaTag(string $html, string $property): ?string

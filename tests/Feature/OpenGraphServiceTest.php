@@ -338,3 +338,162 @@ test('detects MIME type from image content when header is missing', function () 
     expect($result)->toStartWith('/storage/wishlist-images/')
         ->and($result)->toEndWith('.jpg');
 });
+
+// Tests for storeBase64Image method
+
+test('stores valid JPEG base64 image', function () {
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
+    $base64Data = 'data:image/jpeg;base64,' . base64_encode($fakeImageData);
+
+    $result = $this->service->storeBase64Image($base64Data);
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeTrue()
+        ->and($result)->toHaveKey('path')
+        ->and($result['path'])->toStartWith('/storage/wishlist-images/')
+        ->and($result['path'])->toEndWith('.jpg');
+
+    // Verify file was stored
+    $filename = basename($result['path']);
+    Storage::disk('public')->assertExists('wishlist-images/' . $filename);
+});
+
+test('stores valid PNG base64 image', function () {
+    // Create a minimal PNG (1x1 pixel)
+    $pngData = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+    $base64Data = 'data:image/png;base64,' . base64_encode($pngData);
+
+    $result = $this->service->storeBase64Image($base64Data);
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeTrue()
+        ->and($result)->toHaveKey('path')
+        ->and($result['path'])->toStartWith('/storage/wishlist-images/')
+        ->and($result['path'])->toEndWith('.png');
+
+    // Verify file was stored
+    $filename = basename($result['path']);
+    Storage::disk('public')->assertExists('wishlist-images/' . $filename);
+});
+
+test('stores valid GIF base64 image', function () {
+    // Create a minimal GIF (1x1 pixel)
+    $gifData = base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+    $base64Data = 'data:image/gif;base64,' . base64_encode($gifData);
+
+    $result = $this->service->storeBase64Image($base64Data);
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeTrue()
+        ->and($result)->toHaveKey('path')
+        ->and($result['path'])->toStartWith('/storage/wishlist-images/')
+        ->and($result['path'])->toEndWith('.gif');
+
+    // Verify file was stored
+    $filename = basename($result['path']);
+    Storage::disk('public')->assertExists('wishlist-images/' . $filename);
+});
+
+test('handles jpg extension for jpeg mime type', function () {
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
+    $base64Data = 'data:image/jpg;base64,' . base64_encode($fakeImageData);
+
+    $result = $this->service->storeBase64Image($base64Data);
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeTrue()
+        ->and($result['path'])->toEndWith('.jpg');
+});
+
+test('rejects invalid base64 format', function () {
+    $result = $this->service->storeBase64Image('not-a-base64-string');
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeFalse()
+        ->and($result)->toHaveKey('error')
+        ->and($result['error'])->toBe('Invalid image format');
+});
+
+test('rejects unsupported image format', function () {
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
+    $base64Data = 'data:image/bmp;base64,' . base64_encode($fakeImageData);
+
+    $result = $this->service->storeBase64Image($base64Data);
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeFalse()
+        ->and($result)->toHaveKey('error')
+        ->and($result['error'])->toBe('Invalid image format');
+});
+
+test('rejects base64 without data URL scheme', function () {
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
+    $base64String = base64_encode($fakeImageData);
+
+    $result = $this->service->storeBase64Image($base64String);
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeFalse()
+        ->and($result)->toHaveKey('error')
+        ->and($result['error'])->toBe('Invalid image format');
+});
+
+test('rejects oversized base64 image', function () {
+    // Create a fake image larger than 5MB (6MB)
+    $largeImageData = str_repeat('x', 6 * 1024 * 1024);
+    $base64Data = 'data:image/jpeg;base64,' . base64_encode($largeImageData);
+
+    $result = $this->service->storeBase64Image($base64Data);
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeFalse()
+        ->and($result)->toHaveKey('error')
+        ->and($result['error'])->toBe('Image too large (max 5MB)');
+});
+
+test('handles corrupted base64 data', function () {
+    $base64Data = 'data:image/jpeg;base64,!!!invalid-base64-data!!!';
+
+    $result = $this->service->storeBase64Image($base64Data);
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeFalse()
+        ->and($result)->toHaveKey('error')
+        ->and($result['error'])->toBe('Could not decode image');
+});
+
+test('generates unique file paths for base64 images', function () {
+    $fakeImageData = file_get_contents(__DIR__ . '/../fixtures/test-image.jpg');
+    $base64Data = 'data:image/jpeg;base64,' . base64_encode($fakeImageData);
+
+    $result1 = $this->service->storeBase64Image($base64Data);
+    $result2 = $this->service->storeBase64Image($base64Data);
+
+    expect($result1['success'])->toBeTrue()
+        ->and($result2['success'])->toBeTrue()
+        ->and($result1['path'])->not->toBe($result2['path']);
+
+    // Verify both files were stored
+    $filename1 = basename($result1['path']);
+    $filename2 = basename($result2['path']);
+    Storage::disk('public')->assertExists('wishlist-images/' . $filename1);
+    Storage::disk('public')->assertExists('wishlist-images/' . $filename2);
+});
+
+test('stores webp base64 image', function () {
+    // Create minimal WebP header (this is a valid 1x1 WebP)
+    $webpData = base64_decode('UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAwA0JaQAA3AA/vuUAAA=');
+    $base64Data = 'data:image/webp;base64,' . base64_encode($webpData);
+
+    $result = $this->service->storeBase64Image($base64Data);
+
+    expect($result)->toHaveKey('success')
+        ->and($result['success'])->toBeTrue()
+        ->and($result)->toHaveKey('path')
+        ->and($result['path'])->toStartWith('/storage/wishlist-images/')
+        ->and($result['path'])->toEndWith('.webp');
+
+    // Verify file was stored
+    $filename = basename($result['path']);
+    Storage::disk('public')->assertExists('wishlist-images/' . $filename);
+});
