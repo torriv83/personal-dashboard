@@ -16,6 +16,11 @@
 
     <!-- Centered content -->
     <div class="flex-1 flex flex-col items-center justify-center gap-8">
+        {{-- Welcome Text --}}
+        <div class="text-center">
+            <h2 class="text-2xl font-medium text-foreground">Velkommen tilbake</h2>
+        </div>
+
         {{-- Weather Widget --}}
         @if($this->weather)
             <div class="w-full max-w-3xl">
