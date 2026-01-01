@@ -1,18 +1,16 @@
 import './bootstrap';
-import ApexCharts from 'apexcharts';
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
 import sort from '@alpinejs/sort';
 
 // Alpine components
 import calendar from './alpine/calendar';
 import { monthlyHoursChart, percentageChart } from './alpine/bpa-charts';
+import { economyChart } from './alpine/economy-chart';
 
-// Make ApexCharts available globally
-window.ApexCharts = ApexCharts;
-
-// Make BPA chart factories available globally for Blade templates
+// Make chart factories available globally for Blade templates
 window.monthlyHoursChart = monthlyHoursChart;
 window.percentageChart = percentageChart;
+window.economyChart = economyChart;
 
 // Register Alpine sort plugin (required when manually bundling via ESM)
 Alpine.plugin(sort);

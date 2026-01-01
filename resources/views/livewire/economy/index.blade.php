@@ -269,96 +269,61 @@
         @endphp
         <div
         wire:key="chart-{{ $chartVersion }}"
-        x-data="{
-            expanded: false,
-            chart: null,
-            fullChart: null,
-            chartConfig: {
-                chart: {
-                    type: 'bar',
-                    background: 'transparent',
-                    toolbar: { show: false },
-                    zoom: { enabled: false },
-                },
-                series: [
-                    { name: 'Utgift', type: 'bar', data: @js($expenses) },
-                    { name: 'Inntekt', type: 'bar', data: @js($income) },
-                    { name: 'Budsjettert', type: 'bar', data: @js($budgeted) },
-                    { name: 'Netto', type: 'line', data: @js($net) }
-                ],
-                colors: ['#666666', '#c8ff00', '#3b82f6', '#f97316'],
-                plotOptions: {
-                    bar: {
-                        columnWidth: '70%',
-                        borderRadius: 2,
-                    }
-                },
-                stroke: {
-                    width: [0, 0, 0, 3],
-                    curve: 'smooth',
-                },
-                xaxis: {
-                    categories: @js($months),
-                    labels: { style: { colors: '#a3a3a3', fontSize: '10px' } },
-                    axisBorder: { show: false },
-                    axisTicks: { show: false },
-                },
-                yaxis: {
-                    labels: {
-                        style: { colors: '#a3a3a3', fontSize: '10px' },
-                        formatter: (val) => 'kr ' + val.toLocaleString('nb-NO')
-                    },
-                },
-                grid: {
-                    borderColor: '#333',
-                    strokeDashArray: 3,
-                },
-                legend: {
-                    position: 'bottom',
-                    labels: { colors: '#a3a3a3' },
-                    markers: { radius: 2 },
-                },
-                tooltip: {
-                    theme: 'dark',
-                    shared: true,
-                    intersect: false,
-                    y: { formatter: (val) => 'kr ' + val.toLocaleString('nb-NO') }
-                },
-                dataLabels: { enabled: false },
+        x-data="economyChart({
+            chart: {
+                type: 'bar',
+                background: 'transparent',
+                toolbar: { show: false },
+                zoom: { enabled: false },
             },
-            renderChart() {
-                if (this.chart) this.chart.destroy();
-                const isMobile = window.innerWidth < 640;
-                this.chart = new ApexCharts(this.$refs.chart, { ...this.chartConfig, chart: { ...this.chartConfig.chart, height: isMobile ? 280 : 320 } });
-                this.chart.render();
+            series: [
+                { name: 'Utgift', type: 'bar', data: {{ Js::from($expenses) }} },
+                { name: 'Inntekt', type: 'bar', data: {{ Js::from($income) }} },
+                { name: 'Budsjettert', type: 'bar', data: {{ Js::from($budgeted) }} },
+                { name: 'Netto', type: 'line', data: {{ Js::from($net) }} }
+            ],
+            colors: ['#666666', '#c8ff00', '#3b82f6', '#f97316'],
+            plotOptions: {
+                bar: {
+                    columnWidth: '70%',
+                    borderRadius: 2,
+                }
             },
-            getFullChartDimensions() {
-                const height = Math.max(400, Math.floor(window.innerHeight * 0.90) - 140);
-                const width = Math.max(600, Math.floor(window.innerWidth * 0.90) - 80);
-                return { height, width };
+            stroke: {
+                width: [0, 0, 0, 3],
+                curve: 'smooth',
             },
-            renderFullChart() {
-                if (this.fullChart) this.fullChart.destroy();
-                this.$nextTick(() => {
-                    const { height, width } = this.getFullChartDimensions();
-                    this.fullChart = new ApexCharts(this.$refs.fullChart, { ...this.chartConfig, chart: { ...this.chartConfig.chart, height, width } });
-                    this.fullChart.render();
-                });
+            xaxis: {
+                categories: {{ Js::from($months) }},
+                labels: { style: { colors: '#a3a3a3', fontSize: '10px' } },
+                axisBorder: { show: false },
+                axisTicks: { show: false },
             },
-            openExpanded() {
-                this.expanded = true;
-                this.renderFullChart();
-                document.body.style.overflow = 'hidden';
+            yaxis: {
+                labels: {
+                    style: { colors: '#a3a3a3', fontSize: '10px' },
+                    formatter: (val) => 'kr ' + val.toLocaleString('nb-NO')
+                },
             },
-            closeExpanded() {
-                this.expanded = false;
-                if (this.fullChart) this.fullChart.destroy();
-                document.body.style.overflow = '';
-            }
-        }"
-        x-init="$nextTick(() => renderChart())"
+            grid: {
+                borderColor: '#333',
+                strokeDashArray: 3,
+            },
+            legend: {
+                position: 'bottom',
+                labels: { colors: '#a3a3a3' },
+                markers: { radius: 2 },
+            },
+            tooltip: {
+                theme: 'dark',
+                shared: true,
+                intersect: false,
+                y: { formatter: (val) => 'kr ' + val.toLocaleString('nb-NO') }
+            },
+            dataLabels: { enabled: false },
+        })"
         @keydown.escape.window="closeExpanded()"
-        @resize.window.debounce.100ms="if (expanded) renderFullChart()"
+        @resize.window.debounce.100ms="handleResize()"
         class="bg-card border border-border rounded-lg p-4 sm:p-5 overflow-hidden"
         wire:ignore
     >

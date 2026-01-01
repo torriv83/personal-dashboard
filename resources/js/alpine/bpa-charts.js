@@ -6,6 +6,24 @@
  */
 
 /**
+ * Cached promise for ApexCharts module to avoid multiple imports
+ * @type {Promise<typeof import('apexcharts').default>|null}
+ */
+let apexChartsPromise = null;
+
+/**
+ * Dynamically imports ApexCharts and caches the result.
+ * Subsequent calls return the cached promise to avoid multiple imports.
+ * @returns {Promise<typeof import('apexcharts').default>} The ApexCharts constructor
+ */
+export async function loadApexCharts() {
+    if (!apexChartsPromise) {
+        apexChartsPromise = import('apexcharts').then(module => module.default);
+    }
+    return apexChartsPromise;
+}
+
+/**
  * Creates a monthly hours area chart configuration
  * @param {number[]} currentYearData - Current year monthly values
  * @param {number[]} previousYearData - Previous year monthly values
@@ -131,17 +149,24 @@ export function percentageChart(prevYearPercent, currYearPercent, remainingPerce
 export function expandableChart(chartConfig) {
     return {
         expanded: false,
+        loading: false,
         chart: null,
         fullChart: null,
         chartConfig,
 
-        renderChart() {
+        async renderChart() {
             if (this.chart) this.chart.destroy();
-            this.chart = new ApexCharts(
-                this.$refs.chart,
-                { ...this.chartConfig, chart: { ...this.chartConfig.chart, height: 200 } }
-            );
-            this.chart.render();
+            this.loading = true;
+            try {
+                const ApexCharts = await loadApexCharts();
+                this.chart = new ApexCharts(
+                    this.$refs.chart,
+                    { ...this.chartConfig, chart: { ...this.chartConfig.chart, height: 200 } }
+                );
+                this.chart.render();
+            } finally {
+                this.loading = false;
+            }
         },
 
         getFullChartDimensions() {
@@ -150,9 +175,10 @@ export function expandableChart(chartConfig) {
             return { height, width };
         },
 
-        renderFullChart() {
+        async renderFullChart() {
             if (this.fullChart) this.fullChart.destroy();
-            this.$nextTick(() => {
+            this.$nextTick(async () => {
+                const ApexCharts = await loadApexCharts();
                 const { height, width } = this.getFullChartDimensions();
                 this.fullChart = new ApexCharts(
                     this.$refs.fullChart,
@@ -185,6 +211,7 @@ export function expandableChart(chartConfig) {
 }
 
 export default {
+    loadApexCharts,
     monthlyHoursChart,
     percentageChart,
     expandableChart
