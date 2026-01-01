@@ -386,50 +386,11 @@ class WeatherService
         // Remove _day/_night suffix for matching
         $baseCode = preg_replace('/_(day|night)$/', '', $symbolCode);
 
-        return match ($baseCode) {
-            'clearsky' => 'Klarvær',
-            'fair' => 'Lettskyet',
-            'partlycloudy' => 'Delvis skyet',
-            'cloudy' => 'Skyet',
-            'lightrainshowers' => 'Lette regnbyger',
-            'rainshowers' => 'Regnbyger',
-            'heavyrainshowers' => 'Kraftige regnbyger',
-            'lightrainshowersandthunder' => 'Lette regnbyger og torden',
-            'rainshowersandthunder' => 'Regnbyger og torden',
-            'heavyrainshowersandthunder' => 'Kraftige regnbyger og torden',
-            'lightsleetshowers' => 'Lette sluddbyger',
-            'sleetshowers' => 'Sluddbyger',
-            'heavysleetshowers' => 'Kraftige sluddbyger',
-            'lightssleetshowersandthunder' => 'Lette sluddbyger og torden',
-            'sleetshowersandthunder' => 'Sluddbyger og torden',
-            'heavysleetshowersandthunder' => 'Kraftige sluddbyger og torden',
-            'lightsnowshowers' => 'Lette snøbyger',
-            'snowshowers' => 'Snøbyger',
-            'heavysnowshowers' => 'Kraftige snøbyger',
-            'lightssnowshowersandthunder' => 'Lette snøbyger og torden',
-            'snowshowersandthunder' => 'Snøbyger og torden',
-            'heavysnowshowersandthunder' => 'Kraftige snøbyger og torden',
-            'lightrain' => 'Lett regn',
-            'rain' => 'Regn',
-            'heavyrain' => 'Kraftig regn',
-            'lightrainandthunder' => 'Lett regn og torden',
-            'rainandthunder' => 'Regn og torden',
-            'heavyrainandthunder' => 'Kraftig regn og torden',
-            'lightsleet' => 'Lett sludd',
-            'sleet' => 'Sludd',
-            'heavysleet' => 'Kraftig sludd',
-            'lightsleetandthunder' => 'Lett sludd og torden',
-            'sleetandthunder' => 'Sludd og torden',
-            'heavysleetandthunder' => 'Kraftig sludd og torden',
-            'lightsnow' => 'Lett snø',
-            'snow' => 'Snø',
-            'heavysnow' => 'Kraftig snø',
-            'lightsnowandthunder' => 'Lett snø og torden',
-            'snowandthunder' => 'Snø og torden',
-            'heavysnowandthunder' => 'Kraftig snø og torden',
-            'fog' => 'Tåke',
-            default => 'Ukjent',
-        };
+        $key = "weather.symbols.{$baseCode}";
+        $translation = __($key);
+
+        // If translation not found, __() returns the key itself
+        return $translation === $key ? __('weather.symbols.unknown') : $translation;
     }
 
     /**
