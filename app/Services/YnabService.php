@@ -154,7 +154,9 @@ class YnabService
 
         // Check cache first
         if (Cache::has('ynab.age_of_money')) {
-            return Cache::get('ynab.age_of_money');
+            $cached = Cache::get('ynab.age_of_money');
+
+            return $cached !== null ? (int) $cached : null;
         }
 
         // Fetch from API
@@ -167,8 +169,9 @@ class YnabService
 
         $ageOfMoney = $response['data']['month']['age_of_money'] ?? null;
 
-        // Only cache if we got actual data
+        // Cast to int and cache if we got actual data
         if ($ageOfMoney !== null) {
+            $ageOfMoney = (int) $ageOfMoney;
             Cache::forever('ynab.age_of_money', $ageOfMoney);
             $this->updateSyncTimestamp();
         }
