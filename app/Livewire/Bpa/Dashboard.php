@@ -241,14 +241,14 @@ class Dashboard extends Component
         $yearlyQuotaMinutes = $hoursPerWeek * 52 * 60;
 
         // Calculate hours used this year (only past shifts, not future planned ones)
-        $usedThisYearMinutes = Shift::query()
+        $usedThisYearMinutes = (int) Shift::query()
             ->worked()
             ->forYear($currentYear)
             ->where('starts_at', '<=', $now)
             ->sum('duration_minutes');
 
         // Calculate hours used this month (only past shifts)
-        $usedThisMonthMinutes = Shift::query()
+        $usedThisMonthMinutes = (int) Shift::query()
             ->worked()
             ->forMonth($currentYear, $now->month)
             ->where('starts_at', '<=', $now)
@@ -257,20 +257,20 @@ class Dashboard extends Component
         // Calculate hours used this week (only past shifts)
         $startOfWeek = $now->copy()->startOfWeek();
         $endOfWeek = $now->copy()->endOfWeek();
-        $usedThisWeekMinutes = Shift::query()
+        $usedThisWeekMinutes = (int) Shift::query()
             ->worked()
             ->whereBetween('starts_at', [$startOfWeek, $now])
             ->sum('duration_minutes');
 
         // Calculate planned hours (future shifts)
-        $plannedMinutes = Shift::query()
+        $plannedMinutes = (int) Shift::query()
             ->worked()
             ->where('starts_at', '>', $now)
             ->forYear($currentYear)
             ->sum('duration_minutes');
 
         // Calculate planned this week
-        $plannedThisWeekMinutes = Shift::query()
+        $plannedThisWeekMinutes = (int) Shift::query()
             ->worked()
             ->where('starts_at', '>', $now)
             ->whereBetween('starts_at', [$startOfWeek, $endOfWeek])
