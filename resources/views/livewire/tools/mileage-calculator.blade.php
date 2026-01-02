@@ -28,18 +28,12 @@
             <div class="bg-card border border-border rounded-lg">
                 <div class="px-6 py-4 border-b border-border flex items-center justify-between">
                     <h2 class="text-lg font-medium text-foreground">Destinasjoner</h2>
-                    <div class="flex items-center gap-3">
-                        <span class="text-sm text-muted-foreground">Tur/retur</span>
-                        <button
-                            wire:click="$toggle('roundTrip')"
-                            class="relative w-11 h-6 rounded-full transition-colors cursor-pointer {{ $roundTrip ? 'bg-accent' : 'bg-border' }}"
-                            title="{{ $roundTrip ? 'Vis enkeltur' : 'Vis tur/retur' }}"
-                        >
-                            <span
-                                class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {{ $roundTrip ? 'translate-x-5' : '' }}"
-                            ></span>
-                        </button>
-                    </div>
+                    <x-toggle
+                        label="Tur/retur"
+                        :checked="$roundTrip"
+                        @click="$wire.$toggle('roundTrip')"
+                        size="sm"
+                    />
                 </div>
                 <div class="divide-y divide-border" x-sort="$wire.updateOrder($item, $position)" wire:ignore.self>
                     @foreach($this->destinations as $destination)
