@@ -13,7 +13,6 @@ use App\Models\TaskList;
 use App\Models\WeightEntry;
 use App\Models\WishlistItem;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Concurrency;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -74,7 +73,7 @@ class CommandPalette extends Component
     /**
      * Search results from all models.
      *
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
+     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle?: string}>
      */
     #[Computed]
     public function results(): Collection
@@ -84,55 +83,17 @@ class CommandPalette extends Component
         }
 
         $searchTerm = '%' . strtolower($this->search) . '%';
+        $results = collect();
 
         // Filter quick actions
         $filteredActions = collect($this->quickActions)
             ->filter(fn ($action) => str_contains(strtolower($action['name']), strtolower($this->search)));
+        $results = $results->merge($filteredActions);
 
-        // Execute all database searches in parallel
-        // Use static method calls to avoid serialization issues with $this in ProcessDriver
-        try {
-            [$assistants, $equipment, $prescriptions, $wishlistItems, $bookmarks, $taskLists] = Concurrency::run([
-                fn () => self::searchAssistantsStatic($searchTerm),
-                fn () => self::searchEquipmentStatic($searchTerm),
-                fn () => self::searchPrescriptionsStatic($searchTerm),
-                fn () => self::searchWishlistItemsStatic($searchTerm),
-                fn () => self::searchBookmarksStatic($searchTerm),
-                fn () => self::searchTaskListsStatic($searchTerm),
-            ]);
-        } catch (\Throwable $e) {
-            // Fallback to sequential execution if parallel execution fails
-            $assistants = $this->searchAssistants($searchTerm);
-            $equipment = $this->searchEquipment($searchTerm);
-            $prescriptions = $this->searchPrescriptions($searchTerm);
-            $wishlistItems = $this->searchWishlistItems($searchTerm);
-            $bookmarks = $this->searchBookmarks($searchTerm);
-            $taskLists = $this->searchTaskLists($searchTerm);
-        }
-
-        // Merge all results
-        return collect()
-            ->merge($filteredActions)
-            ->merge($assistants)
-            ->merge($equipment)
-            ->merge($prescriptions)
-            ->merge($wishlistItems)
-            ->merge($bookmarks)
-            ->merge($taskLists)
-            ->take(15);
-    }
-
-    /**
-     * Search for assistants matching the given term.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private function searchAssistants(string $term): Collection
-    {
-        return Assistant::query()
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
-            ->orWhereRaw('CAST(employee_number AS CHAR) LIKE ?', [$term])
+        // Search Assistants
+        $assistants = Assistant::query()
+            ->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+            ->orWhereRaw('CAST(employee_number AS CHAR) LIKE ?', [$searchTerm])
             ->limit(5)
             ->get()
             ->map(fn (Assistant $assistant) => [
@@ -142,19 +103,12 @@ class CommandPalette extends Component
                 'category' => 'Assistenter',
                 'subtitle' => $assistant->formatted_number . ' · ' . $assistant->type_label,
             ]);
-    }
+        $results = $results->merge($assistants);
 
-    /**
-     * Search for equipment matching the given term.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private function searchEquipment(string $term): Collection
-    {
-        return Equipment::query()
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
-            ->orWhereRaw('LOWER(article_number) LIKE ?', [$term])
+        // Search Equipment
+        $equipment = Equipment::query()
+            ->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+            ->orWhereRaw('LOWER(article_number) LIKE ?', [$searchTerm])
             ->limit(5)
             ->get()
             ->map(fn (Equipment $item) => [
@@ -162,20 +116,13 @@ class CommandPalette extends Component
                 'url' => route('medical.equipment'),
                 'icon' => 'package',
                 'category' => 'Utstyr',
-                'subtitle' => $item->article_number ?? 'Ingen artikkelnummer',
+                'subtitle' => $item->article_number ?? null,
             ]);
-    }
+        $results = $results->merge($equipment);
 
-    /**
-     * Search for prescriptions matching the given term.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private function searchPrescriptions(string $term): Collection
-    {
-        return Prescription::query()
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
+        // Search Prescriptions
+        $prescriptions = Prescription::query()
+            ->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
             ->limit(5)
             ->get()
             ->map(fn (Prescription $prescription) => [
@@ -185,18 +132,11 @@ class CommandPalette extends Component
                 'category' => 'Resepter',
                 'subtitle' => 'Gyldig til ' . $prescription->valid_to->format('d.m.Y'),
             ]);
-    }
+        $results = $results->merge($prescriptions);
 
-    /**
-     * Search for wishlist items matching the given term.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private function searchWishlistItems(string $term): Collection
-    {
-        return WishlistItem::query()
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
+        // Search Wishlist Items
+        $wishlistItems = WishlistItem::query()
+            ->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
             ->limit(5)
             ->get()
             ->map(fn (WishlistItem $item) => [
@@ -206,19 +146,12 @@ class CommandPalette extends Component
                 'category' => 'Ønskeliste',
                 'subtitle' => number_format($item->price, 0, ',', ' ') . ' kr',
             ]);
-    }
+        $results = $results->merge($wishlistItems);
 
-    /**
-     * Search for bookmarks matching the given term.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private function searchBookmarks(string $term): Collection
-    {
-        return Bookmark::query()
-            ->whereRaw('LOWER(title) LIKE ?', [$term])
-            ->orWhereRaw('LOWER(url) LIKE ?', [$term])
+        // Search Bookmarks
+        $bookmarks = Bookmark::query()
+            ->whereRaw('LOWER(title) LIKE ?', [$searchTerm])
+            ->orWhereRaw('LOWER(url) LIKE ?', [$searchTerm])
             ->limit(5)
             ->get()
             ->map(fn (Bookmark $bookmark) => [
@@ -228,19 +161,12 @@ class CommandPalette extends Component
                 'category' => 'Bokmerker',
                 'subtitle' => $bookmark->getDomain(),
             ]);
-    }
+        $results = $results->merge($bookmarks);
 
-    /**
-     * Search for task lists matching the given term.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private function searchTaskLists(string $term): Collection
-    {
-        return TaskList::query()
+        // Search Task Lists
+        $taskLists = TaskList::query()
             ->with('assistant')
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
+            ->whereRaw('LOWER(name) LIKE ?', [$searchTerm])
             ->limit(5)
             ->get()
             ->map(fn (TaskList $taskList) => [
@@ -250,136 +176,9 @@ class CommandPalette extends Component
                 'category' => 'Oppgaver',
                 'subtitle' => $taskList->isAssignedToAssistant() ? $taskList->assistant->name : 'Ingen assistent',
             ]);
-    }
+        $results = $results->merge($taskLists);
 
-    /**
-     * Static version of searchAssistants for parallel execution.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private static function searchAssistantsStatic(string $term): Collection
-    {
-        return Assistant::query()
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
-            ->orWhereRaw('CAST(employee_number AS CHAR) LIKE ?', [$term])
-            ->limit(5)
-            ->get()
-            ->map(fn (Assistant $assistant) => [
-                'name' => $assistant->name,
-                'url' => route('bpa.assistants.show', $assistant),
-                'icon' => 'user',
-                'category' => 'Assistenter',
-                'subtitle' => $assistant->formatted_number . ' · ' . $assistant->type_label,
-            ]);
-    }
-
-    /**
-     * Static version of searchEquipment for parallel execution.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private static function searchEquipmentStatic(string $term): Collection
-    {
-        return Equipment::query()
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
-            ->orWhereRaw('LOWER(article_number) LIKE ?', [$term])
-            ->limit(5)
-            ->get()
-            ->map(fn (Equipment $item) => [
-                'name' => $item->name,
-                'url' => route('medical.equipment'),
-                'icon' => 'package',
-                'category' => 'Utstyr',
-                'subtitle' => $item->article_number ?? 'Ingen artikkelnummer',
-            ]);
-    }
-
-    /**
-     * Static version of searchPrescriptions for parallel execution.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private static function searchPrescriptionsStatic(string $term): Collection
-    {
-        return Prescription::query()
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
-            ->limit(5)
-            ->get()
-            ->map(fn (Prescription $prescription) => [
-                'name' => $prescription->name,
-                'url' => route('medical.prescriptions'),
-                'icon' => 'file-plus',
-                'category' => 'Resepter',
-                'subtitle' => 'Gyldig til ' . $prescription->valid_to->format('d.m.Y'),
-            ]);
-    }
-
-    /**
-     * Static version of searchWishlistItems for parallel execution.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private static function searchWishlistItemsStatic(string $term): Collection
-    {
-        return WishlistItem::query()
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
-            ->limit(5)
-            ->get()
-            ->map(fn (WishlistItem $item) => [
-                'name' => $item->name,
-                'url' => route('wishlist'),
-                'icon' => 'gift',
-                'category' => 'Ønskeliste',
-                'subtitle' => number_format($item->price, 0, ',', ' ') . ' kr',
-            ]);
-    }
-
-    /**
-     * Static version of searchBookmarks for parallel execution.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private static function searchBookmarksStatic(string $term): Collection
-    {
-        return Bookmark::query()
-            ->whereRaw('LOWER(title) LIKE ?', [$term])
-            ->orWhereRaw('LOWER(url) LIKE ?', [$term])
-            ->limit(5)
-            ->get()
-            ->map(fn (Bookmark $bookmark) => [
-                'name' => $bookmark->title,
-                'url' => $bookmark->url,
-                'icon' => 'bookmark',
-                'category' => 'Bokmerker',
-                'subtitle' => $bookmark->getDomain(),
-            ]);
-    }
-
-    /**
-     * Static version of searchTaskLists for parallel execution.
-     *
-     * @param  string  $term  The search term (with wildcards already applied)
-     * @return Collection<int, array{name: string, url: string, icon: string, category: string, subtitle: string}>
-     */
-    private static function searchTaskListsStatic(string $term): Collection
-    {
-        return TaskList::query()
-            ->with('assistant')
-            ->whereRaw('LOWER(name) LIKE ?', [$term])
-            ->limit(5)
-            ->get()
-            ->map(fn (TaskList $taskList) => [
-                'name' => $taskList->name,
-                'url' => route('bpa.tasks.show', $taskList),
-                'icon' => 'check-square',
-                'category' => 'Oppgaver',
-                'subtitle' => $taskList->isAssignedToAssistant() ? $taskList->assistant->name : 'Ingen assistent',
-            ]);
+        return $results->take(15);
     }
 
     public function open(): void
