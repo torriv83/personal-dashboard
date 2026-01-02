@@ -280,3 +280,130 @@ it('has bookmark and task navigation quick actions', function () {
         ->toHaveKey('icon', 'check-square')
         ->toHaveKey('category', 'Navigasjon');
 });
+
+it('executes parallel search and merges results from all sources', function () {
+    // Create test data in all 6 searchable models
+    $category = Category::factory()->create();
+
+    Assistant::factory()->create(['name' => 'Parallel Test Assistant']);
+    Equipment::factory()->create(['name' => 'Parallel Test Equipment', 'category_id' => $category->id]);
+    Prescription::factory()->create(['name' => 'Parallel Test Prescription']);
+    WishlistItem::factory()->create(['name' => 'Parallel Test Wishlist']);
+    Bookmark::factory()->create(['title' => 'Parallel Test Bookmark']);
+    TaskList::factory()->create(['name' => 'Parallel Test TaskList']);
+
+    $component = Livewire::test(CommandPalette::class)
+        ->set('search', 'Parallel Test');
+
+    $results = $component->get('results');
+
+    // Verify results come from all 6 search sources
+    $categories = $results->pluck('category')->unique()->sort()->values();
+
+    expect($categories)->toContain('Assistenter')
+        ->and($categories)->toContain('Utstyr')
+        ->and($categories)->toContain('Resepter')
+        ->and($categories)->toContain('Ønskeliste')
+        ->and($categories)->toContain('Bokmerker')
+        ->and($categories)->toContain('Oppgaver')
+        ->and($results->count())->toBe(6);
+});
+
+it('respects 15-item limit with parallel execution', function () {
+    // Create more than 15 items across different models to test the limit
+    $category = Category::factory()->create();
+
+    Assistant::factory()->count(6)->create(['name' => 'Limit Test Assistant']);
+    Equipment::factory()->count(6)->create(['name' => 'Limit Test Equipment', 'category_id' => $category->id]);
+    Prescription::factory()->count(6)->create(['name' => 'Limit Test Prescription']);
+    WishlistItem::factory()->count(6)->create(['name' => 'Limit Test Wishlist']);
+
+    $component = Livewire::test(CommandPalette::class)
+        ->set('search', 'Limit Test');
+
+    $results = $component->get('results');
+
+    // With 4 models × 6 items each = 24 items, but should be limited to 15
+    expect($results->count())->toBeLessThanOrEqual(15);
+});
+
+it('filters quick actions correctly with parallel search', function () {
+    // Create database items that would match a search term
+    $category = Category::factory()->create();
+    Assistant::factory()->create(['name' => 'Kalender Assistant']);
+    Equipment::factory()->create(['name' => 'Kalender Equipment', 'category_id' => $category->id]);
+
+    $component = Livewire::test(CommandPalette::class)
+        ->set('search', 'kalender');
+
+    $results = $component->get('results');
+
+    // Should include the quick action "Gå til Kalender"
+    $quickAction = $results->firstWhere('name', 'Gå til Kalender');
+    expect($quickAction)->not->toBeNull()
+        ->and($quickAction['category'])->toBe('Navigasjon');
+
+    // Should NOT include non-matching quick actions
+    $profileAction = $results->firstWhere('name', 'Gå til Profil');
+    expect($profileAction)->toBeNull();
+
+    // Should also include database results
+    $categories = $results->pluck('category')->unique();
+    expect($categories)->toContain('Assistenter')
+        ->and($categories)->toContain('Utstyr');
+});
+
+it('handles empty search results gracefully', function () {
+    // Search for a term that won't match anything
+    $component = Livewire::test(CommandPalette::class)
+        ->set('search', 'xyznonexistentterm123');
+
+    $results = $component->get('results');
+
+    // Should return an empty collection when nothing matches
+    expect($results->count())->toBe(0);
+});
+
+it('handles partial empty results from some sources', function () {
+    // Create data in only some models
+    $category = Category::factory()->create();
+    Assistant::factory()->create(['name' => 'Partial Test Assistant']);
+    Equipment::factory()->create(['name' => 'Partial Test Equipment', 'category_id' => $category->id]);
+    // No Prescriptions, WishlistItems, Bookmarks, or TaskLists created
+
+    $component = Livewire::test(CommandPalette::class)
+        ->set('search', 'Partial Test');
+
+    $results = $component->get('results');
+
+    // Should only have results from the 2 models that have data
+    expect($results->count())->toBe(2);
+
+    $categories = $results->pluck('category')->unique()->sort()->values();
+    expect($categories)->toContain('Assistenter')
+        ->and($categories)->toContain('Utstyr')
+        ->and($categories)->not->toContain('Resepter')
+        ->and($categories)->not->toContain('Ønskeliste')
+        ->and($categories)->not->toContain('Bokmerker')
+        ->and($categories)->not->toContain('Oppgaver');
+});
+
+it('maintains result order priority with parallel execution', function () {
+    // Create items that should appear in specific order based on merge logic
+    $category = Category::factory()->create();
+
+    Assistant::factory()->create(['name' => 'Order Test Item']);
+    Equipment::factory()->create(['name' => 'Order Test Item', 'category_id' => $category->id]);
+    Prescription::factory()->create(['name' => 'Order Test Item']);
+
+    $component = Livewire::test(CommandPalette::class)
+        ->set('search', 'Order Test');
+
+    $results = $component->get('results');
+
+    // Results should be merged in the order: quickActions, assistants, equipment, prescriptions, wishlist, bookmarks, tasks
+    // First result should be from Assistants (after quick actions are filtered out)
+    expect($results->first()['category'])->toBe('Assistenter')
+        ->and($results->get(1)['category'])->toBe('Utstyr')
+        ->and($results->get(2)['category'])->toBe('Resepter');
+});
