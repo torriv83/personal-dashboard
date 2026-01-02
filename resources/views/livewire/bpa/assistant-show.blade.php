@@ -517,6 +517,26 @@
                         </tr>
                     @endforelse
                 </tbody>
+                <tfoot class="border-t-2 border-border bg-card-hover/30">
+                    <tr class="font-medium">
+                        {{-- Mobil layout --}}
+                        <td class="sm:hidden px-4 py-3" colspan="5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-foreground">Totalt jobbet</span>
+                                <span class="text-foreground text-lg">{{ $this->totalWorkedMinutes }}</span>
+                            </div>
+                        </td>
+
+                        {{-- Desktop layout --}}
+                        <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-foreground" colspan="2">
+                            Totalt jobbet
+                        </td>
+                        <td class="hidden sm:table-cell px-4 sm:px-6 py-3 text-foreground text-lg">
+                            {{ $this->totalWorkedMinutes }}
+                        </td>
+                        <td class="hidden sm:table-cell px-4 sm:px-6 py-3" colspan="2"></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
 

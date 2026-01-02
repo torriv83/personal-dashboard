@@ -27,8 +27,6 @@ class RommersGameFactory extends Factory
 
     /**
      * Indicate that the game is active (in progress).
-     *
-     * @return static
      */
     public function active(): static
     {
@@ -40,8 +38,6 @@ class RommersGameFactory extends Factory
 
     /**
      * Indicate that the game is finished.
-     *
-     * @return static
      */
     public function finished(): static
     {
