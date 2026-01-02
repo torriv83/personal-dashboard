@@ -16,6 +16,7 @@ use Livewire\WithPagination;
 /**
  * @property-read array $stats
  * @property-read LengthAwarePaginator $shifts
+ * @property-read string $totalWorkedMinutes
  * @property-read array $availableYears
  * @property-read Collection $upcomingUnavailability
  * @property-read string $employmentDuration
@@ -141,6 +142,36 @@ class AssistantShow extends Component
 
         return $query->orderBy('starts_at', 'desc')
             ->paginate($this->perPage);
+    }
+
+    #[Computed]
+    public function totalWorkedMinutes(): string
+    {
+        $query = $this->assistant->shifts()
+            ->worked() // Only worked shifts (not unavailable)
+            ->forYear($this->year);
+
+        if ($this->month) {
+            $query->whereMonth('starts_at', $this->month);
+        }
+
+        // Apply type filter - same logic as shifts() but only count worked time
+        match ($this->typeFilter) {
+            'worked' => $query->where('is_unavailable', false),
+            'fullday' => $query->where('is_all_day', true)->where('is_unavailable', false),
+            'archived' => $query->onlyTrashed()->where('is_unavailable', false),
+            'away' => null, // Don't count away time
+            default => $query->withTrashed()->where('is_unavailable', false),
+        };
+
+        // If filter is 'away', return zero
+        if ($this->typeFilter === 'away') {
+            return $this->formatMinutes(0);
+        }
+
+        $totalMinutes = (int) $query->sum('duration_minutes');
+
+        return $this->formatMinutes($totalMinutes);
     }
 
     #[Computed]
@@ -320,7 +351,7 @@ class AssistantShow extends Component
         ]);
 
         $this->closeShiftModal();
-        unset($this->shifts, $this->stats);
+        unset($this->shifts, $this->stats, $this->totalWorkedMinutes);
         $this->dispatch('toast', type: 'success', message: 'Oppføringen ble oppdatert');
     }
 
@@ -340,7 +371,7 @@ class AssistantShow extends Component
         $shift = Shift::find($shiftId);
         if ($shift) {
             $shift->delete();
-            unset($this->shifts, $this->stats);
+            unset($this->shifts, $this->stats, $this->totalWorkedMinutes);
             $this->dispatch('toast', type: 'success', message: 'Oppføring arkivert');
         }
     }
@@ -350,7 +381,7 @@ class AssistantShow extends Component
         $shift = Shift::withTrashed()->find($shiftId);
         if ($shift) {
             $shift->forceDelete();
-            unset($this->shifts, $this->stats);
+            unset($this->shifts, $this->stats, $this->totalWorkedMinutes);
             $this->dispatch('toast', type: 'success', message: 'Oppføring permanent slettet');
         }
     }

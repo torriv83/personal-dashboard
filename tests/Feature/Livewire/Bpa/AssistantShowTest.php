@@ -82,3 +82,59 @@ it('taskUrl returns correct url when assistant has token', function () {
 
     expect($component->taskUrl())->toContain('/oppgaver/' . $this->assistant->token);
 });
+
+it('calculates total worked minutes excluding unavailable time', function () {
+    $currentYear = now()->year;
+
+    // Create worked shifts
+    $this->assistant->shifts()->create([
+        'starts_at' => "{$currentYear}-03-01 08:00:00",
+        'ends_at' => "{$currentYear}-03-01 16:00:00",
+        'is_unavailable' => false,
+        'is_all_day' => false,
+        'duration_minutes' => 480, // 8 hours
+    ]);
+
+    $this->assistant->shifts()->create([
+        'starts_at' => "{$currentYear}-03-02 09:00:00",
+        'ends_at' => "{$currentYear}-03-02 13:00:00",
+        'is_unavailable' => false,
+        'is_all_day' => false,
+        'duration_minutes' => 240, // 4 hours
+    ]);
+
+    // Create unavailable shift (should NOT be counted)
+    $this->assistant->shifts()->create([
+        'starts_at' => "{$currentYear}-03-03 08:00:00",
+        'ends_at' => "{$currentYear}-03-03 16:00:00",
+        'is_unavailable' => true,
+        'is_all_day' => false,
+        'duration_minutes' => 480, // 8 hours - should be excluded
+    ]);
+
+    $component = new AssistantShow;
+    $component->assistant = $this->assistant;
+    $component->year = $currentYear;
+
+    // Total should be 480 + 240 = 720 minutes = 12:00
+    expect($component->totalWorkedMinutes())->toBe('12:00');
+});
+
+it('returns zero for total worked minutes when filter is away', function () {
+    $currentYear = now()->year;
+
+    // Create worked shift
+    $this->assistant->shifts()->create([
+        'starts_at' => "{$currentYear}-03-01 08:00:00",
+        'ends_at' => "{$currentYear}-03-01 16:00:00",
+        'is_unavailable' => false,
+        'duration_minutes' => 480,
+    ]);
+
+    $component = new AssistantShow;
+    $component->assistant = $this->assistant;
+    $component->year = $currentYear;
+    $component->typeFilter = 'away';
+
+    expect($component->totalWorkedMinutes())->toBe('0:00');
+});
