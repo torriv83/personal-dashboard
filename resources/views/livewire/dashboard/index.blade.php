@@ -353,14 +353,11 @@
                                 <span class="flex-1 text-foreground">{{ $widget['name'] }}</span>
 
                                 {{-- Visibility toggle --}}
-                                <button
-                                    wire:click="toggleVisibility('{{ $widget['id'] }}')"
-                                    class="relative w-10 h-6 rounded-full transition-colors cursor-pointer {{ $widget['visible'] ? 'bg-accent' : 'bg-border' }}"
-                                >
-                                    <span
-                                        class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {{ $widget['visible'] ? 'translate-x-4' : '' }}"
-                                    ></span>
-                                </button>
+                                <x-toggle
+                                    size="sm"
+                                    :checked="$widget['visible']"
+                                    @click="$wire.toggleVisibility('{{ $widget['id'] }}')"
+                                />
                             </div>
                         @endforeach
                     </div>

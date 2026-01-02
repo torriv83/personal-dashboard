@@ -95,20 +95,12 @@
 
                 <div class="space-y-4">
                     {{-- Enable/Disable toggle --}}
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-foreground">Vis vær på kontrollpanel</p>
-                            <p class="text-xs text-muted">Viser værinformasjon fra Met.no (Yr)</p>
-                        </div>
-                        <button
-                            wire:click="toggleWeather"
-                            class="relative w-12 h-7 rounded-full transition-colors cursor-pointer {{ $weatherEnabled ? 'bg-accent' : 'bg-border' }}"
-                        >
-                            <span
-                                class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $weatherEnabled ? 'translate-x-5' : '' }}"
-                            ></span>
-                        </button>
-                    </div>
+                    <x-toggle
+                        label="Vis vær på kontrollpanel"
+                        description="Viser værinformasjon fra Met.no (Yr)"
+                        :checked="$weatherEnabled"
+                        @click="$wire.toggleWeather()"
+                    />
 
                     @if($weatherEnabled)
                         <div x-data="{ saved: false }"
@@ -284,21 +276,13 @@
 
                     {{-- Prescription Alerts --}}
                     <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-foreground">Resept-varsler</p>
-                                <p class="text-xs text-muted">Varsle når resepter utløper (14, 7, 3 dager før)</p>
-                            </div>
-                            <button
-                                @click="toggleWithSubscription(() => $wire.togglePrescriptionAlerts())"
-                                :disabled="loading || !supported"
-                                class="relative w-12 h-7 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed {{ $pushPrescriptionEnabled ? 'bg-accent' : 'bg-border' }}"
-                            >
-                                <span
-                                    class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $pushPrescriptionEnabled ? 'translate-x-5' : '' }}"
-                                ></span>
-                            </button>
-                        </div>
+                        <x-toggle
+                            label="Resept-varsler"
+                            description="Varsle når resepter utløper (14, 7, 3 dager før)"
+                            :checked="$pushPrescriptionEnabled"
+                            @click="toggleWithSubscription(() => $wire.togglePrescriptionAlerts())"
+                            :disabled="loading || !supported"
+                        />
 
                         @if($pushPrescriptionEnabled)
                             <div x-data="{ saved: false }"
@@ -326,39 +310,24 @@
 
                     {{-- Shift Reminders --}}
                     <div class="pt-4 border-t border-border space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-foreground">Vakt-påminnelser</p>
-                                <p class="text-xs text-muted">Påminnelse før kommende vakter</p>
-                            </div>
-                            <button
-                                @click="toggleWithSubscription(() => $wire.toggleShiftReminders())"
-                                :disabled="loading || !supported"
-                                class="relative w-12 h-7 rounded-full transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed {{ $pushShiftEnabled ? 'bg-accent' : 'bg-border' }}"
-                            >
-                                <span
-                                    class="absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform {{ $pushShiftEnabled ? 'translate-x-5' : '' }}"
-                                ></span>
-                            </button>
-                        </div>
+                        <x-toggle
+                            label="Vakt-påminnelser"
+                            description="Påminnelse før kommende vakter"
+                            :checked="$pushShiftEnabled"
+                            @click="toggleWithSubscription(() => $wire.toggleShiftReminders())"
+                            :disabled="loading || !supported"
+                        />
 
                         @if($pushShiftEnabled)
                             <div class="space-y-4 pl-4 border-l-2 border-border">
                                 {{-- Day before toggle --}}
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm text-foreground">Dagen før</p>
-                                        <p class="text-xs text-muted">Varsle ved samme tidspunkt dagen før vaktstart</p>
-                                    </div>
-                                    <button
-                                        wire:click="toggleShiftDayBefore"
-                                        class="relative w-10 h-6 rounded-full transition-colors cursor-pointer {{ $pushShiftDayBefore ? 'bg-accent' : 'bg-border' }}"
-                                    >
-                                        <span
-                                            class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform {{ $pushShiftDayBefore ? 'translate-x-4' : '' }}"
-                                        ></span>
-                                    </button>
-                                </div>
+                                <x-toggle
+                                    size="sm"
+                                    label="Dagen før"
+                                    description="Varsle ved samme tidspunkt dagen før vaktstart"
+                                    :checked="$pushShiftDayBefore"
+                                    @click="$wire.toggleShiftDayBefore()"
+                                />
 
                                 {{-- Hours before select --}}
                                 <div x-data="{ saved: false }"

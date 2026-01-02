@@ -719,16 +719,12 @@
                         </div>
 
                         {{-- All day checkbox --}}
-                        <div class="flex items-center gap-3">
-                            <button
-                                type="button"
-                                wire:click="$toggle('absenceIsAllDay')"
-                                class="relative w-11 h-6 rounded-full transition-colors cursor-pointer {{ $absenceIsAllDay ? 'bg-accent' : 'bg-input border border-border' }}"
-                            >
-                                <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform {{ $absenceIsAllDay ? 'translate-x-5' : '' }}"></span>
-                            </button>
-                            <label class="text-sm text-foreground cursor-pointer" wire:click="$toggle('absenceIsAllDay')">Hele dagen(e)</label>
-                        </div>
+                        <x-toggle
+                            label="Hele dagen(e)"
+                            :checked="$absenceIsAllDay"
+                            @click="$wire.$toggle('absenceIsAllDay')"
+                            size="sm"
+                        />
 
                         {{-- Time inputs (shown when not all day) --}}
                         @if(!$absenceIsAllDay)
