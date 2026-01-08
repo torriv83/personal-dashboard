@@ -3,14 +3,14 @@
     @include('livewire.medical.prescriptions._context-menu')
 
     {{-- Header --}}
-    <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center justify-between gap-3">
         <div>
             <h1 class="text-2xl font-bold text-foreground">Resepter</h1>
             <p class="text-sm text-muted-foreground mt-1">Oversikt over resepter og utløpsdatoer</p>
         </div>
         <button
             wire:click="openModal"
-            class="p-2 sm:px-4 sm:py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer flex items-center gap-2"
+            class="text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer flex items-center justify-center gap-2 p-2.5 sm:px-4 sm:py-2"
         >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -19,101 +19,187 @@
         </button>
     </div>
 
-    {{-- Compact Prescriptions Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+    {{-- Prescription Cards (Mobile) --}}
+    <div class="md:hidden space-y-3">
         @forelse($this->prescriptions as $prescription)
             <div
-                wire:key="prescription-{{ $prescription['id'] }}"
-                class="bg-card border-l-4 rounded-lg p-4 hover:bg-card-hover transition-colors group
-                    @if($prescription['status'] === 'expired') border-l-red-500
-                    @elseif($prescription['status'] === 'danger') border-l-red-500
-                    @elseif($prescription['status'] === 'warning') border-l-yellow-500
-                    @else border-l-accent @endif"
+                wire:key="prescription-mobile-{{ $prescription['id'] }}"
+                class="bg-card border border-border rounded-lg p-4"
                 @contextmenu.prevent="
                     const x = Math.min($event.clientX, window.innerWidth - 200);
                     const y = Math.min($event.clientY, window.innerHeight - 150);
                     $store.prescriptionMenu.open(x, y, {{ $prescription['id'] }})
                 "
             >
-                <div class="flex items-start justify-between gap-3">
-                    <div class="flex-1 min-w-0">
-                        <h3 class="text-base font-semibold text-foreground">{{ $prescription['name'] }}</h3>
-                        <p class="text-xs text-muted-foreground mt-1">
-                            {{ \Carbon\Carbon::parse($prescription['validTo'])->format('d.m.Y') }}
-                        </p>
-                    </div>
-                    <div class="text-right shrink-0">
-                        @if($prescription['status'] === 'expired')
-                            <span class="text-xs font-medium px-2 py-1 bg-destructive/20 text-destructive rounded">Utløpt</span>
-                        @else
-                            <p class="text-lg font-bold
-                                @if($prescription['status'] === 'danger') text-destructive
-                                @elseif($prescription['status'] === 'warning') text-yellow-400
-                                @else text-accent @endif">
-                                {{ $prescription['daysLeft'] }}
-                            </p>
-                            <p class="text-xs text-muted-foreground">dager</p>
-                        @endif
+                {{-- Header: Navn + Actions --}}
+                <div class="flex items-start justify-between gap-2 mb-1">
+                    <h3 class="font-medium text-foreground">{{ $prescription['name'] }}</h3>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button
+                            wire:click="openModal({{ $prescription['id'] }})"
+                            class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
+                            title="Rediger"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button
+                            wire:click="delete({{ $prescription['id'] }})"
+                            wire:confirm="Er du sikker på at du vil slette denne resepten?"
+                            class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
+                            title="Slett"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
 
-                {{-- Actions - always visible on mobile, hover on desktop --}}
-                <div class="flex items-center gap-1 mt-3 pt-3 border-t border-border md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                    <button
-                        wire:click="openModal({{ $prescription['id'] }})"
-                        class="flex-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer flex items-center justify-center gap-1"
-                    >
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Rediger
-                    </button>
-                    <button
-                        wire:click="delete({{ $prescription['id'] }})"
-                        wire:confirm="Er du sikker på at du vil slette denne resepten?"
-                        class="flex-1 px-2 py-1 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer flex items-center justify-center gap-1"
-                    >
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Slett
-                    </button>
+                {{-- Gyldig til --}}
+                <p class="text-sm text-muted-foreground">
+                    Gyldig til: {{ \Carbon\Carbon::parse($prescription['validTo'])->format('d.m.Y') }}
+                </p>
+
+                {{-- Dager igjen + Status --}}
+                <div class="flex items-center gap-3 mt-2">
+                    @if($prescription['status'] === 'expired')
+                        <span class="text-sm text-destructive">
+                            {{ $prescription['daysLeft'] }} dager siden
+                        </span>
+                        <span class="inline-flex px-2 py-1 text-xs font-medium bg-destructive/20 text-destructive rounded">
+                            Utløpt
+                        </span>
+                    @else
+                        <span class="text-sm
+                            @if($prescription['status'] === 'danger') text-destructive
+                            @elseif($prescription['status'] === 'warning') text-yellow-400
+                            @else text-accent @endif">
+                            {{ $prescription['daysLeft'] }} dager igjen
+                        </span>
+                        <span class="inline-flex px-2 py-1 text-xs font-medium rounded
+                            @if($prescription['status'] === 'danger') bg-destructive/20 text-destructive
+                            @elseif($prescription['status'] === 'warning') bg-yellow-500/10 text-yellow-400
+                            @else bg-accent/10 text-accent @endif">
+                            @if($prescription['status'] === 'danger') Kritisk
+                            @elseif($prescription['status'] === 'warning') Snart
+                            @else OK @endif
+                        </span>
+                    @endif
                 </div>
             </div>
         @empty
-            <div class="col-span-full bg-card border border-border rounded-lg p-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                    <div class="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
-                        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                    </div>
-                    <p class="text-muted-foreground">Ingen resepter registrert</p>
-                    <button
-                        wire:click="openModal"
-                        class="mt-2 px-4 py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
-                    >
-                        Opprett din første resept
-                    </button>
+            <div class="bg-card border border-border rounded-lg p-8 text-center text-muted-foreground">
+                <div class="flex flex-col items-center gap-2">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p>Ingen resepter funnet</p>
                 </div>
             </div>
         @endforelse
+
+        {{-- Mobile Footer --}}
+        <div class="text-sm text-muted-foreground text-center py-2">
+            Viser {{ count($this->prescriptions) }} resepter
+        </div>
     </div>
 
-    {{-- Legend --}}
-    <div class="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-        <span class="font-medium text-foreground">Fargekoder:</span>
-        <div class="flex items-center gap-1.5">
-            <div class="w-2 h-2 rounded-full bg-accent"></div>
-            <span>OK (30+ dager)</span>
+    {{-- Prescription Table (Desktop) --}}
+    <div class="hidden md:block bg-card border border-border rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-border bg-card-hover/50">
+                        <th class="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Navn</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Gyldig til</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Dager igjen</th>
+                        <th class="px-5 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                        <th class="px-5 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Handlinger</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-border">
+                    @forelse($this->prescriptions as $prescription)
+                        <tr
+                            wire:key="prescription-{{ $prescription['id'] }}"
+                            class="hover:bg-card-hover transition-colors"
+                            @contextmenu.prevent="
+                                const x = Math.min($event.clientX, window.innerWidth - 200);
+                                const y = Math.min($event.clientY, window.innerHeight - 150);
+                                $store.prescriptionMenu.open(x, y, {{ $prescription['id'] }})
+                            "
+                        >
+                            <td class="px-5 py-4 text-sm text-foreground font-medium">{{ $prescription['name'] }}</td>
+                            <td class="px-5 py-4 text-sm text-foreground">
+                                {{ \Carbon\Carbon::parse($prescription['validTo'])->format('d.m.Y') }}
+                            </td>
+                            <td class="px-5 py-4 text-sm">
+                                <span class="font-medium
+                                    @if($prescription['status'] === 'expired') text-destructive
+                                    @elseif($prescription['status'] === 'danger') text-destructive
+                                    @elseif($prescription['status'] === 'warning') text-yellow-400
+                                    @else text-accent @endif">
+                                    {{ $prescription['daysLeft'] }}
+                                </span>
+                            </td>
+                            <td class="px-5 py-4">
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded
+                                    @if($prescription['status'] === 'expired') bg-destructive/20 text-destructive
+                                    @elseif($prescription['status'] === 'danger') bg-destructive/20 text-destructive
+                                    @elseif($prescription['status'] === 'warning') bg-yellow-500/10 text-yellow-400
+                                    @else bg-accent/10 text-accent @endif">
+                                    @if($prescription['status'] === 'expired') Utløpt
+                                    @elseif($prescription['status'] === 'danger') Kritisk
+                                    @elseif($prescription['status'] === 'warning') Snart
+                                    @else OK @endif
+                                </span>
+                            </td>
+                            <td class="px-5 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button
+                                        wire:click="openModal({{ $prescription['id'] }})"
+                                        class="p-1.5 text-muted-foreground hover:text-foreground hover:bg-input rounded transition-colors cursor-pointer"
+                                        title="Rediger"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </button>
+                                    <button
+                                        wire:click="delete({{ $prescription['id'] }})"
+                                        wire:confirm="Er du sikker på at du vil slette denne resepten?"
+                                        class="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors cursor-pointer"
+                                        title="Slett"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-5 py-12 text-center text-muted-foreground">
+                                <div class="flex flex-col items-center gap-2">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <p>Ingen resepter funnet</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-        <div class="flex items-center gap-1.5">
-            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-            <span>Snart (8-30 dager)</span>
-        </div>
-        <div class="flex items-center gap-1.5">
-            <div class="w-2 h-2 rounded-full bg-destructive"></div>
-            <span>Kritisk (≤7 dager)</span>
+
+        {{-- Table Footer --}}
+        <div class="px-5 py-3 border-t border-border flex items-center justify-between">
+            <p class="text-sm text-muted-foreground">
+                Viser {{ count($this->prescriptions) }} resepter
+            </p>
         </div>
     </div>
 

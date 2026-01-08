@@ -45,7 +45,7 @@ class Prescriptions extends Component
                     'id' => $prescription->id,
                     'name' => $prescription->name,
                     'validTo' => $prescription->valid_to->format('Y-m-d'),
-                    'daysLeft' => max(0, $daysLeft),
+                    'daysLeft' => $daysLeft, // Behold negative verdier
                     'status' => $status,
                 ];
             });
