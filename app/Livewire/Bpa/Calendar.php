@@ -325,6 +325,175 @@ class Calendar extends Component
     }
 
     /**
+     * Check if a shift should be displayed on a specific date in month view.
+     * For multi-day all-day absences, only display on the first day or on Monday if it spans from previous week.
+     */
+    public function shouldDisplayShift($shift, string $date): bool
+    {
+        // Always show regular shifts and single-day absences
+        if (! $shift->is_unavailable || ! $shift->is_all_day) {
+            return true;
+        }
+
+        $currentDate = Carbon::parse($date);
+        $shiftStartDate = $shift->starts_at->copy()->startOfDay();
+        $shiftEndDate = $shift->ends_at->copy()->startOfDay();
+
+        // Single day absence - always show
+        if ($shiftStartDate->isSameDay($shiftEndDate)) {
+            return true;
+        }
+
+        // Multi-day absence: show on first day
+        if ($currentDate->isSameDay($shiftStartDate)) {
+            return true;
+        }
+
+        // If absence started before this week and current date is Monday, show it (new week segment)
+        if ($currentDate->isMonday() && $shiftStartDate->lt($currentDate->copy()->startOfWeek(Carbon::MONDAY))) {
+            return true;
+        }
+
+        // Don't show on other days (it will be spanned from first day)
+        return false;
+    }
+
+    /**
+     * Calculate how many columns a shift should span in month view.
+     * Returns 1 for regular shifts, or number of days for multi-day absences (capped at end of week).
+     */
+    public function getShiftColumnSpan($shift, string $date): int
+    {
+        // Regular shifts and single-day absences always span 1 column
+        if (! $shift->is_unavailable || ! $shift->is_all_day) {
+            return 1;
+        }
+
+        $currentDate = Carbon::parse($date);
+        $shiftStartDate = $shift->starts_at->copy()->startOfDay();
+        $shiftEndDate = $shift->ends_at->copy()->startOfDay();
+
+        // Single day absence
+        if ($shiftStartDate->isSameDay($shiftEndDate)) {
+            return 1;
+        }
+
+        // Determine the effective start date for this week segment
+        $weekStartDate = $currentDate->copy()->startOfWeek(Carbon::MONDAY);
+        $weekEndDate = $currentDate->copy()->endOfWeek(Carbon::SUNDAY);
+
+        // If shift started before this week, use Monday as start
+        $effectiveStart = $shiftStartDate->lt($weekStartDate) ? $weekStartDate : $shiftStartDate;
+
+        // If current date is not the effective start (shouldn't happen if shouldDisplayShift is used correctly)
+        if (! $currentDate->isSameDay($effectiveStart)) {
+            return 1;
+        }
+
+        // Calculate end date capped at end of week
+        $effectiveEnd = $shiftEndDate->gt($weekEndDate) ? $weekEndDate : $shiftEndDate;
+
+        // Calculate days to span (cast to int since diffInDays returns float)
+        $daysToSpan = (int) $effectiveStart->diffInDays($effectiveEnd) + 1;
+
+        return max(1, $daysToSpan);
+    }
+
+    /**
+     * Get multi-day absences for a specific week with positioning information.
+     * Returns array of shifts with their grid positioning for the week.
+     */
+    public function getMultiDayShiftsForWeek(array $weekDays): array
+    {
+        $multiDayShifts = [];
+        $processedShiftIds = [];
+
+        foreach ($weekDays as $dayIndex => $day) {
+            $date = $day['date'];
+            $dayShifts = $this->getShiftsForDate($date);
+
+            foreach ($dayShifts as $shift) {
+                // Skip if already processed
+                if (in_array($shift->id, $processedShiftIds)) {
+                    continue;
+                }
+
+                // Only process multi-day all-day absences
+                if (! $shift->is_unavailable || ! $shift->is_all_day) {
+                    continue;
+                }
+
+                $shiftStartDate = $shift->starts_at->copy()->startOfDay();
+                $shiftEndDate = $shift->ends_at->copy()->startOfDay();
+
+                // Skip single-day absences
+                if ($shiftStartDate->isSameDay($shiftEndDate)) {
+                    continue;
+                }
+
+                // Check if this shift should be displayed on this day
+                if (! $this->shouldDisplayShift($shift, $date)) {
+                    continue;
+                }
+
+                $columnSpan = $this->getShiftColumnSpan($shift, $date);
+
+                // Only add if it spans more than 1 day
+                if ($columnSpan > 1) {
+                    $multiDayShifts[] = [
+                        'shift' => $shift,
+                        'startColumn' => $dayIndex + 2, // +2 because grid has week number column first (index 1)
+                        'columnSpan' => $columnSpan,
+                        'startDate' => $date,
+                    ];
+
+                    $processedShiftIds[] = $shift->id;
+                }
+            }
+        }
+
+        // Assign rows to prevent overlaps
+        foreach ($multiDayShifts as $index => &$multiShift) {
+            $multiShift['row'] = $this->findAvailableRow($multiShift, array_slice($multiDayShifts, 0, $index));
+        }
+
+        return $multiDayShifts;
+    }
+
+    /**
+     * Find the first available row for a multi-day shift to prevent overlaps.
+     */
+    private function findAvailableRow(array $newShift, array $existingShifts): int
+    {
+        if (empty($existingShifts)) {
+            return 1;
+        }
+
+        $newStart = $newShift['startColumn'];
+        $newEnd = $newStart + $newShift['columnSpan'] - 1;
+
+        // Track which rows are occupied
+        $occupiedRows = [];
+        foreach ($existingShifts as $existing) {
+            $existingStart = $existing['startColumn'];
+            $existingEnd = $existingStart + $existing['columnSpan'] - 1;
+
+            // Check if they overlap
+            if (! ($newEnd < $existingStart || $newStart > $existingEnd)) {
+                $occupiedRows[$existing['row']] = true;
+            }
+        }
+
+        // Find first available row
+        $row = 1;
+        while (isset($occupiedRows[$row])) {
+            $row++;
+        }
+
+        return $row;
+    }
+
+    /**
      * Get external calendar events for the current visible date range.
      *
      * @return Collection<int, CalendarEvent>

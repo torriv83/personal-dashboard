@@ -19,7 +19,30 @@
     {{-- Kalender uker --}}
     <div class="flex-1 grid grid-rows-{{ count($this->weeks) }} divide-y divide-border">
         @foreach($this->weeks as $week)
-            <div class="grid grid-cols-[2rem_repeat(7,1fr)] md:grid-cols-[3rem_repeat(7,1fr)] divide-x divide-border min-h-12 md:min-h-24">
+            <div class="relative grid grid-cols-[2rem_repeat(7,1fr)] md:grid-cols-[3rem_repeat(7,1fr)] divide-x divide-border min-h-12 md:min-h-24">
+                {{-- Multi-day events overlay (desktop only) --}}
+                @php
+                    $multiDayShifts = $this->getMultiDayShiftsForWeek($week);
+                @endphp
+                @if(count($multiDayShifts) > 0)
+                    <div class="hidden md:grid grid-cols-[3rem_repeat(7,1fr)] absolute inset-0 pointer-events-none z-20 content-start">
+                        @foreach($multiDayShifts as $multiShift)
+                            @php
+                                $shift = $multiShift['shift'];
+                                $assistantColor = $shift->assistant?->color ?? '#6b7280';
+                            @endphp
+                            <div
+                                class="pointer-events-auto cursor-pointer hover:bg-destructive/30 transition-colors px-1.5 py-0.5 rounded bg-destructive/20 border-l-2 border-destructive mr-1 ml-10 mt-1"
+                                style="grid-column: {{ $multiShift['startColumn'] }} / span {{ $multiShift['columnSpan'] }}; grid-row: {{ $multiShift['row'] }};"
+                                @click.stop="handleShiftClick({{ $shift->id }})"
+                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, true)"
+                            >
+                                <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte</div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
                 {{-- Ukenummer --}}
                 <div class="p-0.5 md:p-1 text-center text-[10px] md:text-xs text-muted-foreground bg-card flex items-start justify-center pt-1 md:pt-2">
                     {{ $week[0]['weekNumber'] }}
@@ -147,38 +170,47 @@
 
                                     {{-- Assistentvakter --}}
                                     @foreach($dayShifts as $shift)
-                                        @php $assistantColor = $shift->assistant?->color ?? '#6b7280'; @endphp
-                                        @if($shift->is_unavailable)
-                                            <div
-                                                @mousedown.stop
-                                                @click.stop="handleShiftClick({{ $shift->id }})"
-                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, true)"
-                                                draggable="true"
-                                                @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
-                                                @dragend="endDrag($event)"
-                                                class="px-1.5 py-0.5 rounded bg-destructive/20 border-l-2 border-destructive cursor-pointer hover:bg-destructive/30 transition-colors"
-                                                :class="draggedShift === {{ $shift->id }} && 'opacity-50'"
-                                            >
-                                                <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte</div>
-                                                @unless($shift->is_all_day)
+                                        @php
+                                            $assistantColor = $shift->assistant?->color ?? '#6b7280';
+                                            $columnSpan = $this->getShiftColumnSpan($shift, $day['date']);
+                                            $isMultiDay = $columnSpan > 1;
+                                            // Skip multi-day absences on desktop (they're shown in overlay)
+                                            $skipOnDesktop = $isMultiDay && $shift->is_unavailable && $shift->is_all_day;
+                                        @endphp
+
+                                        @if($this->shouldDisplayShift($shift, $day['date']) && !$skipOnDesktop)
+                                            @if($shift->is_unavailable)
+                                                <div
+                                                    @mousedown.stop
+                                                    @click.stop="handleShiftClick({{ $shift->id }})"
+                                                    @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, true)"
+                                                    draggable="true"
+                                                    @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
+                                                    @dragend="endDrag($event)"
+                                                    class="px-1.5 py-0.5 rounded bg-destructive/20 border-l-2 border-destructive cursor-pointer hover:bg-destructive/30 transition-colors"
+                                                    :class="draggedShift === {{ $shift->id }} && 'opacity-50'"
+                                                >
+                                                    <div class="text-xs font-medium text-destructive truncate">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte</div>
+                                                    @unless($shift->is_all_day)
+                                                        <div class="text-[9px] text-muted truncate">{{ $shift->time_range }}</div>
+                                                    @endunless
+                                                </div>
+                                            @else
+                                                <div
+                                                    @mousedown.stop
+                                                    @click.stop="handleShiftClick({{ $shift->id }})"
+                                                    @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, false)"
+                                                    draggable="true"
+                                                    @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
+                                                    @dragend="endDrag($event)"
+                                                    class="px-1.5 py-0.5 rounded border-l-2 cursor-pointer hover:opacity-80 transition-opacity"
+                                                    :class="draggedShift === {{ $shift->id }} && 'opacity-50'"
+                                                    style="background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }};"
+                                                >
+                                                    <div class="text-xs font-medium truncate" style="color: {{ $assistantColor }}">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
                                                     <div class="text-[9px] text-muted truncate">{{ $shift->time_range }}</div>
-                                                @endunless
-                                            </div>
-                                        @else
-                                            <div
-                                                @mousedown.stop
-                                                @click.stop="handleShiftClick({{ $shift->id }})"
-                                                @contextmenu.stop="showShiftContextMenu($event, {{ $shift->id }}, false)"
-                                                draggable="true"
-                                                @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
-                                                @dragend="endDrag($event)"
-                                                class="px-1.5 py-0.5 rounded border-l-2 cursor-pointer hover:opacity-80 transition-opacity"
-                                                :class="draggedShift === {{ $shift->id }} && 'opacity-50'"
-                                                style="background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }}"
-                                            >
-                                                <div class="text-xs font-medium truncate" style="color: {{ $assistantColor }}">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</div>
-                                                <div class="text-[9px] text-muted truncate">{{ $shift->time_range }}</div>
-                                            </div>
+                                                </div>
+                                            @endif
                                         @endif
                                     @endforeach
                                 </div>
