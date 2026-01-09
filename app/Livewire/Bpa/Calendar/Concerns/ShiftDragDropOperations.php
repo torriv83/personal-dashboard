@@ -42,7 +42,7 @@ trait ShiftDragDropOperations
         $this->executeMoveShift($shift, $newDate, $newTime);
 
         // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate);
+        $this->invalidateCalendarCache();
         $this->dispatch('toast', type: 'success', message: 'Vakten ble flyttet');
     }
 
@@ -164,7 +164,7 @@ trait ShiftDragDropOperations
         ]);
 
         // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate);
+        $this->invalidateCalendarCache();
         $this->dispatch('toast', type: 'success', message: 'Vakten ble endret');
     }
 }

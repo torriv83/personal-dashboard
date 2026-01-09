@@ -185,7 +185,7 @@ trait HandlesRecurringShifts
         };
 
         // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate);
+        $this->invalidateCalendarCache();
 
         $this->showRecurringDialog = false;
         $this->closeModal();

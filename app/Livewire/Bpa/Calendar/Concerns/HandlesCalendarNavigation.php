@@ -71,6 +71,15 @@ trait HandlesCalendarNavigation
         $this->view = 'day';
     }
 
+    public function goToWeek(string $date): void
+    {
+        $carbon = Carbon::parse($date);
+        $this->year = $carbon->year;
+        $this->month = $carbon->month;
+        $this->day = $carbon->day;
+        $this->view = 'week';
+    }
+
     public function setView(string $view): void
     {
         $this->view = $view;

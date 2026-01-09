@@ -20,6 +20,7 @@ use App\Services\CalendarYearService;
 use App\Services\GoogleCalendarService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -246,35 +247,125 @@ class Calendar extends Component
     }
 
     /**
-     * Get shifts for the current visible date range.
-     * Includes shifts that overlap with the visible range (for multi-day absences).
+     * Get shifts for month view.
+     * Uses Laravel Cache to persist across view switches.
      */
-    #[Computed]
-    public function shifts(): Collection
+    public function monthShifts(): Collection
     {
-        $startDate = $this->getVisibleStartDate();
-        $endDate = $this->getVisibleEndDate();
+        $key = "calendar-month-shifts-{$this->year}-{$this->month}";
 
-        return Shift::query()
-            ->with('assistant')
-            ->where('starts_at', '<=', $endDate)
-            ->where('ends_at', '>=', $startDate)
-            ->orderBy('starts_at')
-            ->get();
+        return Cache::remember($key, now()->addHours(24), function () {
+            $startDate = Carbon::create($this->year, $this->month, 1)->startOfWeek(Carbon::MONDAY);
+            $endDate = Carbon::create($this->year, $this->month, 1)->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+
+            return Shift::query()
+                ->with('assistant')
+                ->where('starts_at', '<=', $endDate)
+                ->where('ends_at', '>=', $startDate)
+                ->orderBy('starts_at')
+                ->get();
+        });
     }
 
     /**
-     * Get shifts grouped by date for easy template access.
+     * Get shifts for week view.
+     * Uses Laravel Cache to persist across view switches.
+     */
+    public function weekShifts(): Collection
+    {
+        $key = "calendar-week-shifts-{$this->year}-{$this->month}-{$this->day}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            $startDate = Carbon::create($this->year, $this->month, $this->day)->startOfWeek(Carbon::MONDAY);
+            $endDate = Carbon::create($this->year, $this->month, $this->day)->endOfWeek(Carbon::SUNDAY);
+
+            return Shift::query()
+                ->with('assistant')
+                ->where('starts_at', '<=', $endDate)
+                ->where('ends_at', '>=', $startDate)
+                ->orderBy('starts_at')
+                ->get();
+        });
+    }
+
+    /**
+     * Get shifts for day view.
+     * Uses Laravel Cache to persist across view switches.
+     */
+    public function dayShifts(): Collection
+    {
+        $key = "calendar-day-shifts-{$this->year}-{$this->month}-{$this->day}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            $startDate = Carbon::create($this->year, $this->month, $this->day)->startOfDay();
+            $endDate = Carbon::create($this->year, $this->month, $this->day)->endOfDay();
+
+            return Shift::query()
+                ->with('assistant')
+                ->where('starts_at', '<=', $endDate)
+                ->where('ends_at', '>=', $startDate)
+                ->orderBy('starts_at')
+                ->get();
+        });
+    }
+
+    /**
+     * Get shifts grouped by date for month view.
+     */
+    public function monthShiftsByDate(): array
+    {
+        $key = "calendar-month-shifts-by-date-{$this->year}-{$this->month}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            return $this->groupShiftsByDate(
+                $this->monthShifts(),
+                Carbon::create($this->year, $this->month, 1)->startOfWeek(Carbon::MONDAY),
+                Carbon::create($this->year, $this->month, 1)->endOfMonth()->endOfWeek(Carbon::SUNDAY)
+            );
+        });
+    }
+
+    /**
+     * Get shifts grouped by date for week view.
+     */
+    public function weekShiftsByDate(): array
+    {
+        $key = "calendar-week-shifts-by-date-{$this->year}-{$this->month}-{$this->day}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            return $this->groupShiftsByDate(
+                $this->weekShifts(),
+                Carbon::create($this->year, $this->month, $this->day)->startOfWeek(Carbon::MONDAY),
+                Carbon::create($this->year, $this->month, $this->day)->endOfWeek(Carbon::SUNDAY)
+            );
+        });
+    }
+
+    /**
+     * Get shifts grouped by date for day view.
+     */
+    public function dayShiftsByDate(): array
+    {
+        $key = "calendar-day-shifts-by-date-{$this->year}-{$this->month}-{$this->day}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            return $this->groupShiftsByDate(
+                $this->dayShifts(),
+                Carbon::create($this->year, $this->month, $this->day)->startOfDay(),
+                Carbon::create($this->year, $this->month, $this->day)->endOfDay()
+            );
+        });
+    }
+
+    /**
+     * Helper method to group shifts by date.
      * Multi-day absences are expanded to appear on each day they span.
      */
-    #[Computed]
-    public function shiftsByDate(): array
+    private function groupShiftsByDate(Collection $shifts, Carbon $visibleStart, Carbon $visibleEnd): array
     {
         $grouped = [];
-        $visibleStart = $this->getVisibleStartDate()->startOfDay();
-        $visibleEnd = $this->getVisibleEndDate()->endOfDay();
 
-        foreach ($this->shifts() as $shift) {
+        foreach ($shifts as $shift) {
             // For multi-day all-day absences, expand to each day
             if ($shift->is_unavailable && $shift->is_all_day) {
                 $startDate = $shift->starts_at->copy()->startOfDay();
@@ -317,11 +408,17 @@ class Calendar extends Component
     }
 
     /**
-     * Get shifts for a specific date.
+     * Get shifts for a specific date based on current view.
      */
     public function getShiftsForDate(string $date): array
     {
-        return $this->shiftsByDate[$date] ?? [];
+        $shiftsByDate = match ($this->view) {
+            'day' => $this->dayShiftsByDate(),
+            'week' => $this->weekShiftsByDate(),
+            default => $this->monthShiftsByDate(),
+        };
+
+        return $shiftsByDate[$date] ?? [];
     }
 
     /**
@@ -494,30 +591,108 @@ class Calendar extends Component
     }
 
     /**
-     * Get external calendar events for the current visible date range.
+     * Get external events for month view.
      *
      * @return Collection<int, CalendarEvent>
      */
-    #[Computed]
-    public function externalEvents(): Collection
+    public function monthExternalEvents(): Collection
     {
-        $startDate = $this->getVisibleStartDate();
-        $endDate = $this->getVisibleEndDate();
+        $key = "calendar-month-external-events-{$this->year}-{$this->month}";
 
-        return app(GoogleCalendarService::class)->getAllEvents($startDate, $endDate);
+        return Cache::remember($key, now()->addHours(24), function () {
+            $startDate = Carbon::create($this->year, $this->month, 1)->startOfWeek(Carbon::MONDAY);
+            $endDate = Carbon::create($this->year, $this->month, 1)->endOfMonth()->endOfWeek(Carbon::SUNDAY);
+
+            return app(GoogleCalendarService::class)->getAllEvents($startDate, $endDate);
+        });
     }
 
     /**
-     * Get external events grouped by date for easy template access.
+     * Get external events for week view.
+     *
+     * @return Collection<int, CalendarEvent>
+     */
+    public function weekExternalEvents(): Collection
+    {
+        $key = "calendar-week-external-events-{$this->year}-{$this->month}-{$this->day}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            $startDate = Carbon::create($this->year, $this->month, $this->day)->startOfWeek(Carbon::MONDAY);
+            $endDate = Carbon::create($this->year, $this->month, $this->day)->endOfWeek(Carbon::SUNDAY);
+
+            return app(GoogleCalendarService::class)->getAllEvents($startDate, $endDate);
+        });
+    }
+
+    /**
+     * Get external events for day view.
+     *
+     * @return Collection<int, CalendarEvent>
+     */
+    public function dayExternalEvents(): Collection
+    {
+        $key = "calendar-day-external-events-{$this->year}-{$this->month}-{$this->day}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            $startDate = Carbon::create($this->year, $this->month, $this->day)->startOfDay();
+            $endDate = Carbon::create($this->year, $this->month, $this->day)->endOfDay();
+
+            return app(GoogleCalendarService::class)->getAllEvents($startDate, $endDate);
+        });
+    }
+
+    /**
+     * Get external events grouped by date for month view.
      *
      * @return array<string, array<CalendarEvent>>
      */
-    #[Computed]
-    public function externalEventsByDate(): array
+    public function monthExternalEventsByDate(): array
+    {
+        $key = "calendar-month-external-events-by-date-{$this->year}-{$this->month}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            return $this->groupExternalEventsByDate($this->monthExternalEvents());
+        });
+    }
+
+    /**
+     * Get external events grouped by date for week view.
+     *
+     * @return array<string, array<CalendarEvent>>
+     */
+    public function weekExternalEventsByDate(): array
+    {
+        $key = "calendar-week-external-events-by-date-{$this->year}-{$this->month}-{$this->day}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            return $this->groupExternalEventsByDate($this->weekExternalEvents());
+        });
+    }
+
+    /**
+     * Get external events grouped by date for day view.
+     *
+     * @return array<string, array<CalendarEvent>>
+     */
+    public function dayExternalEventsByDate(): array
+    {
+        $key = "calendar-day-external-events-by-date-{$this->year}-{$this->month}-{$this->day}";
+
+        return Cache::remember($key, now()->addHours(24), function () {
+            return $this->groupExternalEventsByDate($this->dayExternalEvents());
+        });
+    }
+
+    /**
+     * Helper method to group external events by date.
+     *
+     * @return array<string, array<CalendarEvent>>
+     */
+    private function groupExternalEventsByDate(Collection $events): array
     {
         $grouped = [];
 
-        foreach ($this->externalEvents as $event) {
+        foreach ($events as $event) {
             $date = $event->starts_at->format('Y-m-d');
 
             if (! isset($grouped[$date])) {
@@ -531,13 +706,19 @@ class Calendar extends Component
     }
 
     /**
-     * Get external events for a specific date.
+     * Get external events for a specific date based on current view.
      *
      * @return array<CalendarEvent>
      */
     public function getExternalEventsForDate(string $date): array
     {
-        return $this->externalEventsByDate[$date] ?? [];
+        $eventsByDate = match ($this->view) {
+            'day' => $this->dayExternalEventsByDate(),
+            'week' => $this->weekExternalEventsByDate(),
+            default => $this->monthExternalEventsByDate(),
+        };
+
+        return $eventsByDate[$date] ?? [];
     }
 
     /**
@@ -585,6 +766,50 @@ class Calendar extends Component
             'remaining_formatted' => $this->formatMinutesForDisplay((int) $remainingMinutes),
             'quota_minutes' => (int) $yearlyQuotaMinutes,
         ];
+    }
+
+    /**
+     * Invalidate all calendar-related caches.
+     * Call this after creating, updating, or deleting shifts.
+     */
+    public function invalidateCalendarCache(): void
+    {
+        // Get current year/month/day
+        $year = $this->year;
+        $month = $this->month;
+        $day = $this->day;
+
+        // Invalidate month caches
+        Cache::forget("calendar-month-shifts-{$year}-{$month}");
+        Cache::forget("calendar-month-shifts-by-date-{$year}-{$month}");
+        Cache::forget("calendar-month-external-events-{$year}-{$month}");
+        Cache::forget("calendar-month-external-events-by-date-{$year}-{$month}");
+
+        // Invalidate week caches (current week and adjacent weeks)
+        for ($d = $day - 7; $d <= $day + 7; $d++) {
+            $date = Carbon::create($year, $month, 1)->addDays($d - 1);
+            $cacheYear = $date->year;
+            $cacheMonth = $date->month;
+            $cacheDay = $date->day;
+
+            Cache::forget("calendar-week-shifts-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
+            Cache::forget("calendar-week-shifts-by-date-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
+            Cache::forget("calendar-week-external-events-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
+            Cache::forget("calendar-week-external-events-by-date-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
+        }
+
+        // Invalidate day caches (current day and adjacent days)
+        for ($d = $day - 1; $d <= $day + 1; $d++) {
+            $date = Carbon::create($year, $month, 1)->addDays($d - 1);
+            $cacheYear = $date->year;
+            $cacheMonth = $date->month;
+            $cacheDay = $date->day;
+
+            Cache::forget("calendar-day-shifts-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
+            Cache::forget("calendar-day-shifts-by-date-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
+            Cache::forget("calendar-day-external-events-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
+            Cache::forget("calendar-day-external-events-by-date-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
+        }
     }
 
     public function render()

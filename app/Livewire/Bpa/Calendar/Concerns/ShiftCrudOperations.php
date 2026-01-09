@@ -144,8 +144,8 @@ trait ShiftCrudOperations
             }
         }
 
-        // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate, $this->remainingHoursData);
+        // Invalidate calendar cache
+        $this->invalidateCalendarCache();
 
         if ($createAnother) {
             $this->resetForm();
@@ -241,8 +241,8 @@ trait ShiftCrudOperations
         $this->showQuickCreate = false;
         $this->quickCreateEndTime = null;
 
-        // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate, $this->remainingHoursData);
+        // Invalidate calendar cache
+        $this->invalidateCalendarCache();
         $this->dispatch('toast', type: 'success', message: 'Vakten ble opprettet');
     }
 
@@ -265,7 +265,7 @@ trait ShiftCrudOperations
         ]);
 
         // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate);
+        $this->invalidateCalendarCache();
         $this->dispatch('toast', type: 'success', message: 'Vakten ble duplisert');
     }
 
@@ -306,7 +306,7 @@ trait ShiftCrudOperations
         ]);
 
         // Clear computed property cache
-        unset($this->shifts, $this->shiftsByDate);
+        $this->invalidateCalendarCache();
 
         // Calculate number of days for message
         $days = (int) Carbon::parse($fromDate)->diffInDays(Carbon::parse($toDate)) + 1;

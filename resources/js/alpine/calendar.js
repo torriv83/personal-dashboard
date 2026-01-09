@@ -249,7 +249,7 @@ export default (entangledView) => ({
     },
 
     /**
-     * Navigate to previous period based on current view
+     * Navigate to previous period based on current view (for swipe navigation)
      * Returns a promise that resolves when Livewire is done
      */
     navigatePrevious() {
@@ -264,7 +264,7 @@ export default (entangledView) => ({
     },
 
     /**
-     * Navigate to next period based on current view
+     * Navigate to next period based on current view (for swipe navigation)
      * Returns a promise that resolves when Livewire is done
      */
     navigateNext() {
@@ -276,6 +276,70 @@ export default (entangledView) => ({
             return this.$wire.nextMonth();
         }
         return Promise.resolve();
+    },
+
+    /**
+     * Navigate to previous period for arrow buttons (Alpine + Livewire)
+     * Updates properties instantly for fast UI, then refreshes data
+     */
+    navigatePreviousArrow(type) {
+        const year = this.$wire.year;
+        const month = this.$wire.month;
+        const day = this.$wire.day;
+
+        if (type === 'day') {
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() - 1);
+            this.$wire.year = date.getFullYear();
+            this.$wire.month = date.getMonth() + 1;
+            this.$wire.day = date.getDate();
+        } else if (type === 'week') {
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() - 7);
+            this.$wire.year = date.getFullYear();
+            this.$wire.month = date.getMonth() + 1;
+            this.$wire.day = date.getDate();
+        } else if (type === 'month') {
+            const date = new Date(year, month - 1, 1);
+            date.setMonth(date.getMonth() - 1);
+            this.$wire.year = date.getFullYear();
+            this.$wire.month = date.getMonth() + 1;
+        }
+
+        // Force Livewire refresh to fetch correct data
+        this.$wire.$refresh();
+    },
+
+    /**
+     * Navigate to next period for arrow buttons (Alpine + Livewire)
+     * Updates properties instantly for fast UI, then refreshes data
+     */
+    navigateNextArrow(type) {
+        const year = this.$wire.year;
+        const month = this.$wire.month;
+        const day = this.$wire.day;
+
+        if (type === 'day') {
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() + 1);
+            this.$wire.year = date.getFullYear();
+            this.$wire.month = date.getMonth() + 1;
+            this.$wire.day = date.getDate();
+        } else if (type === 'week') {
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() + 7);
+            this.$wire.year = date.getFullYear();
+            this.$wire.month = date.getMonth() + 1;
+            this.$wire.day = date.getDate();
+        } else if (type === 'month') {
+            const date = new Date(year, month - 1, 1);
+            date.setMonth(date.getMonth() + 1);
+            this.$wire.year = date.getFullYear();
+            this.$wire.month = date.getMonth() + 1;
+        }
+
+        // Force Livewire refresh to fetch correct data
+        this.$wire.$refresh();
     },
 
     // =========================================================================

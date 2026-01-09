@@ -106,7 +106,7 @@
                 >
                     @foreach($this->weeksInMonth as $week)
                         <button
-                            wire:click="goToDay('{{ $week['date'] }}')"
+                            wire:click="goToWeek('{{ $week['date'] }}')"
                             @click="open = false"
                             class="w-full px-3 py-1.5 text-left text-sm cursor-pointer transition-colors {{ $week['isSelected'] ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
                         >
@@ -155,7 +155,7 @@
         <div class="flex items-center justify-center gap-1 md:hidden">
             <button
                 x-show="view === 'day'" x-cloak
-                wire:click="previousDay"
+                @click="navigatePreviousArrow('day')"
                 class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                 title="Forrige dag"
             >
@@ -165,7 +165,7 @@
             </button>
             <button
                 x-show="view === 'week'" x-cloak
-                wire:click="previousWeek"
+                @click="navigatePreviousArrow('week')"
                 class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                 title="Forrige uke"
             >
@@ -175,7 +175,7 @@
             </button>
             <button
                 x-show="view === 'month'" x-cloak
-                wire:click="previousMonth"
+                @click="navigatePreviousArrow('month')"
                 class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                 title="Forrige måned"
             >
@@ -193,7 +193,7 @@
 
             <button
                 x-show="view === 'day'" x-cloak
-                wire:click="nextDay"
+                @click="navigateNextArrow('day')"
                 class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                 title="Neste dag"
             >
@@ -203,7 +203,7 @@
             </button>
             <button
                 x-show="view === 'week'" x-cloak
-                wire:click="nextWeek"
+                @click="navigateNextArrow('week')"
                 class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                 title="Neste uke"
             >
@@ -213,7 +213,7 @@
             </button>
             <button
                 x-show="view === 'month'" x-cloak
-                wire:click="nextMonth"
+                @click="navigateNextArrow('month')"
                 class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                 title="Neste måned"
             >
@@ -238,7 +238,7 @@
             <div class="hidden md:flex items-center gap-2">
                 <button
                     x-show="view === 'day'" x-cloak
-                    wire:click="previousDay"
+                    @click="navigatePreviousArrow('day')"
                     class="p-2 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                     title="Forrige dag"
                 >
@@ -248,7 +248,7 @@
                 </button>
                 <button
                     x-show="view === 'week'" x-cloak
-                    wire:click="previousWeek"
+                    @click="navigatePreviousArrow('week')"
                     class="p-2 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                     title="Forrige uke"
                 >
@@ -258,7 +258,7 @@
                 </button>
                 <button
                     x-show="view === 'month'" x-cloak
-                    wire:click="previousMonth"
+                    @click="navigatePreviousArrow('month')"
                     class="p-2 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                     title="Forrige måned"
                 >
@@ -276,7 +276,7 @@
 
                 <button
                     x-show="view === 'day'" x-cloak
-                    wire:click="nextDay"
+                    @click="navigateNextArrow('day')"
                     class="p-2 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                     title="Neste dag"
                 >
@@ -286,7 +286,7 @@
                 </button>
                 <button
                     x-show="view === 'week'" x-cloak
-                    wire:click="nextWeek"
+                    @click="navigateNextArrow('week')"
                     class="p-2 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                     title="Neste uke"
                 >
@@ -296,7 +296,7 @@
                 </button>
                 <button
                     x-show="view === 'month'" x-cloak
-                    wire:click="nextMonth"
+                    @click="navigateNextArrow('month')"
                     class="p-2 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
                     title="Neste måned"
                 >
@@ -306,10 +306,10 @@
                 </button>
             </div>
 
-            {{-- Visningsvalg: M U D (Alpine for instant switching) --}}
+            {{-- Visningsvalg: M U D (Alpine + Livewire for instant switching + data refresh) --}}
             <div class="flex items-center bg-card rounded-md border border-border md:ml-4">
                 <button
-                    @click="setView('month')"
+                    @click="setView('month'); $wire.$refresh()"
                     :class="view === 'month' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover'"
                     class="w-8 md:w-auto md:px-3 py-1.5 text-sm font-medium rounded-l-md transition-colors cursor-pointer"
                     title="Måned"
@@ -317,7 +317,7 @@
                     M
                 </button>
                 <button
-                    @click="setView('week')"
+                    @click="setView('week'); $wire.$refresh()"
                     :class="view === 'week' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover'"
                     class="w-8 md:w-auto md:px-3 py-1.5 text-sm font-medium border-x border-border transition-colors cursor-pointer"
                     title="Uke"
@@ -325,7 +325,7 @@
                     U
                 </button>
                 <button
-                    @click="setView('day')"
+                    @click="setView('day'); $wire.$refresh()"
                     :class="view === 'day' ? 'bg-accent text-black' : 'text-muted hover:text-foreground hover:bg-card-hover'"
                     class="w-8 md:w-auto md:px-3 py-1.5 text-sm font-medium rounded-r-md transition-colors cursor-pointer"
                     title="Dag"
