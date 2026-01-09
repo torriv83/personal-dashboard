@@ -34,7 +34,7 @@ class Timesheets extends Component
 
     public ?int $selectedYear = null;
 
-    public ?string $typeFilter = null;
+    public ?string $typeFilter = 'worked';
 
     public int $perPage = 10;
 

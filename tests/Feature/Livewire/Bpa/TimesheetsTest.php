@@ -100,6 +100,10 @@ it('returns years from shifts in descending order', function () {
 });
 
 it('includes current year as fallback when no shifts exist', function () {
+    // This test specifically requires an empty database
+    // RefreshDatabase runs once per file, not per test, so we need explicit cleanup here
+    Shift::query()->delete();
+
     $currentYear = now()->year;
 
     $component = Livewire::test(Timesheets::class);
