@@ -34,6 +34,80 @@
         @endforeach
     </div>
 
+    {{-- Frikort Card --}}
+    <div class="bg-card border border-border rounded-lg overflow-hidden">
+        {{-- Header med action ikoner --}}
+        <div class="px-5 py-4 border-b border-border flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-semibold text-foreground">Frikort {{ now()->year }}</h3>
+                    <p class="text-xs text-muted-foreground">Egenandel</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button
+                    wire:click="openAddExpenseModal"
+                    title="Legg til betaling"
+                    class="p-1.5 text-muted-foreground hover:text-accent rounded transition-colors cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+                <button
+                    wire:click="openExpenseHistoryModal"
+                    title="Se historikk"
+                    class="p-1.5 text-muted-foreground hover:text-accent rounded transition-colors cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </button>
+                <button
+                    wire:click="openFrikortSettingsModal"
+                    title="Innstillinger"
+                    class="p-1.5 text-muted-foreground hover:text-accent rounded transition-colors cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <div class="p-5 space-y-4">
+            {{-- Beløp --}}
+            <div class="flex items-baseline justify-between">
+                <div>
+                    <p class="text-sm text-muted-foreground">Betalt i år</p>
+                    <p class="text-3xl font-bold text-foreground mt-1">{{ number_format($this->frikortTotal, 0, ',', ' ') }} kr</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-muted-foreground">Grense</p>
+                    <p class="text-xl font-semibold text-muted-foreground mt-1">{{ number_format($this->frikortLimit, 0, ',', ' ') }} kr</p>
+                </div>
+            </div>
+
+            {{-- Progress Bar --}}
+            <div class="space-y-2">
+                <div class="w-full bg-card-hover rounded-full h-3 overflow-hidden">
+                    <div class="h-full transition-all duration-500 rounded-full @if($this->frikortAchieved) bg-green-500 @else bg-accent @endif"
+                         style="width: {{ $this->frikortProgress }}%">
+                    </div>
+                </div>
+                @if($this->frikortAchieved)
+                    <p class="text-sm font-medium text-green-400">🎉 Frikort oppnådd!</p>
+                @else
+                    <p class="text-sm text-muted-foreground">{{ number_format($this->frikortRemaining, 0, ',', ' ') }} kr til frikort ({{ number_format($this->frikortProgress, 1) }}%)</p>
+                @endif
+            </div>
+        </div>
+    </div>
+
     {{-- Alert Card - Next Expiry --}}
     @if($this->nextExpiry)
         <div class="bg-card border rounded-lg p-4 sm:p-5
@@ -176,4 +250,9 @@
             </div>
         </a>
     </div>
+
+    {{-- Modals --}}
+    @include('livewire.medical.partials._add-expense-modal')
+    @include('livewire.medical.partials._expense-history-modal')
+    @include('livewire.medical.partials._frikort-settings-modal')
 </x-page-container>

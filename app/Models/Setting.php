@@ -65,4 +65,23 @@ class Setting extends Model
     {
         self::set('bpa_hourly_rate', $rate);
     }
+
+    /**
+     * Get frikort limit for current year.
+     */
+    public static function getFrikortLimit(?int $year = null): float
+    {
+        $year = $year ?? now()->year;
+
+        return (float) self::get("frikort_limit_{$year}", 3000);
+    }
+
+    /**
+     * Set frikort limit for a specific year.
+     */
+    public static function setFrikortLimit(float $limit, ?int $year = null): void
+    {
+        $year = $year ?? now()->year;
+        self::set("frikort_limit_{$year}", $limit);
+    }
 }
