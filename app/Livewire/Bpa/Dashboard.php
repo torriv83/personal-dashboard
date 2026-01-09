@@ -337,8 +337,7 @@ class Dashboard extends Component
 
         $weekCount = Shift::query()
             ->worked()
-            ->where('starts_at', '>=', $now->copy()->subWeeks(52)->startOfWeek())
-            ->where('starts_at', '<=', $now)
+            ->forYear($now->year)
             ->selectRaw("COUNT(DISTINCT {$weekExpression}) as week_count")
             ->value('week_count');
 
@@ -364,8 +363,7 @@ class Dashboard extends Component
             ->selectRaw('SUM(duration_minutes) as total_minutes')
             ->selectRaw('COUNT(*) as shift_count')
             ->worked()
-            ->where('starts_at', '>=', $now->copy()->subWeeks(52)->startOfWeek())
-            ->where('starts_at', '<=', $now)
+            ->forYear($now->year)
             ->groupByRaw($weekExpression)
             ->orderByDesc('week_number')
             ->offset(($this->weeklyPage - 1) * $this->weeklyPerPage)

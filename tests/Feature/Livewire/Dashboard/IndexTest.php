@@ -12,12 +12,6 @@ use App\Services\YnabService;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    // Clean up to ensure isolated tests
-    Shift::query()->forceDelete();
-    Assistant::query()->forceDelete();
-    Prescription::query()->forceDelete();
-    WishlistItem::query()->forceDelete();
-
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 });

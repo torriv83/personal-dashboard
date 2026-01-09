@@ -11,10 +11,6 @@ use Carbon\Carbon;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    // Clean up
-    Shift::query()->forceDelete();
-    Assistant::query()->forceDelete();
-
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 

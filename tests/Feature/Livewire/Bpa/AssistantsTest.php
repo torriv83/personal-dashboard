@@ -8,9 +8,6 @@ use App\Models\User;
 use Livewire\Livewire;
 
 beforeEach(function () {
-    // Truncate tables to ensure clean state
-    Assistant::query()->forceDelete();
-
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
 });
