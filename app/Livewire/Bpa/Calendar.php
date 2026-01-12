@@ -812,6 +812,18 @@ class Calendar extends Component
         }
     }
 
+    /**
+     * Refresh Google Calendar events by clearing all caches.
+     */
+    public function refreshGoogleCalendar(): void
+    {
+        // Clear the Google Calendar iCal feed cache
+        app(GoogleCalendarService::class)->clearCache();
+
+        // Clear the local calendar caches (includes external events)
+        $this->invalidateCalendarCache();
+    }
+
     public function render()
     {
         return view('livewire.bpa.calendar');
