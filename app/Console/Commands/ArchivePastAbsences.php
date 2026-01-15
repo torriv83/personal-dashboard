@@ -29,15 +29,16 @@ class ArchivePastAbsences extends Command
     public function handle(): int
     {
         // Count first, then bulk soft-delete
+        // Use ends_at to ensure multi-day absences are only archived after the ENTIRE period is over
         $count = Shift::query()
             ->where('is_unavailable', true)
-            ->where('starts_at', '<', now()->startOfDay())
+            ->where('ends_at', '<', now()->startOfDay())
             ->count();
 
         if ($count > 0) {
             Shift::query()
                 ->where('is_unavailable', true)
-                ->where('starts_at', '<', now()->startOfDay())
+                ->where('ends_at', '<', now()->startOfDay())
                 ->delete(); // Bulk soft delete
         }
 
