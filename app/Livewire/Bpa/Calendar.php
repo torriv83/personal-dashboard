@@ -591,6 +591,28 @@ class Calendar extends Component
     }
 
     /**
+     * Get the maximum row count for multi-day shifts visible on a specific day index.
+     * Used to calculate padding needed for single-day events.
+     */
+    public function getMultiDayRowCountForDay(array $multiDayShifts, int $dayIndex): int
+    {
+        $maxRow = 0;
+        $column = $dayIndex + 2; // +2 because grid has week number column first
+
+        foreach ($multiDayShifts as $multiShift) {
+            $start = $multiShift['startColumn'];
+            $end = $start + $multiShift['columnSpan'] - 1;
+
+            // Check if this multi-day shift overlaps with the given day
+            if ($column >= $start && $column <= $end) {
+                $maxRow = max($maxRow, $multiShift['row']);
+            }
+        }
+
+        return $maxRow;
+    }
+
+    /**
      * Get external events for month view.
      *
      * @return Collection<int, CalendarEvent>

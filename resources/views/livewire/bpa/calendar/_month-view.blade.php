@@ -68,7 +68,7 @@
                         }"
                     >
                         {{-- Dato --}}
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between relative z-30">
                             @if($day['isToday'])
                                 <span class="text-xs md:text-sm font-bold bg-accent text-black rounded-full w-5 h-5 md:w-7 md:h-7 flex items-center justify-center">
                                     {{ $day['day'] }}
@@ -84,6 +84,7 @@
                         @php
                             $dayShifts = $this->getShiftsForDate($day['date']);
                             $dayExternalEvents = $this->getExternalEventsForDate($day['date']);
+                            $multiDayRowCount = $this->getMultiDayRowCountForDay($multiDayShifts, $loop->index);
                         @endphp
                         @if(count($dayShifts) > 0 || count($dayExternalEvents) > 0)
                             <div class="mt-0.5 md:mt-1">
@@ -118,7 +119,7 @@
                                 </div>
 
                                 {{-- DESKTOP: Full event-info --}}
-                                <div class="hidden md:block space-y-0.5 min-w-0">
+                                <div class="hidden md:block space-y-0.5 min-w-0" @if($multiDayRowCount > 0) style="padding-top: {{ $multiDayRowCount * 22 }}px" @endif>
                                     {{-- Eksterne kalender-events (desktop) - øverst for bedre tooltip-visning --}}
                                     @foreach($dayExternalEvents as $externalEvent)
                                         <div
@@ -128,11 +129,11 @@
                                             class="px-1.5 py-0.5 rounded border-l-2 group/ext cursor-default relative"
                                             style="background-color: {{ $externalEvent->color }}15; border-color: {{ $externalEvent->color }}"
                                         >
-                                            <div class="text-xs font-medium text-muted-foreground truncate opacity-50 group-hover/ext:opacity-80 transition-opacity">
+                                            <div class="text-xs font-medium text-foreground truncate opacity-70 group-hover/ext:opacity-100 transition-opacity">
                                                 @if($externalEvent->isManUtd())<span class="mr-0.5">⚽</span>@endif{{ $externalEvent->title }}
                                             </div>
                                             @unless($externalEvent->is_all_day)
-                                                <div class="text-[9px] text-muted truncate opacity-50 group-hover/ext:opacity-80 transition-opacity">{{ $externalEvent->getTimeRange() }}</div>
+                                                <div class="text-[9px] text-foreground truncate opacity-60 group-hover/ext:opacity-100 transition-opacity">{{ $externalEvent->getTimeRange() }}</div>
                                             @endunless
 
                                             {{-- Tooltip --}}
