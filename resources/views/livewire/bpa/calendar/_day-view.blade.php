@@ -121,7 +121,7 @@
                         class="rounded px-1.5 md:px-2 py-0.5 md:py-1 opacity-50 hover:opacity-70 transition-opacity relative"
                         style="background-color: {{ $externalEvent->color }}15; border: 1px solid {{ $externalEvent->color }}30"
                     >
-                        <div class="text-[10px] md:text-xs font-medium text-muted-foreground">
+                        <div class="text-[10px] md:text-xs font-medium text-foreground">
                             @if($externalEvent->isManUtd())⚽@endif
                             {{ $externalEvent->title }}
                         </div>
@@ -243,6 +243,8 @@
                             $timedExternalEvents = collect($this->getExternalEventsForDate($this->currentDate->format('Y-m-d')))
                                 ->reject(fn($e) => $e->is_all_day)
                                 ->filter(fn($e) => $e->starts_at->hour === $slot['hour']);
+                            // Beregn side-by-side layout for overlappende events
+                            $overlapLayout = $this->calculateOverlapLayout($slotShifts, $timedExternalEvents);
                         @endphp
                         @foreach($slotShifts as $shift)
                             @php
@@ -252,6 +254,10 @@
                                 $durationHours = $shift->duration_minutes / 60;
                                 $heightPercent = $durationHours * 100;
                                 $assistantColor = $shift->assistant?->color ?? '#6b7280';
+                                // Side-by-side layout
+                                $layout = $overlapLayout['shift_'.$shift->id] ?? ['width' => 100, 'left' => 0];
+                                $widthPercent = $layout['width'];
+                                $leftPercent = $layout['left'];
                             @endphp
                             @if($shift->is_unavailable)
                                 <div
@@ -261,9 +267,9 @@
                                     draggable="true"
                                     @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
                                     @dragend="endDrag($event)"
-                                    class="absolute left-0.5 md:left-1 right-0.5 md:right-1 bg-destructive/20 border-l-2 border-destructive rounded px-1 md:px-2 py-0.5 md:py-1 pointer-events-auto cursor-pointer hover:bg-destructive/30 transition-colors z-10 group/shift"
+                                    class="absolute bg-destructive/20 border-l-2 border-destructive rounded px-1 md:px-2 py-0.5 md:py-1 pointer-events-auto cursor-pointer hover:bg-destructive/30 transition-colors z-10 group/shift"
                                     :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
-                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%;"
+                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; left: calc({{ $leftPercent }}% + 2px); width: calc({{ $widthPercent }}% - 4px);"
                                 >
                                     <div class="text-xs md:text-sm font-medium text-destructive">
                                         <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }}</span>
@@ -289,9 +295,9 @@
                                     draggable="true"
                                     @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
                                     @dragend="endDrag($event)"
-                                    class="absolute left-0.5 md:left-1 right-0.5 md:right-1 rounded px-1 md:px-2 py-0.5 md:py-1 pointer-events-auto cursor-pointer hover:opacity-80 transition-opacity z-10 border-l-2 group/shift"
+                                    class="absolute rounded px-1 md:px-2 py-0.5 md:py-1 pointer-events-auto cursor-pointer hover:opacity-80 transition-opacity z-10 border-l-2 group/shift"
                                     :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
-                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }}"
+                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; left: calc({{ $leftPercent }}% + 2px); width: calc({{ $widthPercent }}% - 4px); background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }}"
                                 >
                                     <div class="text-xs md:text-sm font-medium" style="color: {{ $assistantColor }}">
                                         <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }}</span>
@@ -321,19 +327,23 @@
                                 $durationMinutes = $externalEvent->getDurationMinutes();
                                 $durationHours = $durationMinutes / 60;
                                 $heightPercent = $durationHours * 100;
+                                // Side-by-side layout
+                                $extLayout = $overlapLayout['ext_'.$externalEvent->id] ?? ['width' => 100, 'left' => 0];
+                                $extWidthPercent = $extLayout['width'];
+                                $extLeftPercent = $extLayout['left'];
                             @endphp
                             <div
                                 x-data="{ showTooltip: false }"
                                 @mouseenter="showTooltip = true"
                                 @mouseleave="showTooltip = false"
-                                class="absolute left-0.5 md:left-1 right-0.5 md:right-1 rounded px-1 md:px-2 py-0.5 md:py-1 z-5 border-l-2 opacity-50 hover:opacity-70 transition-opacity"
-                                style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; background-color: {{ $externalEvent->color }}15; border-color: {{ $externalEvent->color }}"
+                                class="absolute rounded px-1 md:px-2 py-0.5 md:py-1 z-5 border-l-2 opacity-50 hover:opacity-70 transition-opacity"
+                                style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; left: calc({{ $extLeftPercent }}% + 2px); width: calc({{ $extWidthPercent }}% - 4px); background-color: {{ $externalEvent->color }}15; border-color: {{ $externalEvent->color }}"
                             >
-                                <div class="text-xs md:text-sm font-medium text-muted-foreground">
+                                <div class="text-xs md:text-sm font-medium text-foreground">
                                     @if($externalEvent->isManUtd())⚽@endif
                                     {{ $externalEvent->title }}
                                 </div>
-                                <div class="text-[10px] md:text-xs text-muted">{{ $externalEvent->getTimeRange() }}</div>
+                                <div class="text-[10px] md:text-xs text-foreground">{{ $externalEvent->getTimeRange() }}</div>
 
                                 {{-- Tooltip --}}
                                 <div

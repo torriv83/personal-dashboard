@@ -613,6 +613,76 @@ class Calendar extends Component
     }
 
     /**
+     * Calculate overlap layout for events in a time slot.
+     * Returns array with 'width' and 'left' percentages for each event.
+     *
+     * @param  \Illuminate\Support\Collection  $shifts
+     * @param  \Illuminate\Support\Collection  $externalEvents
+     * @return array<int|string, array{width: float, left: float}>
+     */
+    public function calculateOverlapLayout($shifts, $externalEvents): array
+    {
+        // Combine all events with their time ranges
+        $events = [];
+
+        foreach ($shifts as $shift) {
+            $events[] = [
+                'id' => 'shift_' . $shift->id,
+                'start' => $shift->starts_at->hour * 60 + $shift->starts_at->minute,
+                'end' => $shift->ends_at->hour * 60 + $shift->ends_at->minute,
+            ];
+        }
+
+        foreach ($externalEvents as $event) {
+            $events[] = [
+                'id' => 'ext_' . $event->id,
+                'start' => $event->starts_at->hour * 60 + $event->starts_at->minute,
+                'end' => $event->ends_at->hour * 60 + $event->ends_at->minute,
+            ];
+        }
+
+        if (empty($events)) {
+            return [];
+        }
+
+        // Sort by start time
+        usort($events, fn ($a, $b) => $a['start'] <=> $b['start']);
+
+        // Find overlapping groups using a greedy column assignment
+        $columns = [];
+        $layout = [];
+
+        foreach ($events as $event) {
+            // Find the first column where this event doesn't overlap
+            $column = 0;
+            foreach ($columns as $colIndex => $colEnd) {
+                if ($event['start'] >= $colEnd) {
+                    $column = $colIndex;
+                    break;
+                }
+                $column = $colIndex + 1;
+            }
+
+            $columns[$column] = $event['end'];
+            $layout[$event['id']] = ['column' => $column];
+        }
+
+        // Calculate width and left based on max columns used
+        $maxColumns = count($columns);
+        $width = 100 / $maxColumns;
+
+        $result = [];
+        foreach ($layout as $id => $data) {
+            $result[$id] = [
+                'width' => $width,
+                'left' => $data['column'] * $width,
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * Get external events for month view.
      *
      * @return Collection<int, CalendarEvent>
