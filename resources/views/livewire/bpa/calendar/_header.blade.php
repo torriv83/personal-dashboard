@@ -1,7 +1,18 @@
+{{-- "I dag" ikon i topbar (kun mobil) - viser dagens dato --}}
+@push('topbar-actions')
+    <button
+        @click="Livewire.dispatch('calendar-go-to-today')"
+        class="relative w-8 h-8 flex items-center justify-center rounded border border-border text-foreground hover:bg-card-hover transition-colors cursor-pointer"
+        title="Gå til i dag"
+    >
+        <span class="text-xs font-bold">{{ now()->day }}</span>
+    </button>
+@endpush
+
 {{-- Header: Tittel + Navigasjon --}}
-<div class="flex flex-col gap-2 mb-4">
-    {{-- Linje 1: Tittel med år --}}
-    <div class="flex items-baseline justify-between gap-2">
+<div class="flex flex-col gap-2 mb-2 md:mb-4 px-2 pt-2 md:px-0 md:pt-0">
+    {{-- Linje 1: Tittel med år (kun desktop) --}}
+    <div class="hidden md:flex items-baseline justify-between gap-2">
         <div class="flex items-center gap-2">
             <h1 class="text-2xl font-bold text-foreground">Kalender</h1>
             <button
@@ -18,12 +29,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
             </button>
-            {{-- Årvelger ved siden av tittel (vises alltid, samme for alle views) --}}
+            {{-- Årvelger ved siden av tittel (kun desktop) --}}
             <div x-data="{ open: false }" class="relative">
                 <button
                     @click="open = !open"
                     @click.away="open = false"
-                    class="text-muted text-sm md:text-base hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
+                    class="text-muted text-base hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
                 >
                     {{ $year }}
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,9 +66,9 @@
 
     </div>
 
-    {{-- Linje 2: Dato, navigasjon og M U D --}}
-    {{-- Mobil: 3-kolonner grid | Desktop: flex med absolutt sentrert "Timer igjen" --}}
-    <div class="grid grid-cols-[auto_1fr_auto] md:flex items-center gap-2 md:relative">
+    {{-- Linje 2: Dato og M U D --}}
+    {{-- Mobil: 2-kolonner (dato | M U D) | Desktop: flex med absolutt sentrert "Timer igjen" --}}
+    <div class="flex justify-between md:flex items-center gap-2 md:relative">
         {{-- Venstre: Dato-info --}}
         <div class="flex items-center gap-2 min-w-0 md:flex-1">
             {{-- Dagvelger (dager i denne uken) --}}
@@ -67,7 +78,7 @@
                     @click.away="open = false"
                     class="text-base md:text-xl text-muted hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
                 >
-                    <span class="md:hidden">{{ $this->currentDate->format('j.') }} {{ $this->currentDate->locale('nb')->shortMonthName }}</span>
+                    <span class="md:hidden">{{ $this->currentDate->format('j.') }} {{ $this->currentDate->locale('nb')->shortMonthName }} {{ $year }}</span>
                     <span class="hidden md:inline">{{ $this->currentDate->format('j.') }} {{ $this->currentDate->locale('nb')->monthName }}</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -102,7 +113,7 @@
                     @click.away="open = false"
                     class="text-base md:text-xl text-muted hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
                 >
-                    <span class="md:hidden">{{ $this->weekRangeShort }}</span>
+                    <span class="md:hidden">{{ $this->weekRangeShort }} {{ $year }}</span>
                     <span class="hidden md:inline">{{ $this->weekRange }}</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -137,7 +148,8 @@
                     @click.away="open = false"
                     class="text-base md:text-xl text-muted hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
                 >
-                    {{ $this->currentMonthName }}
+                    <span class="md:hidden">{{ $this->currentMonthName }} {{ $year }}</span>
+                    <span class="hidden md:inline">{{ $this->currentMonthName }}</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -165,77 +177,6 @@
             </div>
         </div>
 
-        {{-- Midt: Navigasjon (mobil: sentrert i grid, desktop: del av høyre) --}}
-        <div class="flex items-center justify-center gap-1 md:hidden">
-            <button
-                x-show="view === 'day'" x-cloak
-                @click="navigatePreviousArrow('day')"
-                class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-                title="Forrige dag"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-            <button
-                x-show="view === 'week'" x-cloak
-                @click="navigatePreviousArrow('week')"
-                class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-                title="Forrige uke"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-            <button
-                x-show="view === 'month'" x-cloak
-                @click="navigatePreviousArrow('month')"
-                class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-                title="Forrige måned"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-
-            <button
-                wire:click="goToToday"
-                class="px-2 py-1 text-xs font-medium rounded-md text-foreground bg-card-hover hover:bg-border transition-colors cursor-pointer"
-            >
-                I dag
-            </button>
-
-            <button
-                x-show="view === 'day'" x-cloak
-                @click="navigateNextArrow('day')"
-                class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-                title="Neste dag"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-            </button>
-            <button
-                x-show="view === 'week'" x-cloak
-                @click="navigateNextArrow('week')"
-                class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-                title="Neste uke"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-            </button>
-            <button
-                x-show="view === 'month'" x-cloak
-                @click="navigateNextArrow('month')"
-                class="p-1.5 rounded-md text-muted hover:text-foreground hover:bg-card-hover transition-colors cursor-pointer"
-                title="Neste måned"
-            >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-            </button>
-        </div>
 
         {{-- Høyre: M U D (mobil) + Timer igjen + Navigasjon + M U D (desktop) --}}
         <div class="flex items-center justify-end gap-1 md:gap-2 md:flex-1">

@@ -117,7 +117,10 @@ class Calendar extends Component
 
     public ?string $pendingMoveTime = null;
 
-    protected $listeners = ['refreshCalendar' => '$refresh'];
+    protected $listeners = [
+        'refreshCalendar' => '$refresh',
+        'calendar-go-to-today' => 'goToToday',
+    ];
 
     public array $norwegianMonths = [
         1 => 'Januar',

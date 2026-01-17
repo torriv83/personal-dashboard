@@ -1,4 +1,4 @@
-<x-page-container class="w-full h-full flex flex-col"
+<x-page-container :mobile-full-width="true" class="w-full h-full flex flex-col"
     x-data="calendar($wire.entangle('view'))"
     @keydown.window="handleKeydown($event)">
     {{-- Header: Tittel + Navigasjon --}}

@@ -61,14 +61,15 @@
                 <button
                     @click="sidebarOpen = !sidebarOpen"
                     type="button"
-                    class="text-foreground hover:text-accent transition-colors"
+                    class="text-foreground hover:text-accent transition-colors cursor-pointer"
                 >
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                     <span class="sr-only">Åpne meny</span>
                 </button>
-                <h1 class="text-lg font-semibold">Personlig Dashboard</h1>
+                <h1 class="text-lg font-semibold flex-1">Personlig Dashboard</h1>
+                @stack('topbar-actions')
             </header>
 
             <!-- Page content -->
