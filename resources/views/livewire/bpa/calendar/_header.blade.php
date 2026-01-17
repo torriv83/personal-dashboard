@@ -154,6 +154,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
+                {{-- Desktop: kun måneder --}}
                 <div
                     x-show="open"
                     x-transition:enter="transition ease-out duration-100"
@@ -162,7 +163,7 @@
                     x-transition:leave="transition ease-in duration-75"
                     x-transition:leave-start="opacity-100 scale-100"
                     x-transition:leave-end="opacity-0 scale-95"
-                    class="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-32"
+                    class="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-32 hidden md:block"
                 >
                     @foreach($norwegianMonths as $num => $name)
                         <button
@@ -173,6 +174,43 @@
                             {{ $name }}
                         </button>
                     @endforeach
+                </div>
+                {{-- Mobil: dual-liste med år og måneder --}}
+                <div
+                    x-show="open"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    class="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-lg shadow-lg py-1 md:hidden"
+                >
+                    <div class="flex">
+                        {{-- Venstre: År --}}
+                        <div class="border-r border-border pr-1">
+                            @foreach($this->availableYears as $y)
+                                <button
+                                    wire:click="goToYear({{ $y }})"
+                                    class="w-full px-3 py-1.5 text-left text-sm cursor-pointer transition-colors {{ $year === $y ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                                >
+                                    {{ $y }}
+                                </button>
+                            @endforeach
+                        </div>
+                        {{-- Høyre: Måneder --}}
+                        <div class="pl-1">
+                            @foreach($norwegianMonths as $num => $name)
+                                <button
+                                    wire:click="goToMonth({{ $num }})"
+                                    @click="open = false"
+                                    class="w-full px-3 py-1.5 text-left text-sm cursor-pointer transition-colors {{ $month === $num ? 'bg-accent text-black font-medium' : 'text-foreground hover:bg-card-hover' }}"
+                                >
+                                    {{ $name }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
