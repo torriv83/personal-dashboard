@@ -141,4 +141,16 @@ return [
         'password' => env('ADMIN_PASSWORD'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | API Key for External Access
+    |--------------------------------------------------------------------------
+    |
+    | Secret key for external API access. Used by the ValidateApiKey middleware
+    | to authenticate requests from external applications.
+    |
+    */
+
+    'api_key' => env('API_KEY'),
+
 ];
