@@ -28,6 +28,13 @@ class Task extends Model
 {
     use HasFactory;
 
+    protected $attributes = [
+        'status' => 'pending',
+        'priority' => 'medium',
+        'is_divider' => false,
+        'sort_order' => 0,
+    ];
+
     protected $fillable = [
         'task_list_id',
         'title',

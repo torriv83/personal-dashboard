@@ -132,3 +132,110 @@ it('returns 404 when toggling non-existent task', function () {
         ->patchJson('/api/tasks/99999/toggle')
         ->assertNotFound();
 });
+
+// Create task endpoint
+
+it('creates a new task', function () {
+    $list = TaskList::factory()->create();
+
+    withHeader('Authorization', 'Bearer test-api-key-12345')
+        ->postJson('/api/tasks', [
+            'task_list_id' => $list->id,
+            'title' => 'Ny oppgave',
+            'priority' => 'high',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.title', 'Ny oppgave')
+        ->assertJsonPath('data.priority', 'high')
+        ->assertJsonPath('data.status', 'pending');
+
+    expect(Task::where('title', 'Ny oppgave')->exists())->toBeTrue();
+});
+
+it('validates required fields when creating task', function () {
+    withHeader('Authorization', 'Bearer test-api-key-12345')
+        ->postJson('/api/tasks', [])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['task_list_id', 'title']);
+});
+
+it('validates task_list_id exists when creating task', function () {
+    withHeader('Authorization', 'Bearer test-api-key-12345')
+        ->postJson('/api/tasks', [
+            'task_list_id' => 99999,
+            'title' => 'Test',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['task_list_id']);
+});
+
+// Update task endpoint
+
+it('updates an existing task', function () {
+    $task = Task::factory()->create(['title' => 'Gammel tittel', 'priority' => 'low']);
+
+    withHeader('Authorization', 'Bearer test-api-key-12345')
+        ->putJson("/api/tasks/{$task->id}", [
+            'title' => 'Ny tittel',
+            'priority' => 'high',
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.title', 'Ny tittel')
+        ->assertJsonPath('data.priority', 'high');
+
+    expect($task->fresh()->title)->toBe('Ny tittel');
+    expect($task->fresh()->priority->value)->toBe('high');
+});
+
+it('can update task status', function () {
+    $task = Task::factory()->create(['status' => TaskStatus::Pending]);
+
+    withHeader('Authorization', 'Bearer test-api-key-12345')
+        ->putJson("/api/tasks/{$task->id}", [
+            'status' => 'completed',
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.status', 'completed');
+
+    expect($task->fresh()->status)->toBe(TaskStatus::Completed);
+});
+
+it('can move task to different list', function () {
+    $list1 = TaskList::factory()->create();
+    $list2 = TaskList::factory()->create();
+    $task = Task::factory()->create(['task_list_id' => $list1->id]);
+
+    withHeader('Authorization', 'Bearer test-api-key-12345')
+        ->putJson("/api/tasks/{$task->id}", [
+            'task_list_id' => $list2->id,
+        ])
+        ->assertOk();
+
+    expect($task->fresh()->task_list_id)->toBe($list2->id);
+});
+
+it('returns 404 when updating non-existent task', function () {
+    withHeader('Authorization', 'Bearer test-api-key-12345')
+        ->putJson('/api/tasks/99999', ['title' => 'Test'])
+        ->assertNotFound();
+});
+
+// Delete task endpoint
+
+it('deletes a task', function () {
+    $task = Task::factory()->create();
+    $taskId = $task->id;
+
+    withHeader('Authorization', 'Bearer test-api-key-12345')
+        ->deleteJson("/api/tasks/{$taskId}")
+        ->assertOk()
+        ->assertJson(['message' => 'Task deleted']);
+
+    expect(Task::find($taskId))->toBeNull();
+});
+
+it('returns 404 when deleting non-existent task', function () {
+    withHeader('Authorization', 'Bearer test-api-key-12345')
+        ->deleteJson('/api/tasks/99999')
+        ->assertNotFound();
+});
