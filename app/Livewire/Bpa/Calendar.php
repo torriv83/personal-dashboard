@@ -780,6 +780,7 @@ class Calendar extends Component
 
     /**
      * Helper method to group external events by date.
+     * Multi-day all-day events are expanded to appear on each day they span.
      *
      * @return array<string, array<CalendarEvent>>
      */
@@ -788,6 +789,31 @@ class Calendar extends Component
         $grouped = [];
 
         foreach ($events as $event) {
+            // For multi-day all-day events, expand to each day
+            if ($event->is_all_day) {
+                $startDate = $event->starts_at->copy()->startOfDay();
+                $endDate = $event->ends_at->copy()->startOfDay();
+
+                // If it spans multiple days, add to each day
+                if ($startDate->format('Y-m-d') !== $endDate->format('Y-m-d')) {
+                    $currentDate = $startDate->copy();
+
+                    while ($currentDate->lte($endDate)) {
+                        $date = $currentDate->format('Y-m-d');
+
+                        if (! isset($grouped[$date])) {
+                            $grouped[$date] = [];
+                        }
+
+                        $grouped[$date][] = $event;
+                        $currentDate->addDay();
+                    }
+
+                    continue;
+                }
+            }
+
+            // Regular events or single-day all-day events: use starts_at date
             $date = $event->starts_at->format('Y-m-d');
 
             if (! isset($grouped[$date])) {
