@@ -325,7 +325,6 @@
                                     type="time"
                                     x-model="value"
                                     :disabled="disabled"
-                                    step="60"
                                     class="datepicker-overlay disabled:cursor-not-allowed"
                                 >
                             </div>
@@ -392,7 +391,6 @@
                                     type="time"
                                     x-model="value"
                                     :disabled="disabled"
-                                    step="60"
                                     class="datepicker-overlay disabled:cursor-not-allowed"
                                 >
                             </div>
