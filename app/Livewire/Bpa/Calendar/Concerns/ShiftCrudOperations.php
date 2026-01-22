@@ -218,6 +218,17 @@ trait ShiftCrudOperations
             $endsAt = $startsAt->copy()->addHours(3);
         }
 
+        // Check if assistant has overlapping unavailability
+        $conflictingUnavailability = Shift::findOverlappingUnavailability($assistantId, $startsAt, $endsAt);
+
+        if ($conflictingUnavailability) {
+            $this->showQuickCreate = false;
+            $this->quickCreateEndTime = null;
+            $this->dispatch('toast', type: 'error', message: 'Assistenten er utilgjengelig i dette tidsrommet');
+
+            return;
+        }
+
         // Check if there are enough remaining hours
         $quotaService = app(BpaQuotaService::class);
         $quotaResult = $quotaService->validateShiftQuota($startsAt, $endsAt);
