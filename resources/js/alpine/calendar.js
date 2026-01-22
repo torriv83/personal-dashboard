@@ -104,6 +104,8 @@ export default (entangledView) => ({
         if (e.key === 'm' || e.key === 'M') { this.setView('month'); this.$wire.$refresh(); }
         if (e.key === 'u' || e.key === 'U') { this.setView('week'); this.$wire.$refresh(); }
         if (e.key === 'd' || e.key === 'D') { this.setView('day'); this.$wire.$refresh(); }
+        if (e.key === 'ArrowLeft') { this.navigatePrevious(); }
+        if (e.key === 'ArrowRight') { this.navigateNext(); }
     },
 
     /**
