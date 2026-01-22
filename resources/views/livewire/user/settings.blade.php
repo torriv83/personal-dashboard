@@ -281,7 +281,7 @@
                             description="Varsle når resepter utløper (14, 7, 3 dager før)"
                             :checked="$pushPrescriptionEnabled"
                             @click="toggleWithSubscription(() => $wire.togglePrescriptionAlerts())"
-                            :disabled="loading || !supported"
+                            x-bind:disabled="loading || !supported"
                         />
 
                         @if($pushPrescriptionEnabled)
@@ -315,7 +315,7 @@
                             description="Påminnelse før kommende vakter"
                             :checked="$pushShiftEnabled"
                             @click="toggleWithSubscription(() => $wire.toggleShiftReminders())"
-                            :disabled="loading || !supported"
+                            x-bind:disabled="loading || !supported"
                         />
 
                         @if($pushShiftEnabled)
