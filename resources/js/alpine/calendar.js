@@ -106,6 +106,7 @@ export default (entangledView) => ({
         if (e.key === 'd' || e.key === 'D') { this.setView('day'); this.$wire.$refresh(); }
         if (e.key === 'ArrowLeft') { this.navigatePrevious(); }
         if (e.key === 'ArrowRight') { this.navigateNext(); }
+        if (e.key === 't' || e.key === 'T') { this.$wire.goToToday(); }
     },
 
     /**
