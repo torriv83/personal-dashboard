@@ -516,13 +516,47 @@
     {{-- Pinned Bookmarks Section (only on main view) --}}
     @if($folderId === null && $search === '' && $tagId === null && $this->pinnedBookmarks->count() > 0)
         <div class="space-y-3">
-            <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-accent" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-                <h2 class="text-sm font-medium text-foreground">Festede</h2>
-                <span class="text-xs text-muted-foreground">({{ $this->pinnedBookmarks->count() }})</span>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-accent" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                    <h2 class="text-sm font-medium text-foreground">Festede</h2>
+                    <span class="text-xs text-muted-foreground">({{ $this->pinnedBookmarks->count() }})</span>
+                </div>
+                {{-- View mode toggle for pinned --}}
+                <div class="flex items-center gap-1 bg-card border border-border rounded-lg p-1">
+                    <button
+                        wire:click="togglePinnedViewMode"
+                        @class([
+                            'p-1.5 rounded transition-colors cursor-pointer',
+                            'bg-accent text-black' => $pinnedViewMode === 'grid',
+                            'text-muted-foreground hover:text-foreground' => $pinnedViewMode !== 'grid',
+                        ])
+                        title="Rutenett"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                    </button>
+                    <button
+                        wire:click="togglePinnedViewMode"
+                        @class([
+                            'p-1.5 rounded transition-colors cursor-pointer',
+                            'bg-accent text-black' => $pinnedViewMode === 'list',
+                            'text-muted-foreground hover:text-foreground' => $pinnedViewMode !== 'list',
+                        ])
+                        title="Liste"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
             </div>
+
+            @if($pinnedViewMode === 'grid')
+            {{-- Grid View --}}
             <div
                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
                 x-sort="$wire.updatePinnedOrder($item, $position)"
@@ -533,7 +567,7 @@
                         wire:key="pinned-{{ $bookmark->id }}"
                         x-sort:item="'pinned-{{ $bookmark->id }}'"
                         @contextmenu.prevent="if (!$event.sourceCapabilities?.firesTouchEvents) openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
-                        class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }} ring-2 ring-accent/20"
+                        class="group relative bg-card border rounded-lg hover:border-accent/50 transition-colors {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
                     >
                         {{-- Top row: Drag handle + Checkbox + Domain --}}
                         <div class="flex items-center gap-2 p-4 pb-0">
@@ -769,16 +803,95 @@
                     </div>
                 @endforeach
             </div>
+            @else
+            {{-- List View --}}
+            <div
+                class="flex flex-wrap gap-2"
+                x-sort="$wire.updatePinnedOrder($item, $position)"
+                wire:ignore.self
+            >
+                @foreach($this->pinnedBookmarks as $bookmark)
+                    <a
+                        wire:key="pinned-list-{{ $bookmark->id }}"
+                        x-sort:item="'pinned-{{ $bookmark->id }}'"
+                        href="{{ $bookmark->url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        @contextmenu.prevent="if (!$event.sourceCapabilities?.firesTouchEvents) openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
+                        class="inline-flex items-center gap-2 w-[180px] px-2.5 py-1.5 bg-[#1f1f1f] rounded-md hover:bg-card-hover transition-colors cursor-pointer {{ $bookmark->is_read ? 'opacity-60' : '' }}"
+                    >
+                        <img
+                            src="https://www.google.com/s2/favicons?domain={{ $bookmark->getDomain() }}&sz=32"
+                            alt=""
+                            class="w-3.5 h-3.5 shrink-0"
+                            loading="lazy"
+                        >
+                        <span class="text-[13px] text-foreground truncate">{{ $bookmark->title }}</span>
+                        @if($bookmark->is_dead)
+                            <span class="w-1.5 h-1.5 rounded-full bg-destructive shrink-0 ml-auto" title="Død lenke"></span>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
+            @endif
         </div>
 
         {{-- Divider between pinned and regular bookmarks --}}
         <div class="border-t border-border"></div>
     @endif
 
-    {{-- Bookmarks Grid --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {{-- Child folders (shown first when inside a parent folder) --}}
-        @foreach($this->childFolders as $childFolder)
+    {{-- Bookmarks Section --}}
+    <div class="space-y-3">
+        {{-- Section header with toggle --}}
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+                <h2 class="text-sm font-medium text-foreground">
+                    @if($folderId)
+                        Bokmerker
+                    @else
+                        Alle bokmerker
+                    @endif
+                </h2>
+                <span class="text-xs text-muted-foreground">({{ $this->totalBookmarksCount }})</span>
+            </div>
+            {{-- View mode toggle for bookmarks --}}
+            <div class="flex items-center gap-1 bg-card border border-border rounded-lg p-1">
+                <button
+                    wire:click="toggleBookmarksViewMode"
+                    @class([
+                        'p-1.5 rounded transition-colors cursor-pointer',
+                        'bg-accent text-black' => $bookmarksViewMode === 'grid',
+                        'text-muted-foreground hover:text-foreground' => $bookmarksViewMode !== 'grid',
+                    ])
+                    title="Rutenett"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                </button>
+                <button
+                    wire:click="toggleBookmarksViewMode"
+                    @class([
+                        'p-1.5 rounded transition-colors cursor-pointer',
+                        'bg-accent text-black' => $bookmarksViewMode === 'list',
+                        'text-muted-foreground hover:text-foreground' => $bookmarksViewMode !== 'list',
+                    ])
+                    title="Liste"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Child folders (shown first when inside a parent folder) - always grid --}}
+        @if($this->childFolders->count() > 0)
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            @foreach($this->childFolders as $childFolder)
             <div
                 wire:key="child-folder-{{ $childFolder->id }}"
                 wire:click="openFolder({{ $childFolder->id }})"
@@ -799,31 +912,36 @@
                     </div>
                 </div>
             </div>
-        @endforeach
+            @endforeach
+        </div>
+        @endif
 
-        @forelse($this->bookmarks as $bookmark)
-            <div
-                wire:key="bookmark-{{ $bookmark->id }}"
-                draggable="true"
-                @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
-                @dragend="draggingBookmarkId = null"
-                @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
-                class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 sm:cursor-grab {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
-            >
-                {{-- Top row: Checkbox + Domain --}}
-                <div class="flex items-center gap-2 p-4 pb-0">
-                    <input
-                        type="checkbox"
-                        wire:model.live="selectedIds"
-                        value="{{ $bookmark->id }}"
-                        class="w-4 h-4 rounded border-border bg-input text-accent focus:ring-accent cursor-pointer shrink-0"
-                    >
-                    <img
-                        src="https://www.google.com/s2/favicons?domain={{ $bookmark->getDomain() }}&sz=32"
-                        alt=""
-                        class="w-4 h-4 shrink-0"
-                        loading="lazy"
-                    >
+        {{-- Bookmarks Grid/List --}}
+        @if($bookmarksViewMode === 'grid')
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            @forelse($this->bookmarks as $bookmark)
+                <div
+                    wire:key="bookmark-{{ $bookmark->id }}"
+                    draggable="true"
+                    @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
+                    @dragend="draggingBookmarkId = null"
+                    @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
+                    class="group relative bg-card border rounded-lg hover:border-accent/50 transition-all duration-200 sm:cursor-grab {{ $bookmark->is_read ? 'opacity-60' : '' }} {{ $bookmark->is_dead ? 'border-destructive/50' : 'border-border' }}"
+                >
+                    {{-- Top row: Checkbox + Domain --}}
+                    <div class="flex items-center gap-2 p-4 pb-0">
+                        <input
+                            type="checkbox"
+                            wire:model.live="selectedIds"
+                            value="{{ $bookmark->id }}"
+                            class="w-4 h-4 rounded border-border bg-input text-accent focus:ring-accent cursor-pointer shrink-0"
+                        >
+                        <img
+                            src="https://www.google.com/s2/favicons?domain={{ $bookmark->getDomain() }}&sz=32"
+                            alt=""
+                            class="w-4 h-4 shrink-0"
+                            loading="lazy"
+                        >
                     <span class="text-xs text-muted-foreground truncate">{{ $bookmark->getDomain() }}</span>
                     @if($bookmark->is_dead)
                         <span class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-destructive bg-destructive/10 rounded shrink-0" title="Død lenke">
@@ -1056,6 +1174,58 @@
                 </div>
             @endif
         @endforelse
+        </div>
+        @else
+        {{-- List View --}}
+        <div class="flex flex-wrap gap-2">
+            @forelse($this->bookmarks as $bookmark)
+                <a
+                    wire:key="bookmark-list-{{ $bookmark->id }}"
+                    href="{{ $bookmark->url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    draggable="true"
+                    @dragstart="draggingBookmarkId = {{ $bookmark->id }}; $event.dataTransfer.effectAllowed = 'move'"
+                    @dragend="draggingBookmarkId = null"
+                    @contextmenu.prevent="openContextMenu($event, {{ $bookmark->id }}, {{ $bookmark->is_dead ? 'true' : 'false' }})"
+                    class="inline-flex items-center gap-2 w-[180px] px-2.5 py-1.5 bg-[#1f1f1f] rounded-md hover:bg-card-hover transition-colors cursor-pointer {{ $bookmark->is_read ? 'opacity-60' : '' }}"
+                >
+                    <img
+                        src="https://www.google.com/s2/favicons?domain={{ $bookmark->getDomain() }}&sz=32"
+                        alt=""
+                        class="w-3.5 h-3.5 shrink-0"
+                        loading="lazy"
+                    >
+                    <span class="text-[13px] text-foreground truncate">{{ $bookmark->title }}</span>
+                    @if($bookmark->is_dead)
+                        <span class="w-1.5 h-1.5 rounded-full bg-destructive shrink-0 ml-auto" title="Død lenke"></span>
+                    @endif
+                    @if($bookmark->is_pinned)
+                        <svg class="w-2.5 h-2.5 text-accent shrink-0 ml-auto" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                    @endif
+                </a>
+            @empty
+                @if($this->childFolders->isEmpty())
+                    <div class="w-full text-center py-12">
+                        <svg class="w-12 h-12 mx-auto text-muted-foreground mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                        </svg>
+                        <p class="text-muted-foreground">
+                            @if($search)
+                                Ingen bokmerker funnet for "{{ $search }}"
+                            @elseif($folderId)
+                                Ingen bokmerker i denne mappen
+                            @else
+                                Ingen bokmerker ennå. Legg til ditt første bokmerke!
+                            @endif
+                        </p>
+                    </div>
+                @endif
+            @endforelse
+        </div>
+        @endif
     </div>
 
     {{-- Load More / Count --}}

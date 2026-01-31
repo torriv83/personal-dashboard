@@ -51,6 +51,13 @@ class Index extends Component
     #[Url]
     public string $sortBy = 'newest';
 
+    // View mode (grid or list)
+    #[Url]
+    public string $pinnedViewMode = 'grid';
+
+    #[Url]
+    public string $bookmarksViewMode = 'grid';
+
     // Pagination
     public int $limit = self::PER_PAGE;
 
@@ -950,6 +957,22 @@ class Index extends Component
     {
         $this->sortBy = $sortBy;
         unset($this->bookmarks);
+    }
+
+    /**
+     * Toggle view mode for pinned bookmarks.
+     */
+    public function togglePinnedViewMode(): void
+    {
+        $this->pinnedViewMode = $this->pinnedViewMode === 'grid' ? 'list' : 'grid';
+    }
+
+    /**
+     * Toggle view mode for bookmarks.
+     */
+    public function toggleBookmarksViewMode(): void
+    {
+        $this->bookmarksViewMode = $this->bookmarksViewMode === 'grid' ? 'list' : 'grid';
     }
 
     public function setFolderFilter(?int $folderId): void
