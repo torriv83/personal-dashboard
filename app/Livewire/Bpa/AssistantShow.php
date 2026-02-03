@@ -94,29 +94,48 @@ class AssistantShow extends Component
         $currentYear = now()->year;
         $currentMonth = now()->month;
 
-        $hoursThisYear = (int) $this->assistant->shifts()
+        // Stats for current year
+        $minutesThisYear = (int) $this->assistant->shifts()
             ->worked()
             ->forYear($currentYear)
             ->sum('duration_minutes');
 
-        $hoursThisMonth = (int) $this->assistant->shifts()
+        $minutesThisMonth = (int) $this->assistant->shifts()
             ->worked()
             ->forMonth($currentYear, $currentMonth)
+            ->sum('duration_minutes');
+
+        $shiftsThisYear = $this->assistant->shifts()
+            ->worked()
+            ->forYear($currentYear)
+            ->count();
+
+        $averageMinutesThisYear = $shiftsThisYear > 0
+            ? intval($minutesThisYear / $shiftsThisYear)
+            : 0;
+
+        // Total stats (all time)
+        $totalMinutes = (int) $this->assistant->shifts()
+            ->worked()
             ->sum('duration_minutes');
 
         $totalShifts = $this->assistant->shifts()
             ->worked()
             ->count();
 
-        $averageMinutes = $totalShifts > 0
-            ? intval($hoursThisYear / $totalShifts)
+        $averageMinutesTotal = $totalShifts > 0
+            ? intval($totalMinutes / $totalShifts)
             : 0;
 
         return [
-            'hours_this_year' => $this->formatMinutes($hoursThisYear),
-            'hours_this_month' => $this->formatMinutes($hoursThisMonth),
+            'hours_this_year' => $this->formatMinutes($minutesThisYear),
+            'hours_this_month' => $this->formatMinutes($minutesThisMonth),
+            'shifts_this_year' => $shiftsThisYear,
+            'average_per_shift' => $this->formatMinutes($averageMinutesThisYear),
+            // Total stats
+            'total_hours' => $this->formatMinutes($totalMinutes),
             'total_shifts' => $totalShifts,
-            'average_per_shift' => $this->formatMinutes($averageMinutes),
+            'total_average_per_shift' => $this->formatMinutes($averageMinutesTotal),
         ];
     }
 

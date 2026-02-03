@@ -155,18 +155,21 @@
         <div class="bg-card border border-border rounded-lg p-4">
             <div class="text-sm text-muted mb-1">Timer i år</div>
             <div class="text-2xl font-bold text-foreground">{{ $this->stats['hours_this_year'] }}</div>
+            <div class="text-xs text-muted mt-1">totalt: {{ $this->stats['total_hours'] }}</div>
         </div>
         <div class="bg-card border border-border rounded-lg p-4">
             <div class="text-sm text-muted mb-1">Timer denne mnd</div>
             <div class="text-2xl font-bold text-foreground">{{ $this->stats['hours_this_month'] }}</div>
         </div>
         <div class="bg-card border border-border rounded-lg p-4">
-            <div class="text-sm text-muted mb-1">Antall vakter</div>
-            <div class="text-2xl font-bold text-foreground">{{ $this->stats['total_shifts'] }}</div>
+            <div class="text-sm text-muted mb-1">Antall vakter i år</div>
+            <div class="text-2xl font-bold text-foreground">{{ $this->stats['shifts_this_year'] }}</div>
+            <div class="text-xs text-muted mt-1">totalt: {{ $this->stats['total_shifts'] }}</div>
         </div>
         <div class="bg-card border border-border rounded-lg p-4">
-            <div class="text-sm text-muted mb-1">Snitt per vakt</div>
+            <div class="text-sm text-muted mb-1">Snitt per vakt i år</div>
             <div class="text-2xl font-bold text-foreground">{{ $this->stats['average_per_shift'] }}</div>
+            <div class="text-xs text-muted mt-1">totalt: {{ $this->stats['total_average_per_shift'] }}</div>
         </div>
     </div>
 
