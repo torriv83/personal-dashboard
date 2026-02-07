@@ -1254,15 +1254,7 @@
                 Viser {{ $this->bookmarks->count() }} av {{ $this->totalBookmarksCount }} bokmerker
             </p>
             @if($this->hasMoreBookmarks())
-                <button
-                    wire:click="loadMore"
-                    wire:loading.attr="disabled"
-                    wire:target="loadMore"
-                    class="px-6 py-2.5 text-sm font-medium text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer disabled:opacity-50"
-                >
-                    <span wire:loading.remove wire:target="loadMore">Last inn flere</span>
-                    <span wire:loading wire:target="loadMore">Laster...</span>
-                </button>
+                <div id="scroll-sentinel" class="h-1"></div>
             @endif
         </div>
     @endif
@@ -1948,3 +1940,36 @@
     {{-- Add to Wishlist Modal (for moveToWishlist action) --}}
     <livewire:bookmarks.add-to-wishlist-modal />
 </x-page-container>
+
+@script
+<script>
+    (function () {
+        let observer = null;
+        let loading = false;
+
+        function setup() {
+            if (observer) { observer.disconnect(); observer = null; }
+            const sentinel = document.getElementById('scroll-sentinel');
+            if (!sentinel) return;
+
+            loading = false;
+            observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && !loading) {
+                    loading = true;
+                    $wire.loadMore().then(() => {
+                        loading = false;
+                        requestAnimationFrame(() => setup());
+                    });
+                }
+            }, { rootMargin: '200px' });
+            observer.observe(sentinel);
+        }
+
+        setup();
+
+        Livewire.hook('morph.updated', () => {
+            requestAnimationFrame(() => setup());
+        });
+    })();
+</script>
+@endscript
