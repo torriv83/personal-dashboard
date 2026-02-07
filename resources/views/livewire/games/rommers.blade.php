@@ -5,15 +5,123 @@
             <h1 class="text-2xl font-bold text-foreground">Rømmers</h1>
             <p class="text-sm text-muted-foreground mt-1 hidden sm:block">Poengføring for kortspillet Rømmers</p>
         </div>
-        <button
-            wire:click="openNewGameModal"
-            class="px-4 py-2 text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer flex items-center gap-2"
-        >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            <span class="hidden sm:inline">Nytt spill</span>
-        </button>
+        <div class="flex items-center gap-2">
+            <button
+                wire:click="openNewGameModal"
+                class="px-4 py-2 text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer flex items-center gap-2"
+            >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span class="hidden sm:inline">Nytt spill</span>
+            </button>
+
+            {{-- Kebab-meny --}}
+            <div x-data="{ menuOpen: false, showFinished: false }" @keydown.escape.window="menuOpen = false" class="relative">
+                <button
+                    @click="menuOpen = !menuOpen"
+                    class="p-2 text-muted-foreground hover:text-foreground hover:bg-card-hover rounded-lg transition-colors cursor-pointer"
+                    title="Flere valg"
+                >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                    </svg>
+                </button>
+
+                {{-- Dropdown --}}
+                <div
+                    x-show="menuOpen"
+                    @click.outside="menuOpen = false"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 scale-95"
+                    x-transition:enter-end="opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75"
+                    x-transition:leave-start="opacity-100 scale-100"
+                    x-transition:leave-end="opacity-0 scale-95"
+                    class="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-xl z-40 overflow-hidden"
+                >
+                    <button
+                        @click="showFinished = true; menuOpen = false; document.body.style.overflow = 'hidden'"
+                        class="w-full px-4 py-3 text-left text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer flex items-center gap-2"
+                    >
+                        <svg class="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        Avsluttede spill
+                    </button>
+                </div>
+
+                {{-- Avsluttede spill modal --}}
+                <template x-teleport="body">
+                    <div
+                        x-show="showFinished"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0"
+                        x-transition:enter-end="opacity-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100"
+                        x-transition:leave-end="opacity-0"
+                        class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+                        @click.self="showFinished = false; document.body.style.overflow = ''"
+                    >
+                        <div class="bg-card border border-border rounded-xl max-h-[95vh] w-full max-w-lg overflow-auto shadow-2xl">
+                            <div class="flex items-center justify-between p-5 border-b border-border">
+                                <h3 class="text-lg font-medium text-foreground">Avsluttede spill</h3>
+                                <button
+                                    @click="showFinished = false; document.body.style.overflow = ''"
+                                    class="p-2 text-muted-foreground hover:text-foreground hover:bg-card-hover rounded-lg transition-colors cursor-pointer"
+                                    title="Lukk"
+                                >
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            @if($this->finishedGames->isEmpty())
+                                <div class="p-6 text-center text-muted-foreground text-sm">
+                                    Ingen avsluttede spill ennå
+                                </div>
+                            @else
+                                <div class="divide-y divide-border">
+                                    @foreach($this->finishedGames as $game)
+                                        <div class="flex items-center">
+                                            <div class="flex-1 px-5 py-4">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="text-sm font-medium text-foreground">
+                                                            {{ $game->finished_at->format('d.m.Y') }}
+                                                            @if($game->winner)
+                                                                — <span class="text-accent">{{ $game->winner->name }}</span> vant
+                                                            @endif
+                                                        </p>
+                                                        <p class="text-xs text-muted-foreground mt-0.5">
+                                                            {{ $game->players->pluck('name')->join(', ') }}
+                                                        </p>
+                                                    </div>
+                                                    <span class="text-sm text-muted-foreground ml-4">
+                                                        {{ $game->players->max('total_score') }} poeng
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <button
+                                                wire:click="deleteGame({{ $game->id }})"
+                                                wire:confirm="Er du sikker på at du vil slette dette spillet?"
+                                                class="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                                                title="Slett spill"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -216,54 +324,6 @@
                 </div>
             @endif
 
-            {{-- Tidligere spill --}}
-            <div class="bg-card border border-border rounded-lg overflow-hidden">
-                <div class="px-4 py-3 border-b border-border">
-                    <h2 class="text-sm font-medium text-foreground">Avsluttede spill</h2>
-                </div>
-                @if($this->finishedGames->isEmpty())
-                    <div class="p-4 text-center text-muted-foreground text-sm">
-                        Ingen avsluttede spill funnet
-                    </div>
-                @else
-                    <div class="divide-y divide-border">
-                        @foreach($this->finishedGames as $game)
-                            <div class="flex items-center">
-                                <div class="flex-1 px-4 py-3 hover:bg-card-hover transition-colors">
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <p class="text-sm font-medium text-foreground">
-                                                {{ $game->finished_at->format('d.m.Y') }}
-                                                @if($game->winner)
-                                                    — <span class="text-accent">{{ $game->winner->name }}</span> vant
-                                                @endif
-                                            </p>
-                                            <p class="text-xs text-muted-foreground">
-                                                {{ $game->players->pluck('name')->join(', ') }}
-                                            </p>
-                                        </div>
-                                        <div class="text-right">
-                                            <p class="text-sm text-muted-foreground">
-                                                {{ $game->players->max('total_score') }} poeng
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button
-                                    wire:click="deleteGame({{ $game->id }})"
-                                    wire:confirm="Er du sikker på at du vil slette dette spillet?"
-                                    class="p-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                                    title="Slett spill"
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
         </div>
 
         {{-- Høyre kolonne: Nivåoversikt --}}
