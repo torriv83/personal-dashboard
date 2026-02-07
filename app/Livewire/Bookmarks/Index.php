@@ -941,7 +941,7 @@ class Index extends Component
     public function fetchAllMetadata(): void
     {
         FetchBookmarkMetadataJob::dispatch();
-        $this->dispatch('toast', type: 'info', message: 'Henter info for bokmerker som mangler metadata i bakgrunnen...');
+        $this->dispatch('toast', type: 'info', message: 'Henter metadata for bokmerker i bakgrunnen...');
     }
 
     // ====================

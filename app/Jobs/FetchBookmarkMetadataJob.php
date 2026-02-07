@@ -48,11 +48,13 @@ class FetchBookmarkMetadataJob implements ShouldQueue
         if ($this->bookmarkId) {
             $query->where('id', $this->bookmarkId);
         } else {
-            // Only fetch metadata for bookmarks missing title or where title equals URL
+            // Fetch metadata for bookmarks missing title, description, or where title equals URL
             $query->where(function ($q) {
                 $q->whereNull('title')
                     ->orWhere('title', '')
-                    ->orWhereColumn('title', 'url');
+                    ->orWhereColumn('title', 'url')
+                    ->orWhereNull('description')
+                    ->orWhere('description', '');
             });
         }
 
