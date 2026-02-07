@@ -12,6 +12,9 @@ use Livewire\Livewire;
 beforeEach(function () {
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
+
+    // Set fake API key for OpenRouteService
+    config(['services.openrouteservice.key' => 'test-api-key']);
 });
 
 // ====================

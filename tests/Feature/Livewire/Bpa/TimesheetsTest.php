@@ -11,6 +11,9 @@ use Livewire\Livewire;
 beforeEach(function () {
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
+
+    // Set default BPA hours for quota validation
+    \App\Models\Setting::set('bpa_hours_per_week', 37);
 });
 
 it('renders the timesheets page', function () {

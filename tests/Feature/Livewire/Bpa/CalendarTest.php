@@ -19,6 +19,9 @@ beforeEach(function () {
         $mock->shouldReceive('getAllEvents')->andReturn(collect());
     });
 
+    // Set default BPA hours for quota validation
+    \App\Models\Setting::set('bpa_hours_per_week', 37);
+
     // Freeze time for predictable tests
     Carbon::setTestNow(Carbon::create(2024, 6, 15, 10, 0, 0, 'Europe/Oslo'));
 });

@@ -11,9 +11,9 @@ class YnabService
 {
     private string $baseUrl;
 
-    private string $token;
+    private ?string $token;
 
-    private string $budgetId;
+    private ?string $budgetId;
 
     /**
      * Errors that occurred during the current request cycle.
@@ -24,7 +24,7 @@ class YnabService
 
     public function __construct()
     {
-        $this->baseUrl = config('services.ynab.base_url');
+        $this->baseUrl = config('services.ynab.base_url', '');
         $this->token = config('services.ynab.token');
         $this->budgetId = config('services.ynab.budget_id');
     }
