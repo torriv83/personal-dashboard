@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Bookmarks;
 
 use App\Jobs\CheckDeadBookmarksJob;
+use App\Jobs\FetchBookmarkMetadataJob;
 use App\Models\Bookmark;
 use App\Models\BookmarkFolder;
 use App\Models\BookmarkTag;
@@ -931,6 +932,16 @@ class Index extends Component
         $this->cacheService->clearAll();
         unset($this->bookmarks);
         $this->dispatch('toast', type: 'success', message: 'Status fjernet.');
+    }
+
+    // ====================
+    // Fetch metadata (bulk)
+    // ====================
+
+    public function fetchAllMetadata(): void
+    {
+        FetchBookmarkMetadataJob::dispatch();
+        $this->dispatch('toast', type: 'info', message: 'Henter info for bokmerker som mangler metadata i bakgrunnen...');
     }
 
     // ====================
