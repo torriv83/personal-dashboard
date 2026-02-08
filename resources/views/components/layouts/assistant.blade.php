@@ -47,7 +47,18 @@
                 fail(({ status, preventDefault }) => {
                     if (status === 419) {
                         preventDefault();
-                        window.location.reload();
+                        fetch(window.location.href)
+                            .then(r => r.text())
+                            .then(html => {
+                                const match = html.match(/csrf-token" content="([^"]+)"/);
+                                if (match) {
+                                    document.querySelector('meta[name="csrf-token"]').content = match[1];
+                                }
+                                window.dispatchEvent(new CustomEvent('toast', {
+                                    detail: { type: 'warning', message: 'Sesjonen utløp. Prøv igjen.' }
+                                }));
+                            })
+                            .catch(() => window.location.reload());
                     }
                 });
             });

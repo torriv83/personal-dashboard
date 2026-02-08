@@ -18,11 +18,13 @@
             return this.currentIndex > 0;
         },
         completeTask(taskId) {
-            this.showCheckmark = true;
-            setTimeout(() => {
-                this.showCheckmark = false;
-            }, 600);
-            $wire.toggleTask(taskId);
+            $wire.toggleTask(taskId)
+                .then(() => {
+                    this.showCheckmark = true;
+                    setTimeout(() => {
+                        this.showCheckmark = false;
+                    }, 600);
+                });
         },
         handleTouchStart(e) {
             if (this.isAnimating) return;
