@@ -48,11 +48,18 @@ class Rommers extends Component
 
     public bool $showScoreModal = false;
 
+    public bool $showEditRoundModal = false;
+
+    public ?int $editRoundNumber = null;
+
     /** @var array<int, string> */
     public array $playerNames = ['', ''];
 
     /** @var array<int, array{score: int, completed: bool}> */
     public array $roundScores = [];
+
+    /** @var array<int, array{score: int, completed: bool}> */
+    public array $editRoundScores = [];
 
     public function mount(): void
     {
@@ -251,6 +258,108 @@ class Rommers extends Component
 
         $this->closeScoreModal();
         unset($this->activeGames, $this->selectedGame, $this->finishedGames);
+    }
+
+    public function openEditRoundModal(int $roundNumber): void
+    {
+        if (! $this->selectedGame) {
+            return;
+        }
+
+        $this->editRoundNumber = $roundNumber;
+        $this->editRoundScores = [];
+
+        foreach ($this->selectedGame->players as $player) {
+            $round = $player->rounds->firstWhere('round_number', $roundNumber);
+            $this->editRoundScores[$player->id] = [
+                'score' => $round?->score ?? 0,
+                'completed' => (bool) ($round?->completed_level ?? false),
+            ];
+        }
+
+        $this->showEditRoundModal = true;
+    }
+
+    public function closeEditRoundModal(): void
+    {
+        $this->showEditRoundModal = false;
+        $this->editRoundNumber = null;
+        $this->editRoundScores = [];
+    }
+
+    public function saveEditRound(): void
+    {
+        if (! $this->selectedGame || ! $this->editRoundNumber) {
+            return;
+        }
+
+        // Oppdater runde-poster
+        foreach ($this->selectedGame->players as $player) {
+            $scoreData = $this->editRoundScores[$player->id] ?? ['score' => 0, 'completed' => false];
+
+            RommersRound::where('player_id', $player->id)
+                ->where('round_number', $this->editRoundNumber)
+                ->update([
+                    'score' => $scoreData['score'],
+                    'completed_level' => $scoreData['completed'],
+                ]);
+        }
+
+        // Refresh og rekalkuler alle spillere fra scratch
+        unset($this->selectedGame);
+        $this->recalculatePlayerStats();
+
+        $this->closeEditRoundModal();
+        unset($this->activeGames, $this->selectedGame, $this->finishedGames);
+        $this->dispatch('toast', type: 'success', message: 'Runde oppdatert!');
+    }
+
+    /**
+     * Rekalkulerer current_level og total_score for alle spillere i valgt spill
+     * basert på alle registrerte runder.
+     */
+    private function recalculatePlayerStats(): void
+    {
+        if (! $this->selectedGame) {
+            return;
+        }
+
+        foreach ($this->selectedGame->players as $player) {
+            $level = 1;
+            $totalScore = 0;
+
+            $rounds = $player->rounds->sortBy('round_number');
+            foreach ($rounds as $round) {
+                $totalScore += $round->score;
+                if ($round->completed_level) {
+                    $level++;
+                }
+            }
+
+            $player->update([
+                'current_level' => $level,
+                'total_score' => $totalScore,
+            ]);
+        }
+
+        // Sjekk om spillet bør markeres som ferdig (eller gjenåpnes)
+        $winner = $this->selectedGame->players->fresh()->first(fn (RommersPlayer $p) => $p->current_level > 11);
+
+        if ($winner && ! $this->selectedGame->isFinished()) {
+            $this->selectedGame->update([
+                'finished_at' => now(),
+                'winner_id' => $winner->id,
+            ]);
+            $this->selectedGameId = null;
+            $this->dispatch('game-selection-changed', hasGame: false);
+            $this->dispatch('toast', type: 'success', message: "{$winner->name} vant spillet!");
+        } elseif (! $winner && $this->selectedGame->isFinished()) {
+            // Redigering fjernet vinneren - gjenåpne spillet
+            $this->selectedGame->update([
+                'finished_at' => null,
+                'winner_id' => null,
+            ]);
+        }
     }
 
     public function deleteGame(int $gameId): void

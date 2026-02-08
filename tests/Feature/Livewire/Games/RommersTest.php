@@ -792,6 +792,278 @@ test('completing level below 11 does not finish game', function () {
     expect($game->winner_id)->toBeNull();
 });
 
+// ====================
+// Edit Round
+// ====================
+
+test('can open edit round modal with existing round data', function () {
+    $game = RommersGame::factory()->create([
+        'started_at' => now(),
+        'finished_at' => null,
+    ]);
+
+    $player1 = RommersPlayer::factory()->create([
+        'game_id' => $game->id,
+        'name' => 'Alice',
+        'current_level' => 2,
+        'total_score' => 10,
+        'sort_order' => 0,
+    ]);
+
+    $player2 = RommersPlayer::factory()->create([
+        'game_id' => $game->id,
+        'name' => 'Bob',
+        'current_level' => 1,
+        'total_score' => 15,
+        'sort_order' => 1,
+    ]);
+
+    \App\Models\RommersRound::create([
+        'player_id' => $player1->id,
+        'round_number' => 1,
+        'level' => 1,
+        'score' => 10,
+        'completed_level' => true,
+    ]);
+
+    \App\Models\RommersRound::create([
+        'player_id' => $player2->id,
+        'round_number' => 1,
+        'level' => 1,
+        'score' => 15,
+        'completed_level' => false,
+    ]);
+
+    $component = Livewire::test(Rommers::class)
+        ->set('selectedGameId', $game->id)
+        ->call('openEditRoundModal', 1)
+        ->assertSet('showEditRoundModal', true)
+        ->assertSet('editRoundNumber', 1);
+
+    expect($component->editRoundScores[$player1->id]['score'])->toBe(10);
+    expect($component->editRoundScores[$player1->id]['completed'])->toBeTrue();
+    expect($component->editRoundScores[$player2->id]['score'])->toBe(15);
+    expect($component->editRoundScores[$player2->id]['completed'])->toBeFalse();
+});
+
+test('can edit round to mark completed level', function () {
+    $game = RommersGame::factory()->create([
+        'started_at' => now(),
+        'finished_at' => null,
+    ]);
+
+    $player = RommersPlayer::factory()->create([
+        'game_id' => $game->id,
+        'name' => 'Alice',
+        'current_level' => 1,
+        'total_score' => 10,
+        'sort_order' => 0,
+    ]);
+
+    \App\Models\RommersRound::create([
+        'player_id' => $player->id,
+        'round_number' => 1,
+        'level' => 1,
+        'score' => 10,
+        'completed_level' => false,
+    ]);
+
+    Livewire::test(Rommers::class)
+        ->set('selectedGameId', $game->id)
+        ->call('openEditRoundModal', 1)
+        ->set("editRoundScores.{$player->id}.completed", true)
+        ->call('saveEditRound')
+        ->assertSet('showEditRoundModal', false)
+        ->assertDispatched('toast', message: 'Runde oppdatert!', type: 'success');
+
+    $player->refresh();
+    expect($player->current_level)->toBe(2);
+    expect($player->total_score)->toBe(10);
+
+    $round = \App\Models\RommersRound::where('player_id', $player->id)->first();
+    expect($round->completed_level)->toBeTrue();
+});
+
+test('can edit round to unmark completed level', function () {
+    $game = RommersGame::factory()->create([
+        'started_at' => now(),
+        'finished_at' => null,
+    ]);
+
+    $player = RommersPlayer::factory()->create([
+        'game_id' => $game->id,
+        'name' => 'Alice',
+        'current_level' => 2,
+        'total_score' => 10,
+        'sort_order' => 0,
+    ]);
+
+    \App\Models\RommersRound::create([
+        'player_id' => $player->id,
+        'round_number' => 1,
+        'level' => 1,
+        'score' => 10,
+        'completed_level' => true,
+    ]);
+
+    Livewire::test(Rommers::class)
+        ->set('selectedGameId', $game->id)
+        ->call('openEditRoundModal', 1)
+        ->set("editRoundScores.{$player->id}.completed", false)
+        ->call('saveEditRound');
+
+    $player->refresh();
+    expect($player->current_level)->toBe(1);
+    expect($player->total_score)->toBe(10);
+
+    $round = \App\Models\RommersRound::where('player_id', $player->id)->first();
+    expect($round->completed_level)->toBeFalse();
+});
+
+test('edit round recalculates score correctly', function () {
+    $game = RommersGame::factory()->create([
+        'started_at' => now(),
+        'finished_at' => null,
+    ]);
+
+    $player = RommersPlayer::factory()->create([
+        'game_id' => $game->id,
+        'name' => 'Alice',
+        'current_level' => 1,
+        'total_score' => 25,
+        'sort_order' => 0,
+    ]);
+
+    \App\Models\RommersRound::create([
+        'player_id' => $player->id,
+        'round_number' => 1,
+        'level' => 1,
+        'score' => 10,
+        'completed_level' => false,
+    ]);
+
+    \App\Models\RommersRound::create([
+        'player_id' => $player->id,
+        'round_number' => 2,
+        'level' => 1,
+        'score' => 15,
+        'completed_level' => false,
+    ]);
+
+    Livewire::test(Rommers::class)
+        ->set('selectedGameId', $game->id)
+        ->call('openEditRoundModal', 1)
+        ->set("editRoundScores.{$player->id}.score", 50)
+        ->call('saveEditRound');
+
+    $player->refresh();
+    expect($player->total_score)->toBe(65);
+});
+
+test('editing round that causes win finishes the game', function () {
+    $game = RommersGame::factory()->create([
+        'started_at' => now(),
+        'finished_at' => null,
+    ]);
+
+    $player = RommersPlayer::factory()->create([
+        'game_id' => $game->id,
+        'name' => 'Alice',
+        'current_level' => 11,
+        'total_score' => 100,
+        'sort_order' => 0,
+    ]);
+
+    // Opprett 10 fullførte runder (nivå 1-10) for å justifisere current_level=11
+    for ($i = 1; $i <= 10; $i++) {
+        \App\Models\RommersRound::create([
+            'player_id' => $player->id,
+            'round_number' => $i,
+            'level' => $i,
+            'score' => 10,
+            'completed_level' => true,
+        ]);
+    }
+
+    // Runde 11: nivå 11, ikke fullført ennå
+    \App\Models\RommersRound::create([
+        'player_id' => $player->id,
+        'round_number' => 11,
+        'level' => 11,
+        'score' => 30,
+        'completed_level' => false,
+    ]);
+
+    Livewire::test(Rommers::class)
+        ->set('selectedGameId', $game->id)
+        ->call('openEditRoundModal', 11)
+        ->set("editRoundScores.{$player->id}.completed", true)
+        ->call('saveEditRound');
+
+    $game->refresh();
+    $player->refresh();
+    expect($game->finished_at)->not->toBeNull();
+    expect($game->winner_id)->toBe($player->id);
+    expect($player->current_level)->toBe(12);
+});
+
+test('editing round that removes win reopens the game', function () {
+    $game = RommersGame::factory()->create([
+        'started_at' => now(),
+        'finished_at' => now(),
+    ]);
+
+    $player = RommersPlayer::factory()->create([
+        'game_id' => $game->id,
+        'name' => 'Alice',
+        'current_level' => 12,
+        'total_score' => 130,
+        'sort_order' => 0,
+    ]);
+
+    $game->update(['winner_id' => $player->id]);
+
+    \App\Models\RommersRound::create([
+        'player_id' => $player->id,
+        'round_number' => 1,
+        'level' => 11,
+        'score' => 30,
+        'completed_level' => true,
+    ]);
+
+    Livewire::test(Rommers::class)
+        ->set('selectedGameId', $game->id)
+        ->call('openEditRoundModal', 1)
+        ->set("editRoundScores.{$player->id}.completed", false)
+        ->call('saveEditRound');
+
+    $game->refresh();
+    expect($game->finished_at)->toBeNull();
+    expect($game->winner_id)->toBeNull();
+});
+
+test('can close edit round modal', function () {
+    $game = RommersGame::factory()->create([
+        'started_at' => now(),
+        'finished_at' => null,
+    ]);
+
+    RommersPlayer::factory()->create([
+        'game_id' => $game->id,
+        'name' => 'Alice',
+        'sort_order' => 0,
+    ]);
+
+    Livewire::test(Rommers::class)
+        ->set('selectedGameId', $game->id)
+        ->set('showEditRoundModal', true)
+        ->set('editRoundNumber', 1)
+        ->call('closeEditRoundModal')
+        ->assertSet('showEditRoundModal', false)
+        ->assertSet('editRoundNumber', null)
+        ->assertSet('editRoundScores', []);
+});
+
 test('not completing level 11 does not finish game', function () {
     $game = RommersGame::factory()->create([
         'started_at' => now(),

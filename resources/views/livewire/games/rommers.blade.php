@@ -252,6 +252,7 @@
                                             @foreach($this->selectedGame->players as $player)
                                                 <th class="px-4 py-2 text-center text-xs font-medium text-muted-foreground">{{ $player->name }}</th>
                                             @endforeach
+                                            <th class="w-10"></th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-border">
@@ -277,6 +278,17 @@
                                                         @endif
                                                     </td>
                                                 @endforeach
+                                                <td class="px-2 py-2 text-center">
+                                                    <button
+                                                        wire:click="openEditRoundModal({{ $i }})"
+                                                        class="p-1 text-muted-foreground hover:text-accent transition-colors cursor-pointer"
+                                                        title="Rediger runde {{ $i }}"
+                                                    >
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                        </svg>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         @endfor
                                     </tbody>
@@ -288,6 +300,7 @@
                                                     {{ $player->total_score }}
                                                 </td>
                                             @endforeach
+                                            <td></td>
                                         </tr>
                                     </tfoot>
                                 </table>
@@ -597,6 +610,94 @@
                         class="px-4 py-2 text-sm text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
                     >
                         Lagre runde
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Rediger runde Modal --}}
+    @if($showEditRoundModal && $this->selectedGame && $editRoundNumber)
+        <div
+            class="fixed inset-0 z-50 flex items-center justify-center"
+            x-data
+            x-on:keydown.escape.window="$wire.closeEditRoundModal()"
+        >
+            {{-- Backdrop --}}
+            <div
+                class="absolute inset-0 bg-black/50"
+                wire:click="closeEditRoundModal"
+            ></div>
+
+            {{-- Modal --}}
+            <div class="relative bg-card border border-border rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+                {{-- Header --}}
+                <div class="px-4 sm:px-6 py-4 border-b border-border flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-foreground">Rediger runde {{ $editRoundNumber }}</h2>
+                    <button
+                        wire:click="closeEditRoundModal"
+                        class="p-1 text-muted-foreground hover:text-foreground rounded transition-colors cursor-pointer"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Body --}}
+                <div class="px-4 sm:px-6 py-4 space-y-4">
+                    @foreach($this->selectedGame->players as $player)
+                        @php
+                            $round = $player->rounds->firstWhere('round_number', $editRoundNumber);
+                        @endphp
+                        <div class="p-4 bg-card-hover/50 rounded-lg space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-medium text-foreground">{{ $player->name }}</span>
+                                <span class="text-xs text-muted-foreground">
+                                    Nivå {{ $round?->level ?? $player->current_level }}: {{ $levels[$round?->level ?? $player->current_level] ?? '—' }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <div class="flex-1">
+                                    <label class="block text-xs text-muted-foreground mb-1">Poeng</label>
+                                    <input
+                                        type="number"
+                                        wire:model="editRoundScores.{{ $player->id }}.score"
+                                        class="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                                        placeholder="0"
+                                        min="0"
+                                        @focus="$el.select()"
+                                    >
+                                </div>
+                                <div class="pt-5">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            wire:model="editRoundScores.{{ $player->id }}.completed"
+                                            class="w-5 h-5 rounded border-border text-accent focus:ring-accent focus:ring-offset-0 bg-input cursor-pointer"
+                                        >
+                                        <span class="text-sm text-foreground">Fullført nivå</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-4 sm:px-6 py-4 border-t border-border flex items-center justify-end gap-3">
+                    <button
+                        wire:click="closeEditRoundModal"
+                        class="px-4 py-2 text-sm text-foreground bg-card-hover border border-border rounded-lg hover:bg-input transition-colors cursor-pointer"
+                    >
+                        Avbryt
+                    </button>
+                    <button
+                        wire:click="saveEditRound"
+                        class="px-4 py-2 text-sm text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer"
+                    >
+                        Lagre endringer
                     </button>
                 </div>
             </div>
