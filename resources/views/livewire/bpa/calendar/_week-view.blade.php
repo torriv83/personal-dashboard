@@ -153,6 +153,21 @@
 
         {{-- Tidslinje med 7 kolonner --}}
         <div class="flex-1 overflow-auto relative flex flex-col">
+            {{-- Nåværende tid-indikator --}}
+            @if($this->currentTimePosition !== null && collect($this->currentWeekDays)->contains('isToday', true))
+                <div
+                    class="absolute left-0 right-0 z-20 pointer-events-none"
+                    style="top: {{ $this->currentTimePosition }}%"
+                >
+                    <div class="flex items-center">
+                        <div class="w-8 md:w-12 flex justify-end pr-0.5 md:pr-1">
+                            <div class="w-2 h-2 rounded-full bg-destructive"></div>
+                        </div>
+                        <div class="flex-1 h-0.5 bg-destructive"></div>
+                    </div>
+                </div>
+            @endif
+
             {{-- Time-rader --}}
             @foreach($this->timeSlots as $slot)
                 <div

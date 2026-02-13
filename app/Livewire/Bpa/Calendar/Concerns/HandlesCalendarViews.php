@@ -95,7 +95,7 @@ trait HandlesCalendarViews
 
         // Calculate position as percentage from 08:00
         $minutesFrom8 = ($hour - 8) * 60 + $minute;
-        $totalMinutes = 15 * 60; // 15 hours (08:00 to 23:00)
+        $totalMinutes = 16 * 60; // 16 hours (08:00 to 23:00 inclusive = 16 slots)
 
         return ($minutesFrom8 / $totalMinutes) * 100;
     }
