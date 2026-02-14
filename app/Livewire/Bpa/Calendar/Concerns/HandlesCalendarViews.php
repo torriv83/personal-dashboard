@@ -68,7 +68,7 @@ trait HandlesCalendarViews
     public function getTimeSlotsProperty(): array
     {
         $slots = [];
-        $startHour = 8;
+        $startHour = 0;
         $endHour = 23;
 
         for ($hour = $startHour; $hour <= $endHour; $hour++) {
@@ -88,16 +88,16 @@ trait HandlesCalendarViews
         $hour = $now->hour;
         $minute = $now->minute;
 
-        // Only show if within visible hours (8-23)
-        if ($hour < 8 || $hour > 23) {
+        // Only show if within visible hours (0-23)
+        if ($hour > 23) {
             return null;
         }
 
-        // Calculate position as percentage from 08:00
-        $minutesFrom8 = ($hour - 8) * 60 + $minute;
-        $totalMinutes = 16 * 60; // 16 hours (08:00 to 23:00 inclusive = 16 slots)
+        // Calculate position as percentage from 00:00
+        $minutesFromStart = $hour * 60 + $minute;
+        $totalMinutes = 24 * 60; // 24 hours (00:00 to 23:00 inclusive = 24 slots)
 
-        return ($minutesFrom8 / $totalMinutes) * 100;
+        return ($minutesFromStart / $totalMinutes) * 100;
     }
 
     public function getIsTodaySelectedProperty(): bool

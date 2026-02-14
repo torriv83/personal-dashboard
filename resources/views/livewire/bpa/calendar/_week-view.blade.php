@@ -126,10 +126,10 @@
                             x-data="{ showTooltip: false }"
                             @mouseenter="showTooltip = true"
                             @mouseleave="showTooltip = false"
-                            class="hidden md:block rounded px-1.5 py-0.5 opacity-50 hover:opacity-70 transition-opacity relative"
-                            style="background-color: {{ $externalEvent->color }}15; border: 1px solid {{ $externalEvent->color }}30"
+                            class="hidden md:block rounded px-1.5 py-0.5 relative group/ext cursor-default border-l-2"
+                            style="background-color: {{ $externalEvent->color }}15; border-color: {{ $externalEvent->color }}"
                         >
-                            <div class="text-[10px] font-medium truncate text-foreground">
+                            <div class="text-[10px] font-medium truncate text-foreground opacity-70 group-hover/ext:opacity-100 transition-opacity">
                                 @if($externalEvent->isManUtd())⚽@endif
                                 {{ $externalEvent->title }}
                             </div>
@@ -359,14 +359,21 @@
                                     x-data="{ showTooltip: false }"
                                     @mouseenter="showTooltip = true"
                                     @mouseleave="showTooltip = false"
-                                    class="hidden md:block absolute rounded px-1 py-0.5 z-5 border-l-2 opacity-50 hover:opacity-70 transition-opacity"
+                                    class="hidden md:block absolute rounded px-1 py-0.5 z-5 border-l-2 group/ext cursor-default"
                                     style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; left: calc({{ $extLeftPercent }}% + 2px); width: calc({{ $extWidthPercent }}% - 4px); background-color: {{ $externalEvent->color }}15; border-color: {{ $externalEvent->color }}"
                                 >
-                                    <div class="text-xs font-medium truncate text-foreground">
-                                        @if($externalEvent->isManUtd())⚽@endif
-                                        {{ $externalEvent->title }}
-                                    </div>
-                                    <div class="text-[10px] text-foreground truncate">{{ $externalEvent->getTimeRange() }}</div>
+                                    @if($durationMinutes < 60)
+                                        <div class="text-[10px] font-medium truncate text-foreground opacity-70 group-hover/ext:opacity-100 transition-opacity">
+                                            @if($externalEvent->isManUtd())⚽@endif
+                                            {{ $externalEvent->title }} <span class="font-normal text-foreground/70">{{ $externalEvent->getTimeRange() }}</span>
+                                        </div>
+                                    @else
+                                        <div class="text-xs font-medium truncate text-foreground opacity-70 group-hover/ext:opacity-100 transition-opacity">
+                                            @if($externalEvent->isManUtd())⚽@endif
+                                            {{ $externalEvent->title }}
+                                        </div>
+                                        <div class="text-[10px] text-foreground truncate opacity-60 group-hover/ext:opacity-100 transition-opacity">{{ $externalEvent->getTimeRange() }}</div>
+                                    @endif
 
                                     {{-- Tooltip --}}
                                     <div
