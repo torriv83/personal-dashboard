@@ -150,12 +150,28 @@
             {{-- Nåværende tid-indikator --}}
             @if($this->isTodaySelected && $this->currentTimePosition !== null)
                 <div
+                    x-data="{
+                        position: {{ $this->currentTimePosition }},
+                        timeText: '',
+                        init() {
+                            this.update();
+                            setInterval(() => this.update(), 30000);
+                        },
+                        update() {
+                            const now = new Date();
+                            const h = String(now.getHours()).padStart(2, '0');
+                            const m = String(now.getMinutes()).padStart(2, '0');
+                            this.timeText = h + ':' + m;
+                            const minutesFromStart = now.getHours() * 60 + now.getMinutes();
+                            this.position = (minutesFromStart / 1440) * 100;
+                        }
+                    }"
                     class="absolute left-0 right-0 z-20 pointer-events-none"
-                    style="top: {{ $this->currentTimePosition }}%"
+                    :style="'top: ' + position + '%'"
                 >
                     <div class="flex items-center">
                         <div class="w-10 md:w-12 flex justify-end pr-1">
-                            <div class="w-2 h-2 rounded-full bg-destructive"></div>
+                            <span class="text-[10px] font-semibold text-white bg-destructive rounded px-1 py-0.5 leading-none" x-text="timeText"></span>
                         </div>
                         <div class="flex-1 h-0.5 bg-destructive"></div>
                     </div>
