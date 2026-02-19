@@ -113,6 +113,23 @@ it('can toggle task status on assigned task', function () {
     expect($task->fresh()->status)->toBe(TaskStatus::Completed);
 });
 
+it('can toggle task on own list without explicit assistant_id on task', function () {
+    $ownList = TaskList::factory()->create([
+        'is_shared' => false,
+        'assistant_id' => $this->assistant->id,
+    ]);
+    $task = Task::factory()->create([
+        'task_list_id' => $ownList->id,
+        'assistant_id' => null,
+        'status' => TaskStatus::Pending,
+    ]);
+
+    Livewire::test(AssistantTasks::class, ['assistant' => $this->assistant])
+        ->call('toggleTask', $task->id);
+
+    expect($task->fresh()->status)->toBe(TaskStatus::Completed);
+});
+
 it('cannot toggle task not accessible to assistant', function () {
     $otherAssistant = Assistant::factory()->create();
     $privateList = TaskList::factory()->create(['is_shared' => false]);

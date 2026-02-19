@@ -274,6 +274,11 @@ class AssistantTasks extends Component
             return true;
         }
 
+        // Can access if the list belongs to this assistant
+        if ($task->taskList->assistant_id === $this->assistant->id) {
+            return true;
+        }
+
         // Can access if directly assigned to this assistant
         if ($task->assistant_id === $this->assistant->id) {
             return true;

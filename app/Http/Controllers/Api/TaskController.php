@@ -9,6 +9,7 @@ use App\Http\Requests\Api\StoreTaskRequest;
 use App\Http\Requests\Api\UpdateTaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Task;
+use App\Models\TaskList;
 use Illuminate\Http\JsonResponse;
 
 class TaskController extends Controller
@@ -18,7 +19,17 @@ class TaskController extends Controller
      */
     public function store(StoreTaskRequest $request): TaskResource
     {
-        $task = Task::create($request->validated());
+        $data = $request->validated();
+
+        // Auto-inherit assistant_id from the task list if not explicitly set
+        if (! isset($data['assistant_id'])) {
+            $taskList = TaskList::find($data['task_list_id']);
+            if ($taskList?->assistant_id) {
+                $data['assistant_id'] = $taskList->assistant_id;
+            }
+        }
+
+        $task = Task::create($data);
 
         return new TaskResource($task);
     }
