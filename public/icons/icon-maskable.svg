@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#1a1a1a"/>
+  <g fill="#c8ff00">
+    <!-- Dashboard grid icon - with maskable safe zone padding -->
+    <rect x="128" y="128" width="108" height="108" rx="12"/>
+    <rect x="276" y="128" width="108" height="60" rx="12"/>
+    <rect x="276" y="228" width="108" height="156" rx="12"/>
+    <rect x="128" y="276" width="108" height="108" rx="12"/>
+  </g>
+</svg>
