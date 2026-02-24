@@ -65,35 +65,35 @@ Alpine.store('contextMenu', {
         this.show = false;
     },
 
-    // Execute action and call Livewire component
+    // Execute action via Alpine custom events (no Livewire round-trip)
     action(actionName) {
-        const calendarEl = document.querySelector('[x-data^="calendar"]');
-        const wireEl = calendarEl?.closest('[wire\\:id]');
-        const wireId = wireEl?.getAttribute('wire:id');
-
-        if (!wireId) {
-            console.error('Context menu: Could not find Livewire component');
-            this.hide();
-            return;
-        }
-
-        const wire = Livewire.find(wireId);
-
         if (this.type === 'slot') {
             if (actionName === 'create') {
-                wire.call('openModal', this.date, this.time, null, null, false);
+                window.dispatchEvent(new CustomEvent('calendar-open-modal', {
+                    detail: { date: this.date, time: this.time }
+                }));
             } else if (actionName === 'unavailable') {
-                wire.call('openModal', this.date, this.time, null, null, true);
+                window.dispatchEvent(new CustomEvent('calendar-open-modal', {
+                    detail: { date: this.date, time: this.time, isUnavailable: true }
+                }));
             }
         } else if (this.type === 'shift') {
             if (actionName === 'edit') {
-                wire.call('editShift', this.shiftId);
+                window.dispatchEvent(new CustomEvent('calendar-edit-shift', {
+                    detail: { shiftId: this.shiftId }
+                }));
             } else if (actionName === 'duplicate') {
-                wire.call('duplicateShiftWithModal', this.shiftId);
+                window.dispatchEvent(new CustomEvent('calendar-duplicate-shift', {
+                    detail: { shiftId: this.shiftId }
+                }));
             } else if (actionName === 'delete') {
-                wire.call('deleteShift', this.shiftId);
+                window.dispatchEvent(new CustomEvent('calendar-delete-shift', {
+                    detail: { shiftId: this.shiftId }
+                }));
             } else if (actionName === 'archive') {
-                wire.call('archiveShift', this.shiftId);
+                window.dispatchEvent(new CustomEvent('calendar-archive-shift', {
+                    detail: { shiftId: this.shiftId }
+                }));
             }
         }
 
@@ -266,18 +266,13 @@ Alpine.store('absencePopup', {
             return;
         }
 
-        const calendarEl = document.querySelector('[x-data^="calendar"]');
-        const wireEl = calendarEl?.closest('[wire\\:id]');
-        const wireId = wireEl?.getAttribute('wire:id');
-
-        if (!wireId) {
-            console.error('Absence popup: Could not find Livewire component');
-            this.hide();
-            return;
-        }
-
-        const wire = Livewire.find(wireId);
-        wire.call('createAbsenceFromSelection', this.assistantId, this.fromDate, this.toDate);
+        window.dispatchEvent(new CustomEvent('calendar-create-absence', {
+            detail: {
+                assistantId: this.assistantId,
+                fromDate: this.fromDate,
+                toDate: this.toDate,
+            }
+        }));
         this.hide();
     }
 });

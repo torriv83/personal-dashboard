@@ -6,11 +6,6 @@ namespace App\Livewire\Bpa;
 
 use App\Livewire\Bpa\Calendar\Concerns\HandlesCalendarNavigation;
 use App\Livewire\Bpa\Calendar\Concerns\HandlesCalendarViews;
-use App\Livewire\Bpa\Calendar\Concerns\HandlesRecurringShifts;
-use App\Livewire\Bpa\Calendar\Concerns\ShiftCrudOperations;
-use App\Livewire\Bpa\Calendar\Concerns\ShiftDragDropOperations;
-use App\Livewire\Bpa\Calendar\Concerns\ShiftModalDispatcher;
-use App\Livewire\Bpa\Calendar\Concerns\ShiftRecurrenceOperations;
 use App\Livewire\Concerns\FormatsMinutes;
 use App\Models\Assistant;
 use App\Models\Setting;
@@ -23,15 +18,17 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
+ * BPA Calendar Livewire component.
+ *
+ * Modal/CRUD operations are handled entirely by Alpine.js + API.
+ * This component provides: initial state, server-side rendering,
+ * cache invalidation, and computed properties for calendar data.
+ *
  * @property-read Collection $assistants
  * @property-read array $dayViewUnavailableAssistantIds
- * @property-read array $unavailableAssistantIds
- * @property-read Collection $shifts
- * @property-read array $shiftsByDate
  * @property-read Collection<int, CalendarEvent> $externalEvents
  * @property-read array $externalEventsByDate
  * @property-read array $remainingHoursData
@@ -42,11 +39,6 @@ class Calendar extends Component
     use FormatsMinutes;
     use HandlesCalendarNavigation;
     use HandlesCalendarViews;
-    use HandlesRecurringShifts;
-    use ShiftCrudOperations;
-    use ShiftDragDropOperations;
-    use ShiftModalDispatcher;
-    use ShiftRecurrenceOperations;
 
     public int $year;
 
@@ -55,72 +47,6 @@ class Calendar extends Component
     public int $day;
 
     public string $view = 'month'; // month, week, day
-
-    // Modal state
-    public bool $showModal = false;
-
-    public ?int $editingShiftId = null;
-
-    // Quick create state
-    public bool $showQuickCreate = false;
-
-    public string $quickCreateDate = '';
-
-    public string $quickCreateTime = '';
-
-    public ?string $quickCreateEndTime = null;
-
-    public int $quickCreateX = 0;
-
-    public int $quickCreateY = 0;
-
-    // Form data
-    public ?int $assistantId = null;
-
-    public string $fromDate = '';
-
-    public string $fromTime = '08:00';
-
-    public string $toDate = '';
-
-    public string $toTime = '16:00';
-
-    public bool $isUnavailable = false;
-
-    public bool $isAllDay = false;
-
-    public string $note = '';
-
-    // Recurring fields (only for unavailable entries)
-    public bool $isRecurring = false;
-
-    public string $recurringInterval = 'weekly'; // weekly, biweekly, monthly
-
-    public string $recurringEndType = 'count'; // count, date
-
-    public int $recurringCount = 4;
-
-    public string $recurringEndDate = '';
-
-    // Dialog for editing/deleting/moving recurring shifts
-    public bool $showRecurringDialog = false;
-
-    public string $recurringAction = ''; // edit, delete, archive, move
-
-    public string $recurringScope = 'single'; // single, future, all
-
-    // Track if shift being edited is already recurring
-    public bool $isExistingRecurring = false;
-
-    // Pending move data for recurring shifts
-    public ?string $pendingMoveDate = null;
-
-    public ?string $pendingMoveTime = null;
-
-    protected $listeners = [
-        'refreshCalendar' => '$refresh',
-        'calendar-go-to-today' => 'goToToday',
-    ];
 
     public array $norwegianMonths = [
         1 => 'Januar',
@@ -163,21 +89,6 @@ class Calendar extends Component
         $this->year = $now->year;
         $this->month = $now->month;
         $this->day = $now->day;
-
-        // Open create modal if ?create=1 is in URL
-        if (request()->query('create')) {
-            $this->openModal($now->format('Y-m-d'));
-            $this->dispatch('clear-url-params');
-        }
-    }
-
-    /**
-     * Handle bottom nav quick shift creation.
-     */
-    #[On('open-quick-shift-modal')]
-    public function handleOpenQuickShiftModal(): void
-    {
-        $this->openModal(Carbon::now('Europe/Oslo')->format('Y-m-d'));
     }
 
     /**
@@ -207,42 +118,6 @@ class Calendar extends Component
             ->where('is_unavailable', true)
             ->where('is_all_day', true)
             ->whereDate('starts_at', $date->format('Y-m-d'))
-            ->pluck('assistant_id')
-            ->unique()
-            ->values()
-            ->toArray();
-    }
-
-    /**
-     * Get assistant IDs that are unavailable for the currently selected time in the modal.
-     *
-     * @return array<int>
-     */
-    #[Computed]
-    public function unavailableAssistantIds(): array
-    {
-        if (! $this->fromDate || ! $this->toDate) {
-            return [];
-        }
-
-        // Don't filter if we're creating an unavailable entry
-        if ($this->isUnavailable) {
-            return [];
-        }
-
-        $startsAt = $this->isAllDay
-            ? Carbon::parse($this->fromDate)->startOfDay()
-            : Carbon::parse($this->fromDate . ' ' . ($this->fromTime ?: '08:00'));
-
-        $endsAt = $this->isAllDay
-            ? Carbon::parse($this->toDate)->endOfDay()
-            : Carbon::parse($this->toDate . ' ' . ($this->toTime ?: '11:00'));
-
-        return Shift::query()
-            ->where('is_unavailable', true)
-            ->when($this->editingShiftId, fn ($q) => $q->where('id', '!=', $this->editingShiftId))
-            ->where('starts_at', '<', $endsAt)
-            ->where('ends_at', '>', $startsAt)
             ->pluck('assistant_id')
             ->unique()
             ->values()
@@ -931,6 +806,9 @@ class Calendar extends Component
             Cache::forget("calendar-day-external-events-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
             Cache::forget("calendar-day-external-events-by-date-{$cacheYear}-{$cacheMonth}-{$cacheDay}");
         }
+
+        // Notify Alpine.js to re-fetch calendar data from API
+        $this->dispatch('calendar-data-changed');
     }
 
     /**
@@ -942,6 +820,7 @@ class Calendar extends Component
         app(GoogleCalendarService::class)->clearCache();
 
         // Clear the local calendar caches (includes external events)
+        // Note: invalidateCalendarCache already dispatches calendar-data-changed
         $this->invalidateCalendarCache();
     }
 

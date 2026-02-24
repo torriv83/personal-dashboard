@@ -42,116 +42,114 @@
                 </button>
             </div>
             <div class="flex-1 overflow-y-auto p-2 space-y-2">
-                @foreach($this->assistants as $assistant)
-                    @php $isUnavailable = in_array($assistant->id, $this->dayViewUnavailableAssistantIds); @endphp
-                    @if($isUnavailable)
-                        <div
-                            class="p-2 rounded opacity-50 cursor-not-allowed"
-                            style="background-color: {{ $assistant->color ?? '#3b82f6' }}10; border: 1px solid {{ $assistant->color ?? '#3b82f6' }}30"
-                            title="Borte hele dagen"
-                        >
-                            <div class="text-sm font-medium text-muted">{{ $assistant->name }}</div>
-                            <div class="text-xs text-muted">Borte</div>
-                        </div>
-                    @else
-                        <div
-                            class="p-2 rounded cursor-grab hover:opacity-80 transition-opacity active:cursor-grabbing"
-                            style="background-color: {{ $assistant->color ?? '#3b82f6' }}20; border: 1px solid {{ $assistant->color ?? '#3b82f6' }}50"
-                            draggable="true"
-                            @dragstart="startDragAssistant($event, {{ $assistant->id }})"
-                            @dragend="endDrag($event)"
-                        >
-                            <div class="text-sm font-medium text-foreground">{{ $assistant->name }}</div>
-                            <div class="text-xs text-muted">{{ $assistant->type_label }}</div>
-                        </div>
-                    @endif
-                @endforeach
+                <template x-for="assistant in assistants" :key="assistant.id">
+                    <div>
+                        <template x-if="dayViewUnavailableAssistantIds.includes(assistant.id)">
+                            <div
+                                class="p-2 rounded opacity-50 cursor-not-allowed"
+                                :style="'background-color: ' + (assistant.color || '#3b82f6') + '10; border: 1px solid ' + (assistant.color || '#3b82f6') + '30'"
+                                title="Borte hele dagen"
+                            >
+                                <div class="text-sm font-medium text-muted" x-text="assistant.name"></div>
+                                <div class="text-xs text-muted">Borte</div>
+                            </div>
+                        </template>
+                        <template x-if="!dayViewUnavailableAssistantIds.includes(assistant.id)">
+                            <div
+                                class="p-2 rounded cursor-grab hover:opacity-80 transition-opacity active:cursor-grabbing"
+                                :style="'background-color: ' + (assistant.color || '#3b82f6') + '20; border: 1px solid ' + (assistant.color || '#3b82f6') + '50'"
+                                draggable="true"
+                                @dragstart="startDragAssistant($event, assistant.id)"
+                                @dragend="endDrag($event)"
+                            >
+                                <div class="text-sm font-medium text-foreground" x-text="assistant.name"></div>
+                                <div class="text-xs text-muted" x-text="assistant.type_label"></div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
             </div>
         </div>
     </div>
 
     {{-- Kalender --}}
     <div class="flex-1 bg-card border border-border rounded-lg md:rounded-l-none md:rounded-r-lg overflow-hidden flex flex-col">
-        {{-- Dag-header (som ukevisning) --}}
+        {{-- Dag-header --}}
         <div class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[3rem_1fr] border-b border-border bg-card">
             <div class="p-1 md:p-2 border-r border-border"></div>
             <div class="p-2 md:p-3 text-center">
                 <div class="text-sm md:text-base font-medium text-foreground">
-                    <span class="md:hidden">{{ ucfirst($this->currentDate->locale('nb')->shortDayName) }} {{ $this->currentDate->format('j.') }} {{ $this->currentDate->locale('nb')->shortMonthName }}</span>
-                    <span class="hidden md:inline">{{ ucfirst($this->currentDate->locale('nb')->dayName) }} {{ $this->currentDate->format('j.') }} {{ $this->currentDate->locale('nb')->monthName }}</span>
+                    <span class="md:hidden" x-text="formattedDateShort + ' ' + currentYear"></span>
+                    <span class="hidden md:inline" x-text="formattedDate"></span>
                 </div>
             </div>
         </div>
 
         {{-- Hele-dagen events --}}
-        @php
-            $allDayShifts = collect($this->getShiftsForDate($this->currentDate->format('Y-m-d')))->where('is_all_day', true);
-            $allDayExternalEvents = collect($this->getExternalEventsForDate($this->currentDate->format('Y-m-d')))->where('is_all_day', true);
-        @endphp
         <div class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[3rem_1fr] border-b border-border bg-surface/50">
             <div class="p-1 md:p-2 text-right text-[9px] md:text-[10px] text-muted-foreground border-r border-border flex items-center justify-end pr-1 md:pr-2">
                 <span class="md:hidden">HD</span>
                 <span class="hidden md:inline">Hel dag</span>
             </div>
             <div class="p-1 md:p-2 flex flex-wrap gap-1 md:gap-2">
-                @foreach($allDayShifts as $shift)
-                    @php $assistantColor = $shift->assistant?->color ?? '#6b7280'; @endphp
-                    @if($shift->is_unavailable)
-                        <div class="bg-destructive/20 border border-destructive/50 rounded px-1.5 md:px-2 py-0.5 md:py-1 cursor-pointer hover:bg-destructive/30 transition-colors">
-                            <div class="text-[10px] md:text-xs font-medium text-destructive">
-                                <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }} - Borte</span>
-                                <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }} - Borte hele dagen</span>
+                <template x-for="shift in getAllDayShiftsForDate(currentDateString)" :key="'dad-' + shift.id">
+                    <div>
+                        <template x-if="shift.is_unavailable">
+                            <div class="bg-destructive/20 border border-destructive/50 rounded px-1.5 md:px-2 py-0.5 md:py-1 cursor-pointer hover:bg-destructive/30 transition-colors"
+                                @click.stop="handleShiftClick(shift.id)">
+                                <div class="text-[10px] md:text-xs font-medium text-destructive">
+                                    <span class="md:hidden" x-text="(shift.assistant_short_name || '?') + ' - Borte'"></span>
+                                    <span class="hidden md:inline" x-text="(shift.assistant_name || 'Tidligere ansatt') + ' - Borte hele dagen'"></span>
+                                </div>
                             </div>
-                        </div>
-                    @else
-                        <div class="rounded px-1.5 md:px-2 py-0.5 md:py-1 cursor-pointer hover:opacity-80 transition-opacity" style="background-color: {{ $assistantColor }}20; border: 1px solid {{ $assistantColor }}50">
-                            <div class="text-[10px] md:text-xs font-medium" style="color: {{ $assistantColor }}">
-                                <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }}</span>
-                                <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
+                        </template>
+                        <template x-if="!shift.is_unavailable">
+                            <div class="rounded px-1.5 md:px-2 py-0.5 md:py-1 cursor-pointer hover:opacity-80 transition-opacity"
+                                :style="'background-color: ' + (shift.assistant_color || '#6b7280') + '20; border: 1px solid ' + (shift.assistant_color || '#6b7280') + '50'"
+                                @click.stop="handleShiftClick(shift.id)">
+                                <div class="text-[10px] md:text-xs font-medium"
+                                    :style="'color: ' + (shift.assistant_color || '#6b7280')">
+                                    <span class="md:hidden" x-text="shift.assistant_short_name || '?'"></span>
+                                    <span class="hidden md:inline" x-text="shift.assistant_name || 'Tidligere ansatt'"></span>
+                                </div>
                             </div>
-                        </div>
-                    @endif
-                @endforeach
+                        </template>
+                    </div>
+                </template>
                 {{-- Eksterne hele-dagen events --}}
-                @foreach($allDayExternalEvents as $externalEvent)
+                <template x-for="externalEvent in getAllDayExternalEventsForDate(currentDateString)" :key="'dae-' + externalEvent.id">
                     <div
                         x-data="{ showTooltip: false }"
                         @mouseenter="showTooltip = true"
                         @mouseleave="showTooltip = false"
                         class="rounded px-1.5 md:px-2 py-0.5 md:py-1 relative group/ext cursor-default border-l-2"
-                        style="background-color: {{ $externalEvent->color }}15; border-color: {{ $externalEvent->color }}"
+                        :style="'background-color: ' + externalEvent.color + '15; border-color: ' + externalEvent.color"
                     >
-                        <div class="text-[10px] md:text-xs font-medium text-foreground opacity-70 group-hover/ext:opacity-100 transition-opacity">
-                            @if($externalEvent->isManUtd())⚽@endif
-                            {{ $externalEvent->title }}
-                        </div>
+                        <div class="text-[10px] md:text-xs font-medium text-foreground opacity-70 group-hover/ext:opacity-100 transition-opacity"
+                            x-text="externalEvent.title"></div>
                         {{-- Tooltip --}}
                         <div
                             x-show="showTooltip"
                             x-cloak
                             class="absolute z-50 top-full left-0 mt-1 w-48 p-2 bg-card border border-border rounded-lg shadow-lg"
                         >
-                            <div class="text-xs font-semibold text-foreground">{{ $externalEvent->title }}</div>
-                            <div class="text-[9px] mt-1 px-1 py-0.5 rounded inline-block" style="background-color: {{ $externalEvent->color }}30; color: {{ $externalEvent->color }}">{{ $externalEvent->calendar_label }}</div>
-                            @if($externalEvent->location)
-                                <div class="text-[10px] text-muted mt-1">📍 {{ $externalEvent->location }}</div>
-                            @endif
-                            @if($externalEvent->description)
-                                <div class="text-[10px] text-muted mt-1 line-clamp-2">{{ $externalEvent->description }}</div>
-                            @endif
+                            <div class="text-xs font-semibold text-foreground" x-text="externalEvent.title"></div>
+                            <div class="text-[9px] mt-1 px-1 py-0.5 rounded inline-block"
+                                :style="'background-color: ' + externalEvent.color + '30; color: ' + externalEvent.color"
+                                x-text="externalEvent.calendar_label"></div>
                         </div>
                     </div>
-                @endforeach
+                </template>
             </div>
         </div>
 
         {{-- Tidslinje --}}
         <div class="flex-1 relative flex flex-col">
-            {{-- Nåværende tid-indikator --}}
-            @if($this->isTodaySelected && $this->currentTimePosition !== null)
+            {{-- Navarende tid-indikator --}}
+            <template x-if="isTodaySelected">
                 <div
                     x-data="{
-                        position: {{ $this->currentTimePosition }},
+                        position: currentTimePosition,
                         timeText: '',
                         init() {
                             this.update();
@@ -176,55 +174,53 @@
                         <div class="flex-1 h-0.5 bg-destructive"></div>
                     </div>
                 </div>
-            @endif
+            </template>
 
-            {{-- Time-rader (16 timer = 08:00-23:00) --}}
-            @foreach($this->timeSlots as $slot)
+            {{-- Time-rader --}}
+            <template x-for="slot in timeSlots" :key="'ds-' + slot.hour">
                 <div
-                    wire:key="slot-{{ $slot['hour'] }}"
                     class="grid grid-cols-[2.5rem_1fr] md:grid-cols-[3rem_1fr] border-b border-border flex-1 min-h-12 md:min-h-16 group"
                 >
                     {{-- Klokkeslett --}}
-                    <div class="text-right text-[10px] md:text-xs text-muted-foreground border-r border-border flex items-start justify-end pr-1 md:pr-2 pt-1">
-                        {{ $slot['label'] }}
-                    </div>
+                    <div class="text-right text-[10px] md:text-xs text-muted-foreground border-r border-border flex items-start justify-end pr-1 md:pr-2 pt-1"
+                        x-text="slot.label"></div>
 
                     {{-- Innhold for denne timen med 15-min intervaller --}}
                     <div
                         class="relative flex flex-col transition-colors"
                         data-slot-height="64"
-                        @dragover="allowDrop($event, '{{ $slot['label'] }}', '{{ $this->currentDate->format('Y-m-d') }}')"
+                        @dragover="allowDrop($event, slot.label, currentDateString)"
                         @dragleave="leaveDrop($event)"
-                        @drop="handleDrop($event, '{{ $this->currentDate->format('Y-m-d') }}', '{{ $slot['label'] }}')"
+                        @drop="handleDrop($event, currentDateString, slot.label)"
                     >
                         {{-- 15-minutters linjer med drag-indikator --}}
                         <div class="absolute inset-0 flex flex-col pointer-events-none">
                             <div class="flex-1 border-b border-border/30 transition-colors"
-                                :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragQuarter === 0 && 'bg-accent/40'"></div>
+                                :class="(draggedShift || draggedAssistant) && dragOverSlot === slot.label && dragQuarter === 0 && 'bg-accent/40'"></div>
                             <div class="flex-1 border-b border-border/50 transition-colors"
-                                :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragQuarter === 1 && 'bg-accent/40'"></div>
+                                :class="(draggedShift || draggedAssistant) && dragOverSlot === slot.label && dragQuarter === 1 && 'bg-accent/40'"></div>
                             <div class="flex-1 border-b border-border/30 transition-colors"
-                                :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragQuarter === 2 && 'bg-accent/40'"></div>
+                                :class="(draggedShift || draggedAssistant) && dragOverSlot === slot.label && dragQuarter === 2 && 'bg-accent/40'"></div>
                             <div class="flex-1 transition-colors"
-                                :class="(draggedShift || draggedAssistant) && dragOverSlot === '{{ $slot['label'] }}' && dragQuarter === 3 && 'bg-accent/40'"></div>
+                                :class="(draggedShift || draggedAssistant) && dragOverSlot === slot.label && dragQuarter === 3 && 'bg-accent/40'"></div>
                         </div>
 
-                        {{-- Klikkbare 15-min områder --}}
+                        {{-- Klikkbare 15-min omrader --}}
                         <div class="relative flex-1 flex flex-col">
-                            @for($quarter = 0; $quarter < 4; $quarter++)
+                            <template x-for="quarter in [0, 1, 2, 3]" :key="'q-' + slot.hour + '-' + quarter">
                                 <div
-                                    @mousedown="startCreate($event, '{{ $this->currentDate->format('Y-m-d') }}', '{{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }}', $el.closest('[data-slot-height]'))"
-                                    @dblclick.stop="openQuickCreate($event, '{{ $this->currentDate->format('Y-m-d') }}', '{{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }}')"
-                                    @contextmenu="showSlotContextMenu($event, '{{ $this->currentDate->format('Y-m-d') }}', '{{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }}')"
+                                    @mousedown="startCreate($event, currentDateString, String(slot.hour).padStart(2, '0') + ':' + String(quarter * 15).padStart(2, '0'), $el.closest('[data-slot-height]'))"
+                                    @dblclick.stop="openQuickCreate($event, currentDateString, String(slot.hour).padStart(2, '0') + ':' + String(quarter * 15).padStart(2, '0'))"
+                                    @contextmenu="showSlotContextMenu($event, currentDateString, String(slot.hour).padStart(2, '0') + ':' + String(quarter * 15).padStart(2, '0'))"
                                     class="flex-1 hover:bg-card-hover/50 transition-colors cursor-pointer group/quarter"
-                                    title="Kl {{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }} (dra for å velge tid, dobbeltklikk for 3t)"
+                                    :title="'Kl ' + String(slot.hour).padStart(2, '0') + ':' + String(quarter * 15).padStart(2, '0') + ' (dra for a velge tid, dobbeltklikk for 3t)'"
                                 >
                                     {{-- Hover: Legg til knapp per kvarter --}}
                                     <button
-                                        wire:click="openModal('{{ $this->currentDate->format('Y-m-d') }}', '{{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }}')"
+                                        @click.stop="openModal(currentDateString, String(slot.hour).padStart(2, '0') + ':' + String(quarter * 15).padStart(2, '0'))"
                                         class="absolute right-1 opacity-0 group-hover/quarter:opacity-100 transition-opacity p-0.5 rounded bg-accent text-black hover:bg-accent-hover text-xs cursor-pointer"
-                                        style="top: {{ $quarter * 25 + 2 }}%"
-                                        title="Legg til vakt kl {{ sprintf('%02d:%02d', $slot['hour'], $quarter * 15) }}"
+                                        :style="'top: ' + (quarter * 25 + 2) + '%'"
+                                        :title="'Legg til vakt kl ' + String(slot.hour).padStart(2, '0') + ':' + String(quarter * 15).padStart(2, '0')"
                                         @mousedown.stop
                                     >
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,163 +228,137 @@
                                         </svg>
                                     </button>
                                 </div>
-                            @endfor
+                            </template>
 
                             {{-- Drag-to-create preview overlay --}}
                             <div
-                                x-show="isCreatingShift && createDate === '{{ $this->currentDate->format('Y-m-d') }}' && getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})"
+                                x-show="isCreatingShift && createDate === currentDateString && getCreatePreviewStyle(currentDateString, slot.hour)"
                                 x-cloak
                                 class="absolute left-0.5 right-0.5 md:left-1 md:right-1 bg-accent/30 pointer-events-none z-20 border-x-2 border-accent border-dashed"
                                 :class="{
-                                    'border-t-2 rounded-t': getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.isFirst,
-                                    'border-b-2 rounded-b': getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.isLast
+                                    'border-t-2 rounded-t': getCreatePreviewStyle(currentDateString, slot.hour)?.isFirst,
+                                    'border-b-2 rounded-b': getCreatePreviewStyle(currentDateString, slot.hour)?.isLast
                                 }"
-                                :style="`top: ${getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.top ?? 0}%; height: ${getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.height ?? 0}%;`"
+                                :style="'top: ' + (getCreatePreviewStyle(currentDateString, slot.hour)?.top ?? 0) + '%; height: ' + (getCreatePreviewStyle(currentDateString, slot.hour)?.height ?? 0) + '%;'"
                             >
-                                <div class="px-1 md:px-2 py-0.5 text-xs font-medium text-accent" x-show="getCreatePreviewStyle('{{ $this->currentDate->format('Y-m-d') }}', {{ $slot['hour'] }})?.isFirst">
+                                <div class="px-1 md:px-2 py-0.5 text-xs font-medium text-accent"
+                                    x-show="getCreatePreviewStyle(currentDateString, slot.hour)?.isFirst">
                                     <span x-text="createStartTime + ' - ' + createEndTime"></span>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Vakter i dette time-slottet --}}
-                        @php
-                            $slotShifts = collect($this->getShiftsForDate($this->currentDate->format('Y-m-d')))
-                                ->reject(fn($s) => $s->is_all_day)
-                                ->filter(fn($s) => $s->starts_at->hour === $slot['hour']);
-                            $timedExternalEvents = collect($this->getExternalEventsForDate($this->currentDate->format('Y-m-d')))
-                                ->reject(fn($e) => $e->is_all_day)
-                                ->filter(fn($e) => $e->starts_at->hour === $slot['hour']);
-                            // Beregn side-by-side layout for overlappende events
-                            $overlapLayout = $this->calculateOverlapLayout($slotShifts, $timedExternalEvents);
-                        @endphp
-                        @foreach($slotShifts as $shift)
-                            @php
-                                // Calculate position and height
-                                $startMinute = $shift->starts_at->minute;
-                                $topPercent = ($startMinute / 60) * 100;
-                                $durationHours = $shift->duration_minutes / 60;
-                                $heightPercent = $durationHours * 100;
-                                $assistantColor = $shift->assistant?->color ?? '#6b7280';
-                                // Side-by-side layout
-                                $layout = $overlapLayout['shift_'.$shift->id] ?? ['width' => 100, 'left' => 0];
-                                $widthPercent = $layout['width'];
-                                $leftPercent = $layout['left'];
-                            @endphp
-                            @if($shift->is_unavailable)
-                                <div
-                                    @click="handleShiftClick({{ $shift->id }})"
-                                    @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, true)"
-                                    data-shift="{{ $shift->id }}"
-                                    draggable="true"
-                                    @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
-                                    @dragend="endDrag($event)"
-                                    class="absolute bg-destructive/20 border-l-2 border-destructive rounded px-1 md:px-2 py-0.5 md:py-1 pointer-events-auto cursor-pointer hover:bg-destructive/30 transition-colors z-10 group/shift"
-                                    :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
-                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; left: calc({{ $leftPercent }}% + 2px); width: calc({{ $widthPercent }}% - 4px);"
-                                >
-                                    <div class="text-xs md:text-sm font-medium text-destructive">
-                                        <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }}</span>
-                                        <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
-                                    </div>
-                                    <div class="text-[10px] md:text-xs" :class="(resizingShift === {{ $shift->id }} || draggedShift === {{ $shift->id }}) ? 'font-bold text-accent' : 'text-muted'">
-                                        <span x-show="resizingShift !== {{ $shift->id }} && draggedShift !== {{ $shift->id }}">Borte {{ $shift->time_range }}</span>
-                                        <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>
-                                        <span x-show="draggedShift === {{ $shift->id }} && dragPreviewTime" x-text="'Borte ' + dragPreviewTime"></span>
-                                    </div>
-                                    {{-- Resize handle --}}
+                        <template x-for="shift in getTimedShiftsForSlot(currentDateString, slot.hour)" :key="'ds-' + shift.id">
+                            <div>
+                                <template x-if="shift.is_unavailable">
                                     <div
-                                        @mousedown="startResize($event, {{ $shift->id }}, {{ $shift->duration_minutes }}, '{{ $shift->starts_at->format('H:i') }}')"
-                                        class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover/shift:opacity-100 bg-destructive/50 rounded-b transition-opacity"
-                                        @click.stop
-                                    ></div>
-                                </div>
-                            @else
-                                <div
-                                    @click="handleShiftClick({{ $shift->id }})"
-                                    @contextmenu="showShiftContextMenu($event, {{ $shift->id }}, false)"
-                                    data-shift="{{ $shift->id }}"
-                                    draggable="true"
-                                    @dragstart="startDragShift($event, {{ $shift->id }}, '{{ $shift->starts_at->format('H:i') }}', {{ $shift->duration_minutes }})"
-                                    @dragend="endDrag($event)"
-                                    class="absolute rounded px-1 md:px-2 py-0.5 md:py-1 pointer-events-auto cursor-pointer hover:opacity-80 transition-opacity z-10 border-l-2 group/shift"
-                                    :class="draggedShift === {{ $shift->id }} && '!pointer-events-none opacity-50'"
-                                    style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; left: calc({{ $leftPercent }}% + 2px); width: calc({{ $widthPercent }}% - 4px); background-color: {{ $assistantColor }}20; border-color: {{ $assistantColor }}"
-                                >
-                                    <div class="text-xs md:text-sm font-medium" style="color: {{ $assistantColor }}">
-                                        <span class="md:hidden">{{ $shift->assistant?->short_name ?? '?' }}</span>
-                                        <span class="hidden md:inline">{{ $shift->assistant?->name ?? 'Tidligere ansatt' }}</span>
+                                        @click="handleShiftClick(shift.id)"
+                                        @contextmenu="showShiftContextMenu($event, shift.id, true)"
+                                        :data-shift="shift.id"
+                                        draggable="true"
+                                        @dragstart="startDragShift($event, shift.id, shift.start_time, shift.duration_minutes)"
+                                        @dragend="endDrag($event)"
+                                        class="absolute bg-destructive/20 border-l-2 border-destructive rounded px-1 md:px-2 py-0.5 md:py-1 pointer-events-auto cursor-pointer hover:bg-destructive/30 transition-colors z-10 group/shift"
+                                        :class="draggedShift === shift.id && '!pointer-events-none opacity-50'"
+                                        :style="'top: ' + getTopPercent(shift.start_time) + '%; height: ' + getHeightPercent(shift.duration_minutes) + '%; left: calc(' + getShiftLayout(currentDateString, slot.hour, shift.id).left + '% + 2px); width: calc(' + getShiftLayout(currentDateString, slot.hour, shift.id).width + '% - 4px);'"
+                                    >
+                                        <div class="text-xs md:text-sm font-medium text-destructive">
+                                            <span class="md:hidden" x-text="shift.assistant_short_name || '?'"></span>
+                                            <span class="hidden md:inline" x-text="shift.assistant_name || 'Tidligere ansatt'"></span>
+                                        </div>
+                                        <div class="text-[10px] md:text-xs"
+                                            :class="(resizingShift === shift.id || draggedShift === shift.id) ? 'font-bold text-accent' : 'text-muted'">
+                                            <span x-show="resizingShift !== shift.id && draggedShift !== shift.id" x-text="'Borte ' + shift.time_range"></span>
+                                            <span x-show="resizingShift === shift.id" x-text="resizePreviewEndTime"></span>
+                                            <span x-show="draggedShift === shift.id && dragPreviewTime" x-text="'Borte ' + dragPreviewTime"></span>
+                                        </div>
+                                        {{-- Resize handle --}}
+                                        <div
+                                            @mousedown="startResize($event, shift.id, shift.duration_minutes, shift.start_time)"
+                                            class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover/shift:opacity-100 bg-destructive/50 rounded-b transition-opacity"
+                                            @click.stop
+                                        ></div>
                                     </div>
-                                    <div class="text-[10px] md:text-xs" :class="(resizingShift === {{ $shift->id }} || draggedShift === {{ $shift->id }}) ? 'font-bold text-accent' : 'text-muted'">
-                                        <span x-show="resizingShift !== {{ $shift->id }} && draggedShift !== {{ $shift->id }}">{{ $shift->time_range }}</span>
-                                        <span x-show="resizingShift === {{ $shift->id }}" x-text="resizePreviewEndTime"></span>
-                                        <span x-show="draggedShift === {{ $shift->id }} && dragPreviewTime" x-text="dragPreviewTime"></span>
-                                    </div>
-                                    {{-- Resize handle --}}
+                                </template>
+                                <template x-if="!shift.is_unavailable">
                                     <div
-                                        @mousedown="startResize($event, {{ $shift->id }}, {{ $shift->duration_minutes }}, '{{ $shift->starts_at->format('H:i') }}')"
-                                        class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover/shift:opacity-100 rounded-b transition-opacity"
-                                        style="background-color: {{ $assistantColor }}50"
-                                        @click.stop
-                                    ></div>
-                                </div>
-                            @endif
-                        @endforeach
+                                        @click="handleShiftClick(shift.id)"
+                                        @contextmenu="showShiftContextMenu($event, shift.id, false)"
+                                        :data-shift="shift.id"
+                                        draggable="true"
+                                        @dragstart="startDragShift($event, shift.id, shift.start_time, shift.duration_minutes)"
+                                        @dragend="endDrag($event)"
+                                        class="absolute rounded px-1 md:px-2 py-0.5 md:py-1 pointer-events-auto cursor-pointer hover:opacity-80 transition-opacity z-10 border-l-2 group/shift"
+                                        :class="draggedShift === shift.id && '!pointer-events-none opacity-50'"
+                                        :style="'top: ' + getTopPercent(shift.start_time) + '%; height: ' + getHeightPercent(shift.duration_minutes) + '%; left: calc(' + getShiftLayout(currentDateString, slot.hour, shift.id).left + '% + 2px); width: calc(' + getShiftLayout(currentDateString, slot.hour, shift.id).width + '% - 4px); background-color: ' + (shift.assistant_color || '#6b7280') + '20; border-color: ' + (shift.assistant_color || '#6b7280')"
+                                    >
+                                        <div class="text-xs md:text-sm font-medium"
+                                            :style="'color: ' + (shift.assistant_color || '#6b7280')">
+                                            <span class="md:hidden" x-text="shift.assistant_short_name || '?'"></span>
+                                            <span class="hidden md:inline" x-text="shift.assistant_name || 'Tidligere ansatt'"></span>
+                                        </div>
+                                        <div class="text-[10px] md:text-xs"
+                                            :class="(resizingShift === shift.id || draggedShift === shift.id) ? 'font-bold text-accent' : 'text-muted'">
+                                            <span x-show="resizingShift !== shift.id && draggedShift !== shift.id" x-text="shift.time_range"></span>
+                                            <span x-show="resizingShift === shift.id" x-text="resizePreviewEndTime"></span>
+                                            <span x-show="draggedShift === shift.id && dragPreviewTime" x-text="dragPreviewTime"></span>
+                                        </div>
+                                        {{-- Resize handle --}}
+                                        <div
+                                            @mousedown="startResize($event, shift.id, shift.duration_minutes, shift.start_time)"
+                                            class="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover/shift:opacity-100 rounded-b transition-opacity"
+                                            :style="'background-color: ' + (shift.assistant_color || '#6b7280') + '50'"
+                                            @click.stop
+                                        ></div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
 
                         {{-- Eksterne kalender-events i dette time-slottet --}}
-                        @foreach($timedExternalEvents as $externalEvent)
-                            @php
-                                $startMinute = $externalEvent->starts_at->minute;
-                                $topPercent = ($startMinute / 60) * 100;
-                                $durationMinutes = $externalEvent->getDurationMinutes();
-                                $durationHours = $durationMinutes / 60;
-                                $heightPercent = $durationHours * 100;
-                                // Side-by-side layout
-                                $extLayout = $overlapLayout['ext_'.$externalEvent->id] ?? ['width' => 100, 'left' => 0];
-                                $extWidthPercent = $extLayout['width'];
-                                $extLeftPercent = $extLayout['left'];
-                            @endphp
-                            <div
-                                x-data="{ showTooltip: false }"
-                                @mouseenter="showTooltip = true"
-                                @mouseleave="showTooltip = false"
-                                class="absolute rounded px-1 md:px-2 py-0.5 md:py-1 z-5 border-l-2 group/ext cursor-default"
-                                style="top: {{ $topPercent }}%; height: {{ $heightPercent }}%; left: calc({{ $extLeftPercent }}% + 2px); width: calc({{ $extWidthPercent }}% - 4px); background-color: {{ $externalEvent->color }}15; border-color: {{ $externalEvent->color }}"
-                            >
-                                @if($durationMinutes < 60)
-                                    <div class="text-[10px] md:text-xs font-medium text-foreground truncate opacity-70 group-hover/ext:opacity-100 transition-opacity">
-                                        @if($externalEvent->isManUtd())⚽@endif
-                                        {{ $externalEvent->title }} <span class="font-normal text-foreground/70">{{ $externalEvent->getTimeRange() }}</span>
-                                    </div>
-                                @else
-                                    <div class="text-xs md:text-sm font-medium text-foreground opacity-70 group-hover/ext:opacity-100 transition-opacity">
-                                        @if($externalEvent->isManUtd())⚽@endif
-                                        {{ $externalEvent->title }}
-                                    </div>
-                                    <div class="text-[10px] md:text-xs text-foreground opacity-60 group-hover/ext:opacity-100 transition-opacity">{{ $externalEvent->getTimeRange() }}</div>
-                                @endif
-
-                                {{-- Tooltip --}}
+                        <template x-for="externalEvent in getTimedExternalEventsForSlot(currentDateString, slot.hour)" :key="'de-' + externalEvent.id">
+                            <div x-data="{ showTooltip: false }">
                                 <div
-                                    x-show="showTooltip"
-                                    x-cloak
-                                    class="absolute z-50 top-full left-0 mt-1 w-52 p-2 bg-card border border-border rounded-lg shadow-lg"
+                                    @mouseenter="showTooltip = true"
+                                    @mouseleave="showTooltip = false"
+                                    class="absolute rounded px-1 md:px-2 py-0.5 md:py-1 z-5 border-l-2 group/ext cursor-default"
+                                    :style="'top: ' + getTopPercent(externalEvent.start_time) + '%; height: ' + getHeightPercent(getDurationMinutes(externalEvent.start_time, externalEvent.end_time)) + '%; left: calc(' + getExternalEventLayout(currentDateString, slot.hour, externalEvent.id).left + '% + 2px); width: calc(' + getExternalEventLayout(currentDateString, slot.hour, externalEvent.id).width + '% - 4px); background-color: ' + externalEvent.color + '15; border-color: ' + externalEvent.color"
                                 >
-                                    <div class="text-xs font-semibold text-foreground">{{ $externalEvent->title }}</div>
-                                    <div class="text-[9px] mt-1 px-1 py-0.5 rounded inline-block" style="background-color: {{ $externalEvent->color }}30; color: {{ $externalEvent->color }}">{{ $externalEvent->calendar_label }}</div>
-                                    <div class="text-[10px] text-muted mt-1">{{ $externalEvent->getTimeRange() }}</div>
-                                    @if($externalEvent->location)
-                                        <div class="text-[10px] text-muted mt-0.5">📍 {{ $externalEvent->location }}</div>
-                                    @endif
-                                    @if($externalEvent->description)
-                                        <div class="text-[10px] text-muted mt-1 line-clamp-3">{{ $externalEvent->description }}</div>
-                                    @endif
+                                    <template x-if="getDurationMinutes(externalEvent.start_time, externalEvent.end_time) < 60">
+                                        <div class="text-[10px] md:text-xs font-medium text-foreground truncate opacity-70 group-hover/ext:opacity-100 transition-opacity">
+                                            <span x-text="externalEvent.title"></span>
+                                            <span class="font-normal text-foreground/70" x-text="' ' + externalEvent.start_time + ' - ' + externalEvent.end_time"></span>
+                                        </div>
+                                    </template>
+                                    <template x-if="getDurationMinutes(externalEvent.start_time, externalEvent.end_time) >= 60">
+                                        <div>
+                                            <div class="text-xs md:text-sm font-medium text-foreground opacity-70 group-hover/ext:opacity-100 transition-opacity"
+                                                x-text="externalEvent.title"></div>
+                                            <div class="text-[10px] md:text-xs text-foreground opacity-60 group-hover/ext:opacity-100 transition-opacity"
+                                                x-text="externalEvent.start_time + ' - ' + externalEvent.end_time"></div>
+                                        </div>
+                                    </template>
+
+                                    {{-- Tooltip --}}
+                                    <div
+                                        x-show="showTooltip"
+                                        x-cloak
+                                        class="absolute z-50 top-full left-0 mt-1 w-52 p-2 bg-card border border-border rounded-lg shadow-lg"
+                                    >
+                                        <div class="text-xs font-semibold text-foreground" x-text="externalEvent.title"></div>
+                                        <div class="text-[9px] mt-1 px-1 py-0.5 rounded inline-block"
+                                            :style="'background-color: ' + externalEvent.color + '30; color: ' + externalEvent.color"
+                                            x-text="externalEvent.calendar_label"></div>
+                                        <div class="text-[10px] text-muted mt-1"
+                                            x-text="externalEvent.start_time + ' - ' + externalEvent.end_time"></div>
+                                    </div>
                                 </div>
                             </div>
-                        @endforeach
+                        </template>
                     </div>
                 </div>
-            @endforeach
+            </template>
         </div>
     </div>
 </div>

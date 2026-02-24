@@ -1,6 +1,6 @@
 {{-- Absence Popup (for multi-day selection in month view) --}}
 <div x-show="$store.absencePopup.show" x-cloak>
-    {{-- Usynlig backdrop for å lukke --}}
+    {{-- Usynlig backdrop for a lukke --}}
     <div
         @click="$store.absencePopup.hide()"
         @keydown.escape.window="$store.absencePopup.hide()"
@@ -25,7 +25,7 @@
                     <svg class="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                     </svg>
-                    Opprett fravær
+                    Opprett fravar
                 </div>
                 <div class="text-xs text-muted mt-0.5">
                     <span x-text="$store.absencePopup.formatDateRange()"></span>
@@ -48,21 +48,21 @@
         <div class="mb-3">
             <label class="block text-xs font-medium text-muted mb-1.5">Hvem er borte?</label>
             <div class="space-y-0.5 max-h-48 overflow-y-auto">
-                @foreach($this->assistants as $assistant)
+                <template x-for="assistant in assistants" :key="'abs-' + assistant.id">
                     <button
-                        @click="$store.absencePopup.assistantId = {{ $assistant->id }}"
+                        @click="$store.absencePopup.assistantId = assistant.id"
                         class="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors cursor-pointer text-left"
-                        :class="$store.absencePopup.assistantId === {{ $assistant->id }}
+                        :class="$store.absencePopup.assistantId === assistant.id
                             ? 'bg-destructive/20 ring-1 ring-destructive'
                             : 'hover:bg-card-hover'"
                     >
                         <span
                             class="w-3 h-3 rounded-full shrink-0"
-                            style="background-color: {{ $assistant->color ?? '#3b82f6' }}"
+                            :style="'background-color: ' + (assistant.color || '#3b82f6')"
                         ></span>
-                        <span class="text-sm text-foreground">{{ $assistant->name }}</span>
+                        <span class="text-sm text-foreground" x-text="assistant.name"></span>
                         <svg
-                            x-show="$store.absencePopup.assistantId === {{ $assistant->id }}"
+                            x-show="$store.absencePopup.assistantId === assistant.id"
                             x-cloak
                             class="w-4 h-4 ml-auto text-destructive"
                             fill="none"
@@ -72,7 +72,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
                     </button>
-                @endforeach
+                </template>
             </div>
         </div>
 
@@ -83,7 +83,7 @@
                 :disabled="!$store.absencePopup.assistantId"
                 class="flex-1 px-3 py-2 rounded-lg bg-destructive text-white font-medium text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-destructive/90"
             >
-                Opprett fravær
+                Opprett fravar
             </button>
             <button
                 @click="$store.absencePopup.hide()"
