@@ -354,45 +354,48 @@
 
                             {{-- Eksterne kalender-events i dette time-slottet --}}
                             <template x-for="externalEvent in getTimedExternalEventsForSlot(weekDay.date, slot.hour)" :key="'we-' + externalEvent.id">
-                                <div x-data="{ showTooltip: false }">
+                                <div>
                                     {{-- Mobil: Farget blokk uten tekst --}}
                                     <div
-                                        class="md:hidden absolute border-l-2 opacity-40 z-5"
+                                        class="md:hidden absolute border-l-2 opacity-40 z-[5] pointer-events-none"
                                         :style="'top: ' + getTopPercent(externalEvent.start_time) + '%; height: ' + getHeightPercent(getDurationMinutes(externalEvent.start_time, externalEvent.end_time)) + '%; left: ' + getExternalEventLayout(weekDay.date, slot.hour, externalEvent.id).left + '%; width: ' + getExternalEventLayout(weekDay.date, slot.hour, externalEvent.id).width + '%; background-color: ' + externalEvent.color + '20; border-color: ' + externalEvent.color"
                                     ></div>
                                     {{-- Desktop: Full info med tooltip --}}
                                     <div
-                                        @mouseenter="showTooltip = true"
-                                        @mouseleave="showTooltip = false"
-                                        class="hidden md:block absolute rounded px-1 py-0.5 z-5 border-l-2 group/ext cursor-default"
+                                        class="hidden md:block absolute rounded px-1 py-0.5 z-[5] border-l-2 pointer-events-none"
                                         :style="'top: ' + getTopPercent(externalEvent.start_time) + '%; height: ' + getHeightPercent(getDurationMinutes(externalEvent.start_time, externalEvent.end_time)) + '%; left: calc(' + getExternalEventLayout(weekDay.date, slot.hour, externalEvent.id).left + '% + 2px); width: calc(' + getExternalEventLayout(weekDay.date, slot.hour, externalEvent.id).width + '% - 4px); background-color: ' + externalEvent.color + '15; border-color: ' + externalEvent.color"
                                     >
-                                        <template x-if="getDurationMinutes(externalEvent.start_time, externalEvent.end_time) < 60">
-                                            <div class="text-[10px] font-medium truncate text-foreground opacity-70 group-hover/ext:opacity-100 transition-opacity">
-                                                <span x-text="externalEvent.title"></span>
-                                                <span class="font-normal text-foreground/70" x-text="' ' + externalEvent.start_time + ' - ' + externalEvent.end_time"></span>
-                                            </div>
-                                        </template>
-                                        <template x-if="getDurationMinutes(externalEvent.start_time, externalEvent.end_time) >= 60">
-                                            <div>
-                                                <div class="text-xs font-medium truncate text-foreground opacity-70 group-hover/ext:opacity-100 transition-opacity"
-                                                    x-text="externalEvent.title"></div>
-                                                <div class="text-[10px] text-foreground truncate opacity-60 group-hover/ext:opacity-100 transition-opacity"
-                                                    x-text="externalEvent.start_time + ' - ' + externalEvent.end_time"></div>
-                                            </div>
-                                        </template>
-
-                                        {{-- Tooltip --}}
-                                        <div
-                                            x-show="showTooltip"
-                                            x-cloak
-                                            class="absolute z-50 top-full left-0 mt-1 w-44 p-2 bg-card border border-border rounded-lg shadow-lg"
+                                        <div x-data="{ showTooltip: false }"
+                                            @mouseenter="showTooltip = true"
+                                            @mouseleave="showTooltip = false"
+                                            class="pointer-events-auto inline-block relative cursor-default"
                                         >
-                                            <div class="text-xs font-semibold text-foreground" x-text="externalEvent.title"></div>
-                                            <div class="text-[9px] mt-1 px-1 py-0.5 rounded inline-block"
-                                                :style="'background-color: ' + externalEvent.color + '30; color: ' + externalEvent.color"
-                                                x-text="externalEvent.calendar_label"></div>
-                                            <div class="text-[10px] text-muted mt-1" x-text="externalEvent.start_time + ' - ' + externalEvent.end_time"></div>
+                                            <template x-if="getDurationMinutes(externalEvent.start_time, externalEvent.end_time) < 60">
+                                                <div class="text-[10px] font-medium truncate text-foreground opacity-70">
+                                                    <span x-text="externalEvent.title"></span>
+                                                    <span class="font-normal text-foreground/70" x-text="' ' + externalEvent.start_time + ' - ' + externalEvent.end_time"></span>
+                                                </div>
+                                            </template>
+                                            <template x-if="getDurationMinutes(externalEvent.start_time, externalEvent.end_time) >= 60">
+                                                <div>
+                                                    <div class="text-xs font-medium truncate text-foreground opacity-70"
+                                                        x-text="externalEvent.title"></div>
+                                                    <div class="text-[10px] text-foreground truncate opacity-60"
+                                                        x-text="externalEvent.start_time + ' - ' + externalEvent.end_time"></div>
+                                                </div>
+                                            </template>
+                                            {{-- Tooltip --}}
+                                            <div
+                                                x-show="showTooltip"
+                                                x-cloak
+                                                class="absolute z-50 top-full left-0 mt-1 w-44 p-2 bg-card border border-border rounded-lg shadow-lg pointer-events-none"
+                                            >
+                                                <div class="text-xs font-semibold text-foreground" x-text="externalEvent.title"></div>
+                                                <div class="text-[9px] mt-1 px-1 py-0.5 rounded inline-block"
+                                                    :style="'background-color: ' + externalEvent.color + '30; color: ' + externalEvent.color"
+                                                    x-text="externalEvent.calendar_label"></div>
+                                                <div class="text-[10px] text-muted mt-1" x-text="externalEvent.start_time + ' - ' + externalEvent.end_time"></div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
