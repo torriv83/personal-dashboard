@@ -46,19 +46,26 @@
                     targetY: 0,
                     currentY: 0,
                     rafId: null,
+                    sidebarEl: null,
                     init() {
-                        this.animate();
+                        this.sidebarEl = this.$el.closest('.md\\:flex');
                     },
                     onScroll() {
-                        const sidebar = this.$el.closest('.md\\:flex');
-                        if (!sidebar) return;
-                        const rect = sidebar.getBoundingClientRect();
-                        this.targetY = rect.top < 0 ? Math.abs(rect.top) : 0;
+                        if (!this.sidebarEl) return;
+                        const rect = this.sidebarEl.getBoundingClientRect();
+                        const newTarget = rect.top < 0 ? Math.abs(rect.top) : 0;
+                        if (newTarget !== this.targetY) {
+                            this.targetY = newTarget;
+                            if (!this.rafId) this.animate();
+                        }
                     },
                     animate() {
                         this.currentY += (this.targetY - this.currentY) * 0.15;
                         if (Math.abs(this.targetY - this.currentY) < 0.5) {
                             this.currentY = this.targetY;
+                            this.$el.style.transform = 'translateY(' + this.currentY + 'px)';
+                            this.rafId = null;
+                            return;
                         }
                         this.$el.style.transform = 'translateY(' + this.currentY + 'px)';
                         this.rafId = requestAnimationFrame(() => this.animate());

@@ -395,39 +395,19 @@ export default (config = {}) => ({
         });
 
         // Listen for global Livewire events
-        document.addEventListener('livewire:navigated', () => {
-            this._invalidateCache();
-            this.fetchCalendarData();
-        });
-
-        // Listen for "go to today" from topbar button (dispatched as browser custom event)
-        window.addEventListener('calendar-go-to-today', () => {
-            this.goToToday();
-        });
-
-        // Listen for context menu / absence popup actions dispatched via custom events
-        window.addEventListener('calendar-open-modal', (e) => {
-            const d = e.detail || {};
-            this.openModal(d.date, d.time, d.assistantId, d.endTime, d.isUnavailable);
-        });
-        window.addEventListener('calendar-edit-shift', (e) => {
-            this.editShift(e.detail.shiftId);
-        });
-        window.addEventListener('calendar-duplicate-shift', (e) => {
-            this.duplicateShiftToModal(e.detail.shiftId);
-        });
-        window.addEventListener('calendar-delete-shift', (e) => {
-            this.deleteShift(e.detail.shiftId);
-        });
-        window.addEventListener('calendar-archive-shift', (e) => {
-            this.archiveShift(e.detail.shiftId);
-        });
-        window.addEventListener('calendar-set-unavailable', (e) => {
-            this.setShiftUnavailable(e.detail.shiftId);
-        });
-        window.addEventListener('calendar-create-absence', (e) => {
-            const d = e.detail;
-            this.createAbsenceFromSelection(d.assistantId, d.fromDate, d.toDate);
+        this._eventHandlers = [
+            ['livewire:navigated', () => { this._invalidateCache(); this.fetchCalendarData(); }, document],
+            ['calendar-go-to-today', () => this.goToToday()],
+            ['calendar-open-modal', (e) => { const d = e.detail || {}; this.openModal(d.date, d.time, d.assistantId, d.endTime, d.isUnavailable); }],
+            ['calendar-edit-shift', (e) => this.editShift(e.detail.shiftId)],
+            ['calendar-duplicate-shift', (e) => this.duplicateShiftToModal(e.detail.shiftId)],
+            ['calendar-delete-shift', (e) => this.deleteShift(e.detail.shiftId)],
+            ['calendar-archive-shift', (e) => this.archiveShift(e.detail.shiftId)],
+            ['calendar-set-unavailable', (e) => this.setShiftUnavailable(e.detail.shiftId)],
+            ['calendar-create-absence', (e) => { const d = e.detail; this.createAbsenceFromSelection(d.assistantId, d.fromDate, d.toDate); }],
+        ];
+        this._eventHandlers.forEach(([event, handler, target]) => {
+            (target || window).addEventListener(event, handler);
         });
 
         // Handle ?create=1 URL parameter
@@ -1374,13 +1354,18 @@ export default (config = {}) => ({
         this.quickCreate.show = true;
     },
 
-    closeQuickCreate() {
-        this.quickCreate.show = false;
-        this.quickCreate.endTime = '';
+    _resetCreateState() {
         this.isCreatingShift = false;
+        this.createPending = false;
         this.createDate = null;
         this.createStartTime = null;
         this.createEndTime = null;
+    },
+
+    closeQuickCreate() {
+        this.quickCreate.show = false;
+        this.quickCreate.endTime = '';
+        this._resetCreateState();
     },
 
     // =========================================================================
@@ -1399,7 +1384,6 @@ export default (config = {}) => ({
 
         this.isCreatingShift = false;
         this.createPending = true;
-        this.createTimeout = null;
         this.createSessionId++;
         this.createDate = date;
         this.createStartTime = time;
@@ -1458,10 +1442,7 @@ export default (config = {}) => ({
         }
 
         if (!this.isCreatingShift) {
-            this.createPending = false;
-            this.createDate = null;
-            this.createStartTime = null;
-            this.createEndTime = null;
+            this._resetCreateState();
             return;
         }
 
@@ -1472,15 +1453,10 @@ export default (config = {}) => ({
 
         if (endMinutes > startMinutes) {
             this.openQuickCreate(e, this.createDate, this.createStartTime, this.createEndTime);
-            this.createPending = false;
             return;
         }
 
-        this.isCreatingShift = false;
-        this.createPending = false;
-        this.createDate = null;
-        this.createStartTime = null;
-        this.createEndTime = null;
+        this._resetCreateState();
     },
 
     getCreatePreviewStyle(date, slotHour) {
@@ -2138,6 +2114,17 @@ export default (config = {}) => ({
         const shift = this._findShift(shiftId);
         if (!shift) return;
 
+        if (shift.is_recurring) {
+            this._populateFormFromShift(shift);
+            this.modal.form.is_unavailable = true;
+            this.modal.isEditing = true;
+            this.modal.editingShiftId = shiftId;
+            this.modal.isExistingRecurring = true;
+            this.modal.errors = {};
+            this.modal.show = true;
+            return;
+        }
+
         this._populateFormFromShift(shift);
         this.modal.form.is_unavailable = true;
         this.modal.isEditing = true;
@@ -2586,5 +2573,13 @@ export default (config = {}) => ({
     formatDateShort(dateStr) {
         const d = new Date(dateStr + 'T00:00:00');
         return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0');
+    },
+
+    destroy() {
+        if (this._eventHandlers) {
+            this._eventHandlers.forEach(([event, handler, target]) => {
+                (target || window).removeEventListener(event, handler);
+            });
+        }
     },
 });
