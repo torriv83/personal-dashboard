@@ -85,17 +85,17 @@ it('does not include past shifts in next shift', function () {
 });
 
 it('returns correct count of expiring prescriptions', function () {
-    // Create prescription expiring within 60 days
+    // Create prescriptions expiring within 30 days
     Prescription::factory()->create([
-        'valid_to' => now()->addDays(30),
+        'valid_to' => now()->addDays(10),
     ]);
     Prescription::factory()->create([
-        'valid_to' => now()->addDays(45),
+        'valid_to' => now()->addDays(25),
     ]);
 
-    // Create prescription NOT expiring within 60 days
+    // Create prescription NOT expiring within 30 days
     Prescription::factory()->create([
-        'valid_to' => now()->addDays(90),
+        'valid_to' => now()->addDays(45),
     ]);
 
     // Create already expired prescription

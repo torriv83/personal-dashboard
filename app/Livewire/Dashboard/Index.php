@@ -197,13 +197,13 @@ class Index extends Component
     }
 
     /**
-     * Get count of prescriptions expiring within 60 days.
+     * Get count of prescriptions expiring within 30 days.
      */
     #[Computed]
     public function expiringPrescriptionsCount(): int
     {
         return Prescription::query()
-            ->where('valid_to', '<=', now()->addDays(60))
+            ->where('valid_to', '<=', now()->addDays(30))
             ->where('valid_to', '>=', now())
             ->count();
     }
