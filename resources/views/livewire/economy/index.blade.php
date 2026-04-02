@@ -267,6 +267,10 @@
             $budgeted = $chartData->pluck('budgeted')->toArray();
             $net = $chartData->map(fn($m) => $m['income'] + $m['activity'])->toArray();
         @endphp
+        <style>
+            .apexcharts-legend { flex-wrap: nowrap !important; }
+            .apexcharts-legend-group { display: contents !important; }
+        </style>
         <div
         wire:key="chart-{{ $chartVersion }}"
         x-data="economyChart({
@@ -280,9 +284,10 @@
                 { name: 'Utgift', type: 'bar', data: {{ Js::from($expenses) }} },
                 { name: 'Inntekt', type: 'bar', data: {{ Js::from($income) }} },
                 { name: 'Budsjettert', type: 'bar', data: {{ Js::from($budgeted) }} },
-                { name: 'Netto', type: 'line', data: {{ Js::from($net) }} }
+                { name: 'Netto', type: 'line', data: {{ Js::from($net) }} },
+                { name: 'Saldo', type: 'line', data: {{ Js::from($this->balanceHistory) }} }
             ],
-            colors: ['#666666', '#c8ff00', '#3b82f6', '#f97316'],
+            colors: ['#666666', '#c8ff00', '#3b82f6', '#f97316', '#06b6d4'],
             plotOptions: {
                 bar: {
                     columnWidth: '70%',
@@ -290,8 +295,9 @@
                 }
             },
             stroke: {
-                width: [0, 0, 0, 3],
+                width: [0, 0, 0, 3, 3],
                 curve: 'smooth',
+                dashArray: [0, 0, 0, 0, 5],
             },
             xaxis: {
                 categories: {{ Js::from($months) }},

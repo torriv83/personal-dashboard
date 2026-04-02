@@ -107,7 +107,7 @@ class Index extends Component
         $ynab->clearCache();
 
         // Re-fetch data by clearing computed cache (timestamp is set in YnabService when data is fetched)
-        unset($this->accounts, $this->ageOfMoney, $this->monthlyData, $this->lastModifiedAt, $this->lastSyncedAt);
+        unset($this->accounts, $this->ageOfMoney, $this->monthlyData, $this->balanceHistory, $this->lastModifiedAt, $this->lastSyncedAt);
 
         // Reload data
         $this->loadYnabData();
@@ -146,6 +146,29 @@ class Index extends Component
     public function totalBalance(): float
     {
         return collect($this->accounts)->sum('balance');
+    }
+
+    /** @return array<int, float> */
+    #[Computed]
+    public function balanceHistory(): array
+    {
+        $balance = collect($this->accounts)
+            ->filter(fn (array $a): bool => in_array($a['type'], ['checking', 'savings']))
+            ->sum('balance');
+
+        $monthlyNet = collect($this->monthlyData)
+            ->reverse()
+            ->values()
+            ->map(fn (array $m): float => $m['income'] + $m['activity'])
+            ->toArray();
+
+        $history = [];
+        foreach (array_reverse($monthlyNet) as $net) {
+            $history[] = round($balance, 2);
+            $balance -= $net;
+        }
+
+        return array_reverse($history);
     }
 
     #[Computed]
