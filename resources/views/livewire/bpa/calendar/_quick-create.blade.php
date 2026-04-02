@@ -32,7 +32,7 @@
                                 return String(endH).padStart(2, '0') + ':' + String(m).padStart(2, '0');
                             })();
                             const date = new Date(quickCreate.date + 'T00:00:00');
-                            const dateStr = date.toLocaleDateString('nb-NO', { day: '2-digit', month: '2-digit' });
+                            const dateStr = date.toLocaleDateString('nb-NO', { day: 'numeric', month: 'short' });
                             const [sh, sm] = startTime.split(':').map(Number);
                             const [eh, em] = endTime.split(':').map(Number);
                             const durationMinutes = (eh * 60 + em) - (sh * 60 + sm);
