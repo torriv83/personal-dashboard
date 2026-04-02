@@ -131,6 +131,16 @@ export default (config = {}) => ({
         },
     },
 
+    // Confirm dialog state
+    confirmDialog: {
+        show: false,
+        title: '',
+        message: '',
+        confirmLabel: 'Bekreft',
+        confirmClass: 'destructive',
+        _resolve: null,
+    },
+
     // Recurring dialog state
     recurringDialog: {
         show: false,
@@ -2263,6 +2273,24 @@ export default (config = {}) => ({
     /**
      * Delete shift - check recurring, then execute.
      */
+    _confirm(title, message, confirmLabel = 'Bekreft', confirmClass = 'destructive') {
+        return new Promise((resolve) => {
+            this.confirmDialog.title = title;
+            this.confirmDialog.message = message;
+            this.confirmDialog.confirmLabel = confirmLabel;
+            this.confirmDialog.confirmClass = confirmClass;
+            this.confirmDialog._resolve = resolve;
+            this.confirmDialog.show = true;
+        });
+    },
+
+    confirmDialogAction(confirmed) {
+        const resolve = this.confirmDialog._resolve;
+        this.confirmDialog.show = false;
+        this.confirmDialog._resolve = null;
+        if (resolve) resolve(confirmed);
+    },
+
     async deleteShift(shiftId) {
         const shift = this._findShift(shiftId);
         if (!shift) return;
@@ -2274,7 +2302,7 @@ export default (config = {}) => ({
             return;
         }
 
-        if (!confirm('Er du sikker på at du vil slette denne oppføringen permanent?')) return;
+        if (!await this._confirm('Slett oppføring', 'Er du sikker på at du vil slette denne oppføringen permanent?', 'Slett')) return;
         await this._executeDelete(shiftId, 'single', 'delete');
     },
 
@@ -2292,7 +2320,7 @@ export default (config = {}) => ({
             return;
         }
 
-        if (!confirm('Er du sikker på at du vil arkivere denne oppføringen?')) return;
+        if (!await this._confirm('Arkiver oppføring', 'Er du sikker på at du vil arkivere denne oppføringen?', 'Arkiver', 'warning')) return;
         await this._executeDelete(shiftId, 'single', 'archive');
     },
 

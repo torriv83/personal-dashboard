@@ -452,6 +452,66 @@
     </div>
 </div>
 
+{{-- Confirm Dialog (Pure Alpine.js) --}}
+<div
+    x-show="confirmDialog.show"
+    x-cloak
+    x-transition:enter="transition ease-out duration-150"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-100"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
+    @keydown.escape.window="confirmDialogAction(false)"
+    class="fixed inset-0 z-[60] overflow-y-auto"
+>
+    {{-- Backdrop --}}
+    <div
+        @click="confirmDialogAction(false)"
+        class="fixed inset-0 bg-background/95 backdrop-blur-sm cursor-pointer"
+    ></div>
+
+    {{-- Dialog --}}
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div
+            x-show="confirmDialog.show"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-100"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            @click.stop
+            class="relative w-full max-w-sm bg-card border border-border rounded-xl shadow-2xl"
+        >
+            {{-- Header --}}
+            <div class="px-5 py-4 border-b border-border">
+                <h3 class="text-lg font-semibold text-foreground" x-text="confirmDialog.title"></h3>
+                <p class="text-sm text-muted mt-1" x-text="confirmDialog.message"></p>
+            </div>
+
+            {{-- Footer --}}
+            <div class="px-5 py-4 flex items-center justify-end gap-3">
+                <button
+                    @click="confirmDialogAction(false)"
+                    class="px-4 py-2 text-sm font-medium text-muted hover:text-foreground transition-colors cursor-pointer"
+                >
+                    Avbryt
+                </button>
+                <button
+                    @click="confirmDialogAction(true)"
+                    class="px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer"
+                    :class="{
+                        'bg-destructive text-white hover:bg-destructive/80': confirmDialog.confirmClass === 'destructive',
+                        'bg-warning text-black hover:bg-warning/80': confirmDialog.confirmClass === 'warning',
+                    }"
+                    x-text="confirmDialog.confirmLabel"
+                ></button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Recurring Action Dialog (Pure Alpine.js) --}}
 <div
     x-show="recurringDialog.show"
