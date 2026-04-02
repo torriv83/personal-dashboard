@@ -59,6 +59,18 @@
                 <span>Dupliser</span>
             </button>
 
+            {{-- Sett som borte (kun for vanlige vakter) --}}
+            <button
+                x-show="!$store.contextMenu.isUnavailable"
+                @click="$store.contextMenu.action('setUnavailable')"
+                class="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-card-hover transition-colors cursor-pointer text-left"
+            >
+                <svg class="w-4 h-4 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                <span>Sett som borte</span>
+            </button>
+
             <div class="my-1.5 border-t border-border"></div>
 
             {{-- Arkiver (kun for utilgjengelighet) --}}

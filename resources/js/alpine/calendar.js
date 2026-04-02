@@ -422,6 +422,9 @@ export default (config = {}) => ({
         window.addEventListener('calendar-archive-shift', (e) => {
             this.archiveShift(e.detail.shiftId);
         });
+        window.addEventListener('calendar-set-unavailable', (e) => {
+            this.setShiftUnavailable(e.detail.shiftId);
+        });
         window.addEventListener('calendar-create-absence', (e) => {
             const d = e.detail;
             this.createAbsenceFromSelection(d.assistantId, d.fromDate, d.toDate);
@@ -2131,6 +2134,19 @@ export default (config = {}) => ({
     /**
      * Open modal for editing an existing shift.
      */
+    async setShiftUnavailable(shiftId) {
+        const shift = this._findShift(shiftId);
+        if (!shift) return;
+
+        this._populateFormFromShift(shift);
+        this.modal.form.is_unavailable = true;
+        this.modal.isEditing = true;
+        this.modal.editingShiftId = shiftId;
+        this.modal.isExistingRecurring = false;
+        this.modal.errors = {};
+        await this.saveShift();
+    },
+
     editShift(shiftId) {
         const shift = this._findShift(shiftId);
         if (!shift) return;

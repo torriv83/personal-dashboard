@@ -94,6 +94,10 @@ Alpine.store('contextMenu', {
                 window.dispatchEvent(new CustomEvent('calendar-archive-shift', {
                     detail: { shiftId: this.shiftId }
                 }));
+            } else if (actionName === 'setUnavailable') {
+                window.dispatchEvent(new CustomEvent('calendar-set-unavailable', {
+                    detail: { shiftId: this.shiftId }
+                }));
             }
         }
 
