@@ -1384,6 +1384,8 @@ export default (config = {}) => ({
         if (e.target.closest('[data-shift]')) return;
         if (e.button !== 0) return;
 
+        e.preventDefault();
+
         if (this.createTimeout) clearTimeout(this.createTimeout);
         if (this._createMoveHandler) document.removeEventListener('mousemove', this._createMoveHandler);
         if (this._createUpHandler) document.removeEventListener('mouseup', this._createUpHandler);
