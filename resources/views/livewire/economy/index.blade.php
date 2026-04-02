@@ -275,6 +275,7 @@
         @php
             $chartData = collect($this->monthlyData)->reverse()->values();
             $months = $chartData->pluck('month')->map(fn($m) => \Carbon\Carbon::parse($m)->translatedFormat('M'))->toArray();
+            $monthsFull = $chartData->pluck('month')->map(fn($m) => \Carbon\Carbon::parse($m)->translatedFormat('F Y'))->toArray();
             $expenses = $chartData->pluck('activity')->map(fn($v) => abs($v))->toArray();
             $income = $chartData->pluck('income')->toArray();
             $budgeted = $chartData->pluck('budgeted')->toArray();
@@ -337,6 +338,7 @@
                 theme: 'dark',
                 shared: true,
                 intersect: false,
+                x: { formatter: (val, { dataPointIndex }) => {{ Js::from($monthsFull) }}[dataPointIndex] },
                 y: { formatter: (val) => 'kr ' + val.toLocaleString('nb-NO') }
             },
             dataLabels: { enabled: false },
