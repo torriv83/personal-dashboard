@@ -365,10 +365,16 @@
                                         class="hidden md:block absolute rounded px-1 py-0.5 z-[5] border-l-2 pointer-events-none"
                                         :style="'top: ' + getTopPercent(externalEvent.start_time) + '%; height: ' + getHeightPercent(getDurationMinutes(externalEvent.start_time, externalEvent.end_time)) + '%; left: calc(' + getExternalEventLayout(weekDay.date, slot.hour, externalEvent.id).left + '% + 2px); width: calc(' + getExternalEventLayout(weekDay.date, slot.hour, externalEvent.id).width + '% - 4px); background-color: ' + externalEvent.color + '15; border-color: ' + externalEvent.color"
                                     >
-                                        <div x-data="{ showTooltip: false }"
-                                            @mouseenter="showTooltip = true"
+                                        <div x-data="{ showTooltip: false, tooltipAbove: false }"
+                                            @mouseenter="
+                                                showTooltip = true;
+                                                const rect = $el.getBoundingClientRect();
+                                                const scrollContainer = $el.closest('.overflow-auto');
+                                                const containerBottom = scrollContainer ? scrollContainer.getBoundingClientRect().bottom : window.innerHeight;
+                                                tooltipAbove = (containerBottom - rect.bottom) < 120;
+                                            "
                                             @mouseleave="showTooltip = false"
-                                            class="pointer-events-auto inline-block relative cursor-default"
+                                            class="pointer-events-auto relative cursor-default w-full"
                                         >
                                             <template x-if="getDurationMinutes(externalEvent.start_time, externalEvent.end_time) < 60">
                                                 <div class="text-[10px] font-medium truncate text-foreground opacity-70">
@@ -388,7 +394,8 @@
                                             <div
                                                 x-show="showTooltip"
                                                 x-cloak
-                                                class="absolute z-50 top-full left-0 mt-1 w-44 p-2 bg-card border border-border rounded-lg shadow-lg pointer-events-none"
+                                                class="absolute z-50 left-0 w-44 p-2 bg-card border border-border rounded-lg shadow-lg pointer-events-none"
+                                                :class="tooltipAbove ? 'bottom-full mb-1' : 'top-full mt-1'"
                                             >
                                                 <div class="text-xs font-semibold text-foreground" x-text="externalEvent.title"></div>
                                                 <div class="text-[9px] mt-1 px-1 py-0.5 rounded inline-block"
