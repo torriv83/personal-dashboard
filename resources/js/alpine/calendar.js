@@ -1374,6 +1374,10 @@ export default (config = {}) => ({
     closeQuickCreate() {
         this.quickCreate.show = false;
         this.quickCreate.endTime = '';
+        this.isCreatingShift = false;
+        this.createDate = null;
+        this.createStartTime = null;
+        this.createEndTime = null;
     },
 
     // =========================================================================
@@ -1465,6 +1469,8 @@ export default (config = {}) => ({
 
         if (endMinutes > startMinutes) {
             this.openQuickCreate(e, this.createDate, this.createStartTime, this.createEndTime);
+            this.createPending = false;
+            return;
         }
 
         this.isCreatingShift = false;
