@@ -41,7 +41,34 @@
                     </svg>
                 </button>
             </div>
-            <div class="flex-1 overflow-y-auto p-2 space-y-2">
+            <div class="flex-1 p-2 space-y-2"
+                x-data="{
+                    targetY: 0,
+                    currentY: 0,
+                    rafId: null,
+                    init() {
+                        this.animate();
+                    },
+                    onScroll() {
+                        const sidebar = this.$el.closest('.md\\:flex');
+                        if (!sidebar) return;
+                        const rect = sidebar.getBoundingClientRect();
+                        this.targetY = rect.top < 0 ? Math.abs(rect.top) : 0;
+                    },
+                    animate() {
+                        this.currentY += (this.targetY - this.currentY) * 0.15;
+                        if (Math.abs(this.targetY - this.currentY) < 0.5) {
+                            this.currentY = this.targetY;
+                        }
+                        this.$el.style.transform = 'translateY(' + this.currentY + 'px)';
+                        this.rafId = requestAnimationFrame(() => this.animate());
+                    },
+                    destroy() {
+                        if (this.rafId) cancelAnimationFrame(this.rafId);
+                    }
+                }"
+                @scroll.window="onScroll()"
+            >
                 <template x-for="assistant in assistants" :key="assistant.id">
                     <div>
                         <template x-if="dayViewUnavailableAssistantIds.includes(assistant.id)">
