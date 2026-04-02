@@ -27,6 +27,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property Carbon|null $deleted_at
  * @property-read Assistant|null $assistant
  * @property-read string $assistant_name
+ * @property-read string $formatted_duration
+ * @property-read string $time_range
+ * @property-read string $compact_time_range
  */
 class Shift extends Model
 {

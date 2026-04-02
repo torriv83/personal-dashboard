@@ -65,7 +65,6 @@ return [
             ]) : [],
         ],
 
-
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

@@ -272,8 +272,8 @@ class Rommers extends Component
         foreach ($this->selectedGame->players as $player) {
             $round = $player->rounds->firstWhere('round_number', $roundNumber);
             $this->editRoundScores[$player->id] = [
-                'score' => $round?->score ?? 0,
-                'completed' => (bool) ($round?->completed_level ?? false),
+                'score' => $round->score ?? 0,
+                'completed' => (bool) ($round->completed_level ?? false),
             ];
         }
 
