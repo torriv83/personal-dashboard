@@ -152,7 +152,16 @@
                 $debtTypes = ['creditCard', 'lineOfCredit', 'mortgage', 'autoLoan', 'studentLoan', 'personalLoan', 'medicalDebt', 'otherDebt', 'otherLiability'];
                 $regularAccounts = collect($this->accounts)->filter(fn($a) => !in_array($a['type'], $debtTypes));
                 $debtAccounts = collect($this->accounts)->filter(fn($a) => in_array($a['type'], $debtTypes));
-                $colors = ['blue', 'purple', 'emerald', 'orange', 'cyan', 'pink', 'amber'];
+                $colorMap = [
+                    'blue'    => ['bg' => 'bg-blue-500/20', 'text' => 'text-blue-400'],
+                    'cyan'    => ['bg' => 'bg-cyan-500/20', 'text' => 'text-cyan-400'],
+                    'amber'   => ['bg' => 'bg-amber-500/20', 'text' => 'text-amber-400'],
+                    'orange'  => ['bg' => 'bg-orange-500/20', 'text' => 'text-orange-400'],
+                    'pink'    => ['bg' => 'bg-pink-500/20', 'text' => 'text-pink-400'],
+                    'emerald' => ['bg' => 'bg-emerald-500/20', 'text' => 'text-emerald-400'],
+                ];
+                $checkingColors = ['blue', 'cyan', 'amber', 'orange', 'pink'];
+                $checkingIndex = 0;
             @endphp
 
             {{-- Brukskontoer --}}
@@ -160,15 +169,19 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     @foreach($regularAccounts as $index => $account)
                         @php
-                            $color = $colors[$index % count($colors)];
+                            $isSavings = $account['type'] === 'savings'
+                                || str_contains(strtolower($account['name']), 'spar');
+                            $color = $isSavings
+                                ? 'emerald'
+                                : $checkingColors[$checkingIndex++ % count($checkingColors)];
                             $daysAgo = $account['last_reconciled_at']
                                 ? (int) \Carbon\Carbon::parse($account['last_reconciled_at'])->diffInDays(now())
                                 : null;
                         @endphp
                         <div class="bg-background border border-border rounded-lg p-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-{{ $color }}-500/20 flex items-center justify-center">
-                                    <svg class="w-5 h-5 text-{{ $color }}-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-10 h-10 rounded-full {{ $colorMap[$color]['bg'] }} flex items-center justify-center">
+                                    <svg class="w-5 h-5 {{ $colorMap[$color]['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                     </svg>
                                 </div>
