@@ -67,29 +67,23 @@
         <h1 class="text-2xl font-bold text-foreground">Økonomi</h1>
         <button
             wire:click="syncYnab"
+            wire:target="syncYnab"
+            wire:loading.attr="disabled"
             @if(!$this->isYnabConfigured) disabled @endif
             class="p-2 sm:px-4 sm:py-2 text-sm font-medium text-black bg-accent rounded-lg hover:bg-accent-hover transition-colors cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            x-data="{ loading: false }"
-            x-on:click="loading = true"
-            x-init="$wire.on('syncCompleted', () => loading = false); Livewire.hook('request', ({ fail }) => { if (fail) loading = false })"
-            :disabled="loading"
         >
-            <template x-if="!loading">
-                <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span class="hidden sm:inline">Synkroniser YNAB</span>
-                </span>
-            </template>
-            <template x-if="loading">
-                <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span class="hidden sm:inline">Synkroniserer...</span>
-                </span>
-            </template>
+            <span wire:loading.remove wire:target="syncYnab" class="flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span class="hidden sm:inline">Synkroniser YNAB</span>
+            </span>
+            <span wire:loading.flex wire:target="syncYnab" class="items-center gap-2">
+                <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span class="hidden sm:inline">Synkroniserer...</span>
+            </span>
         </button>
     </div>
 
